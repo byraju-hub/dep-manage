@@ -92,9 +92,9 @@
 		{#each list as s, i (s.id)}
 			{@const cur = draft[s.id] ?? 'present'}
 			<li class="row">
-				<Avatar name={s.name} index={i} size={40} />
+				<Avatar name={s.name} tone={s.tone} size={40} />
 				<div class="nm">
-					<div class="n">{s.name}</div>
+					<div class="n tone-{s.tone}">{s.name}</div>
 					<div class="m">{s.gradeLabel}{s.className ? ` · ${s.className}` : ''}{s.status === 'new' ? ` · ${terms.newMember}` : ''}</div>
 				</div>
 				<div class="seg" role="group" aria-label="{s.name} 출석 상태">
@@ -133,7 +133,7 @@
 	.rows { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
 	.row { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 8px 8px 8px 10px; display: flex; align-items: center; gap: 10px; min-height: 62px; }
 	.nm { flex-grow: 1; min-width: 0; line-height: 1.35; }
-	.n { font-weight: 600; font-size: 16px; white-space: nowrap; }
+	.n { font-weight: 600; font-size: 16px; white-space: nowrap; color: var(--fg); }
 	.m { font-size: 12.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 	.none { color: var(--muted); padding: 24px; text-align: center; }
 

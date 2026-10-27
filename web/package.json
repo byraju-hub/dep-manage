@@ -24,5 +24,8 @@
 	"imports": {
 		"#lib": "./src/lib/index.js",
 		"#lib/*": "./src/lib/*"
+	},
+	"dependencies": {
+		"@fontsource-variable/noto-sans-kr": "^5.3.1"
 	}
 }

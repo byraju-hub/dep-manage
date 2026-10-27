@@ -53,9 +53,9 @@
 				</div>
 				{#each dash.absentees as p, i (p.id)}
 					<div class="line">
-						<Avatar name={p.name} index={i} />
+						<Avatar name={p.name} tone={p.tone} />
 						<div class="grow">
-							<div class="strong">{p.name}</div>
+							<div class="strong tone-{p.tone}">{p.name}</div>
 							<div class="sub">{p.gradeLabel}{p.className && p.className !== p.gradeLabel ? ` · ${p.className}` : ''} · {p.weeks}주 연속 결석</div>
 						</div>
 						<a class="pill-link" href={url(`/d/${dept.id}/visits`)}>{terms.visit}</a>
@@ -115,6 +115,7 @@
 	.line { display: flex; align-items: center; gap: 12px; padding: 8px 0; border-top: 1px solid var(--line-soft); }
 	.grow { flex-grow: 1; min-width: 0; line-height: 1.35; }
 	.strong { font-weight: 600; }
+	.strong[class*='tone-'] { color: var(--fg); }
 	.sub { font-size: 12.5px; color: var(--muted); }
 	.sub2 { font-size: 13px; color: var(--ink-2); }
 	.row2 { display: flex; justify-content: space-between; gap: 8px; }

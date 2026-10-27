@@ -122,8 +122,8 @@
 						{#each c.students.slice(0, 6) as s (s.id)}
 							<li>
 								<a href={url(`/d/${dept.id}/students/${s.id}`)}>
-									<Avatar name={s.name} tone={c.tone} size={28} />
-									<span class="nm">{s.name}</span>
+									<Avatar name={s.name} tone={s.tone} size={28} />
+									<span class="nm gname tone-{s.tone}">{s.name}</span>
 									{#if s.status === 'new'}<span class="badge badge-sq tone-orange sm">{terms.newMember}</span>{/if}
 								</a>
 							</li>
@@ -167,8 +167,8 @@
 							<tr>
 								<td class="first">
 									<a class="who" href={url(`/d/${dept.id}/students/${s.id}`)}>
-										<Avatar name={s.name} index={(pageNo - 1) * PAGE + i} />
-										<span class="strong">{s.name}</span>
+										<Avatar name={s.name} tone={s.tone} />
+										<span class="strong gname tone-{s.tone}">{s.name}</span>
 									</a>
 								</td>
 								<td><span class="badge badge-sq tone-{toneOf(s.gradeId)}">{gradeClass(s.gradeLabel, s.className)}</span></td>
@@ -236,6 +236,8 @@
 	.nowrap { white-space: nowrap; }
 	.who { display: flex; align-items: center; gap: 12px; }
 	.strong { font-weight: 600; }
+	/* 이름은 그 학생의 학년 색으로 보여준다 */
+	.gname { color: var(--fg); }
 	.none { text-align: center; color: var(--muted); padding: 32px; }
 	tbody tr:hover { background: var(--field-bg); }
 

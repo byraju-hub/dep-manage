@@ -27,7 +27,7 @@
 	--radius: 16px;
 	--radius-sm: 12px;
 
-	--font: 'Pretendard', 'Noto Sans KR', 'Malgun Gothic', 'Apple SD Gothic Neo', system-ui, sans-serif;
+	--font: 'Noto Sans KR Variable', 'Noto Sans KR', 'Malgun Gothic', 'Apple SD Gothic Neo', system-ui, sans-serif;
 }
 
 /* 색 톤: 배경(bg)과 글자/아이콘(fg) 한 쌍. 모든 쌍은 4.5:1 이상 대비를 가진다. */

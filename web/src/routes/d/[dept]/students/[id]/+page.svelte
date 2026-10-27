@@ -17,9 +17,9 @@
 	<a class="back" href={url(`/d/${data.dept.id}/students`)}><Icon name="chevronLeft" size={16} />{terms.student} 명단</a>
 
 	<header class="hero card">
-		<Avatar name={s.name} index={s.id} size={64} />
+		<Avatar name={s.name} tone={d.tone} size={64} />
 		<div class="who">
-			<h1>{s.name}</h1>
+			<h1 class="tone-{d.tone}">{s.name}</h1>
 			<div class="chips">
 				<span class="badge badge-sq tone-blue">{d.gradeLabel}{d.className ? ` · ${d.className}` : ''}</span>
 				<span class="badge tone-{s.status === 'active' ? 'green' : s.status === 'new' ? 'orange' : 'slate'}">{s.status === 'active' ? '재적' : s.status === 'new' ? terms.newMember : '비활동'}</span>
@@ -90,7 +90,7 @@
 <style>
 	.back { display: inline-flex; align-items: center; gap: 4px; color: var(--accent); font-weight: 700; font-size: 13.5px; width: fit-content; padding: 4px 0; }
 	.hero { display: flex; align-items: center; gap: 18px; padding: 18px 22px; }
-	h1 { font-size: 24px; font-weight: 700; }
+	h1 { font-size: 24px; font-weight: 700; color: var(--fg); }
 	.chips { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 4px; }
 	.cols { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 	.box { padding: 16px 20px; display: flex; flex-direction: column; gap: 8px; }

@@ -12,10 +12,16 @@ import type {
 	Student,
 	Teacher,
 	Terms,
+	Tone,
 	Visit
 } from './types';
 
 const tick = () => Promise.resolve();
+
+/** 학년의 색. 색이 없는 단계(예비 등)는 회색 톤. */
+function gradeTone(dept: Department, gradeId: number): Tone {
+	return dept.gradeLevels.find((g) => g.id === gradeId)?.tone ?? 'slate';
+}
 
 // ===== 부서 =====
 export async function listDepartments(): Promise<Department[]> {
@@ -48,6 +54,8 @@ export async function updateDepartmentInfo(deptId: number, info: { name: string;
 
 // ===== 학생 · 교사 · 반 =====
 export interface StudentRow extends Student {
+	/** 학년 색. 이름과 아바타를 이 색으로 보여준다. */
+	tone: Tone;
 	gradeLabel: string;
 	className: string;
 	recent: boolean[]; // 최근 4주 출석 (오래된 순서)
@@ -73,6 +81,7 @@ export async function listStudents(
 	);
 	return rows.map((s) => ({
 		...s,
+		tone: gradeTone(dept, s.gradeId),
 		gradeLabel: dept.gradeLevels.find((g) => g.id === s.gradeId)?.label ?? '',
 		className: db.classes.find((c) => c.id === s.classId)?.name ?? '',
 		recent: sundays.map((d) => (db.attendance[d]?.[s.id] ?? 'absent') !== 'absent')
@@ -87,6 +96,7 @@ export async function getStudent(id: number) {
 	const sundays = recentSundays(12);
 	return {
 		student: s,
+		tone: gradeTone(dept, s.gradeId),
 		gradeLabel: dept.gradeLevels.find((g) => g.id === s.gradeId)?.label ?? '',
 		className: db.classes.find((c) => c.id === s.classId)?.name ?? '',
 		history: sundays.map((d) => ({ date: d, status: (db.attendance[d]?.[s.id] ?? 'absent') as AttendanceStatus })),
@@ -263,6 +273,7 @@ export async function getDashboard(deptId: number) {
 		.map((x) => ({
 			id: x.student.id,
 			name: x.student.name,
+			tone: gradeTone(dept, x.student.gradeId),
 			weeks: x.weeks,
 			gradeLabel: dept.gradeLevels.find((g) => g.id === x.student.gradeId)?.label ?? '',
 			className: db.classes.find((c) => c.id === x.student.classId)?.name ?? ''
