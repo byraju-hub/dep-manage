@@ -8,3 +8,5 @@
 - 진행 계획: [PLAN.md](PLAN.md)
 
 > 현재 설계 단계입니다.
+
+라이선스: [GNU AGPL-3.0](LICENSE)

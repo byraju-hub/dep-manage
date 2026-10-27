@@ -25,6 +25,7 @@
 | 세례 구분이 ENUM | 설정 가능한 선택 목록 |
 | `has_kakao`, `attended_retreat` 같은 교회 고유 컬럼 | **사용자 정의 항목**(custom fields)으로 일반화 |
 | 권한 A/B/pending, 최고관리자가 아이디(`byraju`)로 고정 | 부서별 역할(owner/admin/teacher/viewer) |
+| 부서가 하나뿐인 구조 | 한 설치에서 여러 부서 운영 (부서마다 용어·학년·반 독립) |
 | 비로그인 사용자에게 이름 마스킹해서 공개 | 기본은 로그인 필수 (공개 모드는 나중에 검토) |
 | 부모 이름이 `father_name`/`mother_name` 고정 | `guardians` 테이블 (한부모·조부모 등 대응) |
 | 출석이 출석/결석 두 가지 | 출석/결석/지각/온라인/사유결석 + 메모 |
@@ -105,7 +106,7 @@ www/
 
 ## 4. 데이터베이스 스키마
 
-모든 업무 테이블은 `department_id`를 가진다. **v1 화면은 부서 하나만 다루지만, 스키마는 처음부터 여러 부서를 지원**한다 (나중에 추가하면 모든 쿼리를 고쳐야 하므로).
+모든 업무 테이블은 `department_id`를 가진다. **한 설치에서 여러 부서(영아부, 유치부, 유초등부, 중고등부, 청년부 등)를 운영**할 수 있고, 부서마다 용어·학년 단계·반·선택 목록·사용자 정의 항목을 따로 가진다. 부서 간에 공유되는 것은 교회 정보, 로그인 계정, 교회 전체 공지뿐이다.
 
 ### 4.1 시스템·설정
 
@@ -154,7 +155,13 @@ www/
 | `teacher` | 담임 교사 | 출석 체크, 명단 열람, **담당 반** 학생 정보 수정, 본인이 쓴 심방 기록 |
 | `viewer` | 임원·참관 | 명단 기본 보기, 계획·공지 열람 (연락처 등 민감정보 제외) |
 
-> 담당 반만 보이게 할지(교사 열람 범위)는 부서 설정 옵션으로 둔다: `teacher_scope = all | own_class`
+> 담당 반만 보이게 할지(교사 열람 범위)는 부서 설정 옵션으로 둔다: `teacher_scope = all | own_class` (기본값 `all`: 명단은 전체 열람, 수정은 담당 반만)
+
+**여러 부서에서의 권한**
+- `memberships`가 사용자·부서·역할을 연결하므로, 한 사람이 부서마다 다른 역할을 가질 수 있다 (예: 중고등부 admin + 청년부 viewer).
+- `owner`는 교회 전체 단위다. 모든 부서에 접근하고, 부서 추가·삭제와 사용자 승인을 한다.
+- 로그인 후 소속 부서가 하나면 바로 그 부서로, 여러 개면 마지막으로 본 부서로 들어간다. 상단에서 부서를 전환한다.
+- 소속되지 않은 부서의 데이터는 API가 존재 여부도 알려주지 않는다 (404).
 
 ### 4.3 사람
 
@@ -171,6 +178,8 @@ www/
 
 - 반 편성을 **연도별**로 두어 작년 반 기록이 남고, 새해 반 편성은 "작년 편성 복사 후 수정"으로 처리
 - 학년 승급은 youth67처럼 **미리보기 → 적용** 방식, `grade_levels.next_id`를 따라감
+- **부서 간 이동**: 유치부 → 유초등부처럼 학년이 올라가며 부서가 바뀌는 경우를 위해, 학생의 `department_id`와 학년 단계를 바꾸는 "부서 이동" 기능을 둔다. 출석·심방 기록은 `student_id`로 연결되어 그대로 따라간다. 이동 가능한 부서는 `grade_levels.next_id`가 다른 부서의 단계를 가리키도록 설정해서 졸업 대신 승급 이동으로 처리할 수 있다.
+- 한 사람이 두 부서에서 교사로 섬기는 경우는 v1에서는 부서마다 교사 레코드를 따로 둔다 (v1.x에서 `people` 테이블로 통합 검토).
 
 ### 4.4 출석
 
@@ -208,7 +217,7 @@ www/
 | `events` | `department_id`, `start_date`, `end_date`, `title`, `category`(예배/공과/행사/수련회/회의/기타), `prayer`(기도자), `owner`, `notes` | **연간 계획** (youth67 `year_plan` 확장, 여러 날 행사 지원) |
 | `ministry_plans` | `department_id`, `year`, `theme`, `theme_verse`, `vision`, `goals`, `status`(draft/final) | **사역 계획** (연도별 1건) |
 | `ministry_plan_items` | `plan_id`, `area`(예배/교육/전도/양육/교제/봉사), `title`, `description`, `period`, `owner`, `budget`, `status`, `sort` | 사역 계획 세부 항목 |
-| `notices` | `department_id`, `title`, `body`, `is_pinned`, `audience`(staff/admin), `publish_at`, `author_user_id` | **공지사항** |
+| `notices` | `department_id`(비우면 교회 전체 공지), `title`, `body`, `is_pinned`, `audience`(staff/admin), `publish_at`, `author_user_id` | **공지사항** |
 | `meeting_notes` | `department_id`, `meeting_date`, `title`, `content`, `attendees`, `author_user_id` | **회의록** (youth67 서기 노트) |
 
 ### 4.7 추가 기능 (모듈로 켜고 끄기)
@@ -226,32 +235,40 @@ www/
 
 ## 5. 화면 구성
 
+부서 업무 화면은 모두 `/d/:dept/` 아래에 두고, 상단의 부서 전환 메뉴로 이동한다.
+
 ```
 /login                      로그인
 /join?code=XXXX             초대 코드로 가입 → 승인 대기
-/                           대시보드
-/students                   명단 - 기본 보기 (이름·학년·반·상태)
-/students?view=full         명단 - 상세(전체) 보기 (모든 항목, 가로 스크롤 표)
-/students?view=class        명단 - 반별 보기 (반 카드 + 담임 교사)
-/students/new, /students/:id, /students/:id/edit
-/teachers  (위와 같은 3가지 보기)
-/attendance                 출석 체크 (날짜·반 필터, 터치 토글)
-/attendance/stats           출석 통계 (주별 추이, 개인별 출석률, 반별 비교)
-/visits                     심방 목록 (대상·기간·방법 필터, 후속조치 필터)
-/visits/new, /visits/:id
-/plans/calendar             연간 계획 (달력 + 목록, 엑셀 일괄 입력)
-/plans/ministry             사역 계획 (연도별)
-/notices, /notices/:id      공지사항
-/meetings                   회의록
-/settings/church            교회·부서 정보, 담당자(교역자/부장)
-/settings/terms             용어 설정 (미리보기 포함)
-/settings/structure         학년 단계, 반 편성, 선택 목록, 사용자 정의 항목
-/settings/users             사용자 승인·역할, 초대 코드
-/settings/data              가져오기·내보내기, 백업, 업데이트
+/                           교회 홈 (전체 공지, 소속 부서 목록과 부서별 요약)
 /me                         내 정보, 비밀번호 변경
+
+/d/:dept/                   부서 대시보드
+/d/:dept/students           명단 - 기본 보기 (이름·학년·반·상태)
+/d/:dept/students?view=full 명단 - 상세(전체) 보기 (모든 항목, 가로 스크롤 표)
+/d/:dept/students?view=class 명단 - 반별 보기 (반 카드 + 담임 교사)
+/d/:dept/students/new, /:id, /:id/edit
+/d/:dept/teachers           (위와 같은 3가지 보기)
+/d/:dept/attendance         출석 체크 (날짜·반 필터, 터치 토글)
+/d/:dept/attendance/stats   출석 통계 (주별 추이, 개인별 출석률, 반별 비교)
+/d/:dept/visits             심방 목록 (대상·기간·방법 필터, 후속조치 필터)
+/d/:dept/visits/new, /:id
+/d/:dept/plans/calendar     연간 계획 (달력 + 목록, 엑셀 일괄 입력)
+/d/:dept/plans/ministry     사역 계획 (연도별)
+/d/:dept/notices            부서 공지사항
+/d/:dept/meetings           회의록
+/d/:dept/settings/info      부서 정보, 담당자(교역자/부장)
+/d/:dept/settings/terms     용어 설정 (미리보기 포함)
+/d/:dept/settings/structure  학년 단계, 반 편성, 선택 목록, 사용자 정의 항목
+/d/:dept/settings/data      가져오기·내보내기
+
+/settings/church            교회 정보 (owner)
+/settings/departments       부서 추가·순서·보관·삭제, 프리셋으로 새 부서 만들기 (owner)
+/settings/users             사용자 승인, 부서별 역할, 초대 코드 (owner/부서 admin은 자기 부서만)
+/settings/system            백업·복원, 업데이트 적용 (owner)
 ```
 
-### 대시보드에 보여줄 것
+### 대시보드에 보여줄 것 (부서별)
 - 지난 주일 / 이번 주일 출석 인원 (학생·교사)
 - 이번 주 생일자
 - 장기 결석자 (연속 N주)
@@ -267,6 +284,7 @@ www/
 ## 6. API 설계
 
 - 기본 경로: `/api/v1/...`, 요청·응답 모두 JSON
+- 부서에 속한 업무 데이터는 `/api/v1/d/:deptId/...` 아래에 둔다. 아래 표의 학생·교사·반·승급·출석·심방·계획·공지·회의록·대시보드·가져오기 항목이 해당하며, 표에서는 접두사를 생략했다. 교회 단위(인증, 사용자, 부서 관리, 시스템, 교회 전체 공지)는 접두사 없이 쓴다.
 - 성공: `{ "ok": true, "data": ... }` / 실패: `{ "ok": false, "error": { "code": "...", "message": "..." } }`
 - 변경 요청(POST/PUT/PATCH/DELETE)은 `X-CSRF-Token` 헤더 필수
 - 모든 쿼리는 prepared statement, 모든 엔드포인트는 서버에서 권한 확인 (화면에서 숨기는 것만으로는 안 됨)
@@ -275,12 +293,13 @@ www/
 | 영역 | 엔드포인트 |
 |---|---|
 | 인증 | `POST /auth/login`, `POST /auth/logout`, `GET /auth/me`, `POST /auth/join`, `POST /auth/password` |
-| 설정 | `GET/PUT /settings`, `GET/PUT /departments/:id`, `GET/PUT /terms`, `CRUD /grade-levels`, `CRUD /option-lists`, `CRUD /custom-fields` |
+| 교회·부서 | `GET/PUT /settings` (교회 정보), `CRUD /departments`, `POST /departments` (프리셋으로 생성) |
+| 부서 설정 | `GET/PUT /d/:deptId/settings`, `GET/PUT /d/:deptId/terms`, `CRUD /d/:deptId/grade-levels`, `CRUD /d/:deptId/option-lists`, `CRUD /d/:deptId/custom-fields` |
 | 사용자 | `GET /users`, `PATCH /users/:id` (승인·역할), `POST /users/:id/reset-password`, `CRUD /invites` |
 | 학생 | `GET /students?view=&grade=&class=&status=&q=`, `GET/POST/PUT/DELETE /students/:id`, `POST /students/:id/photo`, `GET /students/export` |
 | 교사 | 학생과 동일 구조 |
 | 반 | `GET /classes?year=`, `CRUD /classes`, `PUT /classes/:id/members`, `POST /classes/copy-year` |
-| 승급 | `GET /promotions/preview?year=`, `POST /promotions/apply` |
+| 승급·이동 | `GET /promotions/preview?year=`, `POST /promotions/apply`, `POST /students/:id/transfer` (다른 부서로 이동) |
 | 출석 | `GET /attendance?date=&class=`, `PUT /attendance` (한 명 토글), `GET /attendance/stats?from=&to=` |
 | 심방 | `GET /visits?target=&from=&to=&pending=1`, `CRUD /visits` |
 | 계획 | `CRUD /events`, `POST /events/bulk`, `GET/PUT /ministry-plans/:year`, `CRUD /ministry-plans/:year/items` |
@@ -296,8 +315,8 @@ www/
 1. **환경 점검**: PHP 버전(8.1+), PDO MySQL, GD(사진 축소), mbstring, `data/` 쓰기 권한
 2. **DB 연결**: 호스트·DB명·아이디·비밀번호 입력 → 접속 테스트 (카페24는 DB명 = 아이디인 경우가 많아 안내 문구 제공)
 3. **테이블 생성**: `migrations/` 순서대로 실행
-4. **교회·부서 정보**: 교회 이름, 부서 이름, 담당 교역자, 부장(부서장)
-5. **용어·구조 프리셋 선택**: "중고등부(중1~고3)", "청소년부", "유초등부", "청년부", "직접 설정" → 학년 단계와 용어가 자동으로 채워짐
+4. **교회 정보**: 교회 이름
+5. **첫 부서 만들기**: 부서 이름, 담당 교역자, 부장(부서장), 그리고 용어·구조 프리셋 선택 ("영아부", "유치부", "유초등부", "중고등부", "청소년부", "청년부", "직접 설정") → 학년 단계와 용어가 자동으로 채워짐. 나머지 부서는 설치 후 `/settings/departments`에서 같은 방식으로 추가
 6. **관리자 계정 생성**: owner 계정 (비밀번호 8자 이상)
 7. **완료**: `data/config.php`, `data/install.lock` 생성 → 이후 `/install` 접근 차단
 
@@ -334,7 +353,7 @@ www/
 | 단계 | 내용 | 완료 기준 |
 |---|---|---|
 | M0 | 레포 구성, 로컬 개발 환경, 빌드·릴리스 스크립트 | 빈 화면 zip이 카페24에 올라가 뜸 |
-| M1 | 설치 마법사, 로그인·초대 가입·승인, 기본 설정(교회·부서·용어·학년·반) | 새 서버에 설치하고 로그인까지 |
+| M1 | 설치 마법사, 로그인·초대 가입·승인, 기본 설정(교회·부서 추가·전환·용어·학년·반), 부서별 권한 | 새 서버에 설치하고 부서 2개를 만들어 전환까지 |
 | M2 | 학생·교사 명단 (기본/상세/반별), 상세·편집, 사진, 사용자 정의 항목 | youth67 명단 기능 대체 |
 | M3 | 출석 체크, 출석 통계, 대시보드, 생일, 장기 결석 | youth67 출석 기능 대체 |
 | M4 | 심방 | 신규 |
@@ -348,9 +367,15 @@ www/
 
 ## 11. 결정이 필요한 것
 
-1. **한 설치에 여러 부서?** — 제안: 스키마는 다부서 지원, v1 화면은 단일 부서. (교회 전체가 한 설치로 여러 부서를 운영하는 건 v2)
-2. **비로그인 열람(이름 마스킹 공개) 기능 유지?** — 제안: 제거. 로그인 필수
-3. **교사의 열람 범위 기본값** — 제안: 전체 명단 열람 가능, 수정은 담당 반만
-4. **심방 기록 기본 열람 범위** — 제안: `pastors` (작성자 + 교역자·부장)
-5. **라이선스** — 제안: MIT
-6. **추가 모듈 중 v1에 넣을 것** — 제안: 생일, 장기 결석, 가져오기/내보내기, 백업은 v1. 새가족 정착·행사 참가·기도 제목은 v1.x
+2026-10-27 결정:
+
+1. **한 설치에 여러 부서** — 결정: **v1부터 지원.** 영아부·유치부·유초등부·중고등부·청년부를 한 설치에서 운영. 부서별 용어·학년·반 독립, 부서 간 이동 지원
+2. **비로그인 열람** — 결정: 제거. **로그인 필수**
+3. **교사의 열람 범위 기본값** — 결정: 전체 명단 열람 가능, 수정은 담당 반만
+4. **심방 기록 기본 열람 범위** — 결정: `pastors` (작성자 + 교역자·부장)
+5. **라이선스** — 결정: **AGPL-3.0.** 수정해서 서비스하는 경우 수정본 소스도 공개해야 한다
+6. **추가 모듈 중 v1에 넣을 것** — 결정: 생일, 장기 결석, 가져오기/내보내기, 백업은 v1. 새가족 정착·행사 참가·기도 제목은 v1.x
+
+추가 결정:
+- 한 사람이 여러 부서에서 교사로 섬기는 경우: v1은 부서마다 교사 레코드를 따로 두고, v1.x에서 통합 검토
+- 교회 전체 공지: owner와 모든 부서의 admin이 작성 가능
