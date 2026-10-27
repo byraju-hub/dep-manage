@@ -1,9 +1,11 @@
 // 가상 데이터 생성기. 실제 교회의 정보는 하나도 들어 있지 않다.
 // 날짜는 오늘을 기준으로 상대적으로 만들어서 언제 열어도 화면이 비어 보이지 않는다.
 import { addDays, fromISO, sundayOf, today, toISO } from '../dates';
+import { defaultFonts } from '../fonts';
 import type {
 	AttendanceMap,
 	AttendanceStatus,
+	Church,
 	ClassRoom,
 	Department,
 	GradeLevel,
@@ -16,6 +18,7 @@ import type {
 } from '../types';
 
 export interface MockDB {
+	church: Church;
 	departments: Department[];
 	students: Student[];
 	teachers: Teacher[];
@@ -287,6 +290,7 @@ export function seed(): MockDB {
 	];
 
 	return {
+		church: { name: '은혜교회', fonts: { ...defaultFonts } },
 		departments: [dept1, dept2],
 		students,
 		teachers,

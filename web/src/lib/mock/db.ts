@@ -4,7 +4,7 @@ import { seed, type MockDB } from './seed';
 const KEY = 'dep-manage-demo-v1';
 
 // 저장하는 항목: 사용자가 화면에서 바꿀 수 있는 것들만
-type Persisted = Pick<MockDB, 'departments' | 'attendance' | 'teacherAttendance' | 'visits' | 'notices'>;
+type Persisted = Pick<MockDB, 'church' | 'departments' | 'attendance' | 'teacherAttendance' | 'visits' | 'notices'>;
 
 function load(): MockDB {
 	const base = seed();
@@ -25,6 +25,7 @@ export const db: MockDB = load();
 export function persist() {
 	try {
 		const data: Persisted = {
+			church: db.church,
 			departments: db.departments,
 			attendance: db.attendance,
 			teacherAttendance: db.teacherAttendance,

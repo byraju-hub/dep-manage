@@ -9,7 +9,7 @@
 	import Icon from './Icon.svelte';
 	import Tile from './Tile.svelte';
 
-	let { dept, depts, pending }: { dept: Department; depts: Department[]; pending: number } = $props();
+	let { dept, depts, pending, churchName }: { dept: Department; depts: Department[]; pending: number; churchName: string } = $props();
 
 	const nav = $derived(buildNav(terms, pending));
 	const all = $derived([...nav.main, ...nav.plan, nav.settings]);
@@ -32,7 +32,7 @@
 
 <header class="top">
 	<div>
-		<div class="church">은혜교회</div>
+		<div class="church">{churchName}</div>
 		<div class="dept">{dept.name}</div>
 	</div>
 </header>
@@ -83,8 +83,9 @@
 		position: sticky; top: 0; z-index: 10;
 	}
 	.church { font-size: 12px; color: var(--muted); line-height: 1.2; }
-	.dept { font-size: 18px; font-weight: 700; line-height: 1.35; }
+	.dept { font-family: var(--font-title); font-size: 18px; font-weight: 700; line-height: 1.35; }
 
+	.tabs, .sheet { font-family: var(--font-menu); }
 	.tabs {
 		position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
 		display: grid; grid-template-columns: repeat(5, 1fr);

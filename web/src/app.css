@@ -27,7 +27,10 @@
 	--radius: 16px;
 	--radius-sm: 12px;
 
-	--font: 'Noto Sans KR Variable', 'Noto Sans KR', 'Malgun Gothic', 'Apple SD Gothic Neo', system-ui, sans-serif;
+	/* 글꼴 세 곳. 설정에서 고른 값을 앱이 시작할 때 덮어쓴다(lib/fonts.ts). */
+	--font-title: 'Noto Sans KR Variable', 'Malgun Gothic', 'Apple SD Gothic Neo', system-ui, sans-serif;
+	--font-menu: var(--font-title);
+	--font-body: var(--font-title);
 }
 
 /* 색 톤: 배경(bg)과 글자/아이콘(fg) 한 쌍. 모든 쌍은 4.5:1 이상 대비를 가진다. */
@@ -52,13 +55,17 @@ body {
 	margin: 0;
 	background: var(--ground);
 	color: var(--ink);
-	font-family: var(--font);
+	font-family: var(--font-body);
+	/* 굵은 글자가 없는 글꼴을 억지로 굵게 만들지 않는다 */
+	font-synthesis: none;
 	font-size: 14px;
 	line-height: 1.5;
 	-webkit-text-size-adjust: 100%;
 }
 
 h1, h2, h3, p { margin: 0; }
+/* 각 화면의 제목은 '타이틀' 글꼴 */
+h1 { font-family: var(--font-title); }
 a { color: inherit; text-decoration: none; }
 button, input, select, textarea { font-family: inherit; font-size: inherit; color: inherit; }
 button { cursor: pointer; }

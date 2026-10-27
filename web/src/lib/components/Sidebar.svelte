@@ -9,7 +9,7 @@
 	import Icon from './Icon.svelte';
 	import Tile from './Tile.svelte';
 
-	let { dept, depts, pending }: { dept: Department; depts: Department[]; pending: number } = $props();
+	let { dept, depts, pending, churchName }: { dept: Department; depts: Department[]; pending: number; churchName: string } = $props();
 
 	const nav = $derived(buildNav(terms, pending));
 	let open = $state(false);
@@ -38,9 +38,9 @@
 
 <aside class="side">
 	<div class="brand">
-		<div class="logo">은</div>
+		<div class="logo" aria-hidden="true">{churchName.slice(0, 1)}</div>
 		<div>
-			<div class="church">은혜교회</div>
+			<div class="church">{churchName}</div>
 			<div class="sub">부서 관리</div>
 		</div>
 	</div>
@@ -87,6 +87,7 @@
 	.side {
 		width: 248px;
 		flex-shrink: 0;
+		font-family: var(--font-menu);
 		position: sticky;
 		top: 0;
 		height: 100vh;
@@ -103,7 +104,7 @@
 		width: 38px; height: 38px; border-radius: 12px; background: var(--accent); color: #fff;
 		display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 17px;
 	}
-	.church { font-size: 15px; font-weight: 700; line-height: 1.2; }
+	.church { font-family: var(--font-title); font-size: 15px; font-weight: 700; line-height: 1.2; }
 	.sub { font-size: 12px; color: var(--muted); }
 
 	.switcher { position: relative; }

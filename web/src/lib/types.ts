@@ -135,6 +135,17 @@ export interface CalendarItem {
 	label: string;
 }
 
+/** 글꼴을 따로 정할 수 있는 세 곳 */
+export type FontRole = 'title' | 'menu' | 'body';
+export type FontId = 'noto-sans' | 'nanum-gothic' | 'gowun-dodum' | 'black-han-sans' | 'do-hyeon' | 'jua' | 'system';
+export type FontSettings = Record<FontRole, FontId>;
+
+/** 교회 전체에 적용되는 설정 */
+export interface Church {
+	name: string;
+	fonts: FontSettings;
+}
+
 export interface SessionUser {
 	id: number;
 	name: string;

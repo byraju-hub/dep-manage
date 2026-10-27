@@ -3,6 +3,7 @@
 	import { login } from '$lib/session.svelte';
 	import { url } from '$lib/url';
 
+	let { data } = $props();
 	let loginId = $state('');
 	let password = $state('');
 	let error = $state('');
@@ -30,9 +31,9 @@
 
 	<div class="card box">
 		<div class="brand">
-			<div class="logo">은</div>
+			<div class="logo" aria-hidden="true">{data.church.name.slice(0, 1)}</div>
 			<div>
-				<h1>은혜교회</h1>
+				<h1>{data.church.name}</h1>
 				<p class="muted">부서 관리 시스템</p>
 			</div>
 		</div>

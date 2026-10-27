@@ -5,11 +5,11 @@
 	let { data, children } = $props();
 </script>
 
-<svelte:head><title>{data.dept.name} · dep-manage</title></svelte:head>
+<svelte:head><title>{data.dept.name} · {data.church.name}</title></svelte:head>
 
 <div class="shell">
-	<div class="desktop"><Sidebar dept={data.dept} depts={data.depts} pending={data.pending} /></div>
-	<div class="mobile"><MobileNav dept={data.dept} depts={data.depts} pending={data.pending} /></div>
+	<div class="desktop"><Sidebar dept={data.dept} depts={data.depts} pending={data.pending} churchName={data.church.name} /></div>
+	<div class="mobile"><MobileNav dept={data.dept} depts={data.depts} pending={data.pending} churchName={data.church.name} /></div>
 	<main class="main">
 		<div class="inner">{@render children()}</div>
 	</main>

@@ -5,8 +5,10 @@ import { db, persist, resetDemo } from './mock/db';
 import type {
 	AttendanceStatus,
 	CalendarItem,
+	Church,
 	ClassRoom,
 	Department,
+	FontSettings,
 	MinistryEvent,
 	Notice,
 	Student,
@@ -21,6 +23,24 @@ const tick = () => Promise.resolve();
 /** 학년의 색. 색이 없는 단계(예비 등)는 회색 톤. */
 function gradeTone(dept: Department, gradeId: number): Tone {
 	return dept.gradeLevels.find((g) => g.id === gradeId)?.tone ?? 'slate';
+}
+
+// ===== 교회 (모든 부서에 적용되는 설정) =====
+export async function getChurch(): Promise<Church> {
+	await tick();
+	return db.church;
+}
+
+export async function updateChurchName(name: string): Promise<void> {
+	await tick();
+	db.church.name = name.trim() || db.church.name;
+	persist();
+}
+
+export async function updateFonts(fonts: FontSettings): Promise<void> {
+	await tick();
+	db.church.fonts = { ...fonts };
+	persist();
 }
 
 // ===== 부서 =====

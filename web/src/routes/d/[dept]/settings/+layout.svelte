@@ -8,6 +8,7 @@
 		{ label: '부서 정보', href: root },
 		{ label: '용어', href: `${root}/terms` },
 		{ label: '학년 · 반 구조', href: `${root}/structure` },
+		{ label: '글꼴', href: `${root}/fonts` },
 		{ label: '데이터', href: `${root}/data` }
 	]);
 	const isOn = (href: string) => (href === root ? page.url.pathname.replace(/\/$/, '') === root : page.url.pathname.startsWith(href));
@@ -17,7 +18,7 @@
 	<header class="page-head">
 		<div>
 			<h1>설정</h1>
-			<p class="sub">{data.dept.name} · 이 부서에만 적용됩니다</p>
+			<p class="sub">{data.dept.name} · 부서 정보와 용어는 이 부서에만, 교회 이름과 글꼴은 모든 부서에 적용됩니다</p>
 		</div>
 	</header>
 
