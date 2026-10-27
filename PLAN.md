@@ -4,7 +4,7 @@
 기존 운영 중인 `byraju-hub/youth67`(PHP)을 참고하되 코드·이력·개인정보는 가져오지 않는다. 라이선스 AGPL-3.0.
 
 - 설계: `docs/ARCHITECTURE.md` · 화면 설계 원본: `design/` · 개발 방법: `README.md`
-- 데모(가상 데이터): https://byraju.mycafe24.com/dm/ (공통 로그인 보호)
+- 데모(가상 데이터): https://byraju.mycafe24.com/dm/ (가상 데이터만 있어서 로그인 보호 없이 공개. 데모 로그인은 아무 아이디·비밀번호)
 
 ## 확정된 결정
 - 한 설치에서 여러 부서 운영 (부서마다 용어·학년·반 독립, 부서 간 이동)
@@ -34,4 +34,5 @@
 - 빌드 후 `scripts/prune-fonts.mjs` 가 글꼴의 woff 중복과 비한글 조각을 제거 (사이트 약 12MB)
 - 서브폴더 배포는 `MSYS_NO_PATHCONV=1 BASE_PATH=/dm npm run build` (Git Bash에서 경로 변환 방지)
 - 카페24 FTP는 삭제 명령을 받지 않아 지난 빌드의 오래된 해시 파일이 `/dm/_app/immutable` 에 남아 있음 (쓰이지 않음, 수동 삭제 가능)
-- 로그인 후의 실제 `/dm` 화면은 서버 비밀번호가 필요해 로컬 빌드로만 확인함
+- `/dm` 은 `.htaccess` 로 SPA 주소 처리(rewrite)만 하고 서버 로그인은 걸지 않음. 실제 서버에서 새로고침·안쪽 주소 동작 확인함
+- 브라우저 저장소(localStorage)는 같은 도메인의 모든 경로가 공유하므로, 데모가 바꾼 값은 `dep-manage-demo-v1` 키로만 저장함
