@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>학생 명단 기본 보기</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{text-decoration:none}
+</style>
+</helmet>
+<div style="width:1280px;height:960px;box-sizing:border-box;display:flex;background:#F3F6FF;color:#17202A;font-family:'Noto Sans KR',system-ui,sans-serif;font-size:14px;line-height:1.5">
+
+  <aside style="width:248px;flex-shrink:0;box-sizing:border-box;background:#FFFFFF;border-right:1px solid #E1E7F5;padding:20px 14px;display:flex;flex-direction:column;gap:16px">
+    <div style="display:flex;align-items:center;gap:10px;padding:0 6px">
+      <div style="width:38px;height:38px;border-radius:12px;background:{{accent}};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:17px">은</div>
+      <div>
+        <div style="font-size:15px;font-weight:700;line-height:1.2">은혜교회</div>
+        <div style="font-size:12px;color:#5B6678">부서 관리</div>
+      </div>
+    </div>
+
+    <button aria-label="부서 전환" style="display:flex;align-items:center;justify-content:space-between;width:100%;box-sizing:border-box;padding:9px 12px;border:1px solid #D5DDF0;border-radius:12px;background:#F8FAFF;font-family:inherit;text-align:left;cursor:pointer;color:#17202A">
+      <span>
+        <span style="display:block;font-size:11px;color:#5B6678;line-height:1.2">부서</span>
+        <span style="display:block;font-size:15px;font-weight:600;line-height:1.4">중고등부</span>
+      </span>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5B6678" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 9l5-5 5 5M7 15l5 5 5-5"></path></svg>
+    </button>
+
+    <nav style="display:flex;flex-direction:column;gap:2px">
+      <sc-for list="{{navMain}}" as="item" hint-placeholder-count="5">
+        <a href="#" style="{{item.style}}">
+          <span style="{{item.tile}}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{item.d}}"></path></svg></span>
+          <span style="flex-grow:1">{{item.label}}</span>
+          <sc-if value="{{item.badge}}" hint-placeholder-val="{{ false }}">
+            <span style="min-width:20px;height:20px;padding:0 6px;box-sizing:border-box;border-radius:10px;background:#E11D48;color:#fff;font-size:12px;font-weight:600;display:inline-flex;align-items:center;justify-content:center">{{item.badge}}</span>
+          </sc-if>
+        </a>
+      </sc-for>
+      <div style="font-size:11.5px;font-weight:600;color:#5B6678;padding:14px 10px 4px;letter-spacing:.02em">계획 · 소통</div>
+      <sc-for list="{{navPlan}}" as="item" hint-placeholder-count="4">
+        <a href="#" style="{{item.style}}">
+          <span style="{{item.tile}}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{item.d}}"></path></svg></span>
+          <span style="flex-grow:1">{{item.label}}</span>
+        </a>
+      </sc-for>
+    </nav>
+
+    <div style="margin-top:auto;display:flex;flex-direction:column;gap:6px">
+      <a href="#" style="{{settingsStyle}}">
+        <span style="{{settingsTile}}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"></path></svg></span>
+        <span>설정</span>
+      </a>
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 10px;border-top:1px solid #E1E7F5">
+        <div style="width:34px;height:34px;border-radius:50%;background:#FFEBD0;color:#A04A07;display:flex;align-items:center;justify-content:center;font-weight:700">김</div>
+        <div style="line-height:1.3">
+          <div style="font-size:13.5px;font-weight:600">김선생</div>
+          <div style="font-size:12px;color:#5B6678">부장 · 관리자</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <main style="flex-grow:1;min-width:0;box-sizing:border-box;padding:28px 36px;display:flex;flex-direction:column;gap:18px">
+    <header style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px">
+      <div>
+        <h1 style="margin:0;font-size:24px;font-weight:700;line-height:1.3">학생 명단</h1>
+        <div style="display:flex;gap:8px;margin-top:4px;flex-wrap:wrap">
+          <span style="font-size:12.5px;font-weight:600;border-radius:999px;padding:1px 10px;background:#DDF5E8;color:#0F6B40">재적 43명</span>
+          <span style="font-size:12.5px;font-weight:600;border-radius:999px;padding:1px 10px;background:#FFEBD0;color:#A04A07">새가족 11명</span>
+          <span style="font-size:12.5px;font-weight:600;border-radius:999px;padding:1px 10px;background:#E8ECF3;color:#475467">비활동 6명</span>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px">
+        <button style="height:40px;padding:0 16px;border-radius:12px;border:1px solid #D5DDF0;background:#fff;color:#17202A;font-family:inherit;font-size:14px;font-weight:600;display:inline-flex;align-items:center;gap:8px;cursor:pointer">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0F7B4A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"></path></svg>
+          내보내기
+        </button>
+        <button style="height:40px;padding:0 18px;border-radius:12px;border:0;background:{{accent}};color:#fff;font-family:inherit;font-size:14px;font-weight:600;display:inline-flex;align-items:center;gap:8px;cursor:pointer">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>
+          학생 추가
+        </button>
+      </div>
+    </header>
+
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
+      <div role="tablist" aria-label="보기 방식" style="display:inline-flex;background:#E6ECFA;border-radius:12px;padding:4px;gap:2px">
+        <sc-for list="{{views}}" as="v" hint-placeholder-count="3">
+          <a href="#" role="tab" aria-selected="{{v.on}}" style="{{v.style}}">{{v.label}}</a>
+        </sc-for>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <label style="position:relative;display:block">
+          <span style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">이름 또는 학교 검색</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5B6678" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="position:absolute;left:12px;top:11px"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path></svg>
+          <input type="text" placeholder="이름 · 학교 검색" style="height:40px;width:240px;box-sizing:border-box;border:1px solid #D5DDF0;border-radius:12px;padding:0 12px 0 38px;font-family:inherit;font-size:14px;background:#fff;color:#17202A">
+        </label>
+        <button style="height:40px;padding:0 14px;border-radius:12px;border:1px solid #D5DDF0;background:#fff;color:#17202A;font-family:inherit;font-size:14px;font-weight:500;display:inline-flex;align-items:center;gap:8px;cursor:pointer">학년: 전체 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5B6678" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button>
+        <button style="height:40px;padding:0 14px;border-radius:12px;border:1px solid #D5DDF0;background:#fff;color:#17202A;font-family:inherit;font-size:14px;font-weight:500;display:inline-flex;align-items:center;gap:8px;cursor:pointer">상태: 재적·새가족 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5B6678" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button>
+      </div>
+    </div>
+
+    <div style="background:#fff;border:1px solid #E1E7F5;border-radius:16px;overflow:hidden">
+      <table style="width:100%;border-collapse:collapse;font-size:14px">
+        <caption style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">학생 명단</caption>
+        <thead>
+          <tr style="background:#F3F6FF;text-align:left;color:#475467;font-size:12.5px">
+            <th scope="col" style="padding:12px 20px;font-weight:600">이름</th>
+            <th scope="col" style="padding:12px 10px;font-weight:600">학년 · 반</th>
+            <th scope="col" style="padding:12px 10px;font-weight:600">성별</th>
+            <th scope="col" style="padding:12px 10px;font-weight:600">학교</th>
+            <th scope="col" style="padding:12px 10px;font-weight:600">상태</th>
+            <th scope="col" style="padding:12px 10px;font-weight:600">최근 4주 출석</th>
+            <th scope="col" style="padding:12px 20px 12px 10px;width:32px"><span style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">상세</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          <sc-for list="{{rows}}" as="r" hint-placeholder-count="10">
+            <tr style="border-top:1px solid #EDF1FA">
+              <td style="padding:8px 20px">
+                <div style="display:flex;align-items:center;gap:12px">
+                  <div style="{{r.av}}">{{r.initial}}</div>
+                  <span style="font-weight:600">{{r.name}}</span>
+                </div>
+              </td>
+              <td style="padding:8px 10px"><span style="font-size:13px;font-weight:700;border-radius:8px;padding:2px 10px;{{r.gradeStyle}}">{{r.grade}}</span></td>
+              <td style="padding:8px 10px;color:#475467">{{r.gender}}</td>
+              <td style="padding:8px 10px;color:#475467">{{r.school}}</td>
+              <td style="padding:8px 10px"><span style="font-size:12.5px;font-weight:600;border-radius:999px;padding:2px 10px;{{r.badgeStyle}}">{{r.status}}</span></td>
+              <td style="padding:8px 10px">
+                <div style="display:flex;gap:6px;align-items:center" role="img" aria-label="{{r.dotsLabel}}">
+                  <span style="{{r.d1}}"></span><span style="{{r.d2}}"></span><span style="{{r.d3}}"></span><span style="{{r.d4}}"></span>
+                </div>
+              </td>
+              <td style="padding:8px 20px 8px 10px;text-align:right">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5B6678" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"></path></svg>
+              </td>
+            </tr>
+          </sc-for>
+        </tbody>
+      </table>
+    </div>
+
+    <div style="display:flex;align-items:center;justify-content:space-between;font-size:13px;color:#5B6678">
+      <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+        <span>54명 중 1–10 · 학년 → 반 → 이름 순</span>
+        <span style="display:inline-flex;align-items:center;gap:6px"><span style="width:12px;height:12px;border-radius:50%;background:#0F8A55;display:inline-block"></span>출석</span>
+        <span style="display:inline-flex;align-items:center;gap:6px"><span style="width:12px;height:12px;box-sizing:border-box;border-radius:50%;border:2px solid #E11D48;background:#fff;display:inline-block"></span>결석</span>
+      </div>
+      <div style="display:flex;gap:6px">
+        <button aria-label="이전 페이지" style="width:36px;height:36px;border:1px solid #D5DDF0;border-radius:10px;background:#fff;cursor:pointer;color:#5B6678">‹</button>
+        <button style="min-width:36px;height:36px;border:0;border-radius:10px;background:{{accent}};color:#fff;font-family:inherit;font-weight:700;cursor:pointer">1</button>
+        <button style="min-width:36px;height:36px;border:1px solid #D5DDF0;border-radius:10px;background:#fff;font-family:inherit;cursor:pointer;color:#17202A">2</button>
+        <button style="min-width:36px;height:36px;border:1px solid #D5DDF0;border-radius:10px;background:#fff;font-family:inherit;cursor:pointer;color:#17202A">3</button>
+        <button aria-label="다음 페이지" style="width:36px;height:36px;border:1px solid #D5DDF0;border-radius:10px;background:#fff;cursor:pointer;color:#5B6678">›</button>
+      </div>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#2563EB","options":["#2563EB","#0D9488","#7C3AED","#EA580C"]},"$preview":{"width":1280,"height":960}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const accent = this.props.accent ?? '#2563EB';
+    const soft = `color-mix(in srgb, ${accent} 12%, white)`;
+    const P = {
+      blue: { fg: '#1D4ED8', bg: '#E3ECFF' }, green: { fg: '#0F7B4A', bg: '#DDF5E8' }, violet: { fg: '#6D28D9', bg: '#ECE5FF' },
+      sky: { fg: '#0369A1', bg: '#DAF1FC' }, pink: { fg: '#BE185D', bg: '#FFE3EE' }, orange: { fg: '#A04A07', bg: '#FFEBD0' },
+      teal: { fg: '#0F766E', bg: '#D9F5F1' }, amber: { fg: '#92400E', bg: '#FEF3C7' }, slate: { fg: '#475467', bg: '#E8ECF3' }
+    };
+    const tile = (c, s) => `width:${s}px;height:${s}px;border-radius:${Math.round(s * 0.3)}px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:${P[c].bg};color:${P[c].fg};`;
+    const active = '학생 명단';
+    const base = 'display:flex;align-items:center;gap:10px;padding:5px 10px;border-radius:12px;font-size:14px;min-height:42px;box-sizing:border-box;';
+    const mk = (label, color, d, badge) => ({
+      label, d, badge: badge || '', tile: tile(color, 30),
+      style: base + (label === active ? `background:${soft};color:#17202A;font-weight:700;` : 'color:#475467;font-weight:500;')
+    });
+    const gradeColor = { '중1': 'blue', '중2': 'green', '중3': 'orange', '고1': 'pink', '고2': 'violet', '고3': 'teal' };
+    const avs = ['blue', 'green', 'orange', 'pink', 'violet', 'teal'];
+    const dot = (on) => on
+      ? 'width:12px;height:12px;border-radius:50%;background:#0F8A55;display:inline-block;'
+      : 'width:12px;height:12px;box-sizing:border-box;border-radius:50%;border:2px solid #E11D48;background:#fff;display:inline-block;';
+    const badges = {
+      '재적': `background:${P.green.bg};color:#0F6B40;`,
+      '새가족': `background:${P.orange.bg};color:${P.orange.fg};`
+    };
+    const raw = [
+      ['김', '김하준', '중1 A', '남', '은혜중', '재적', [1,1,1,1]],
+      ['박', '박서윤', '중1 A', '여', '은혜중', '재적', [1,1,0,1]],
+      ['정', '정시우', '중1 A', '남', '새빛중', '새가족', [0,0,1,1]],
+      ['오', '오세린', '중1 A', '여', '새빛중', '재적', [1,0,0,0]],
+      ['이', '이서아', '중1 B', '여', '은혜중', '재적', [1,1,1,1]],
+      ['최', '최민재', '중2', '남', '한빛중', '재적', [0,0,0,0]],
+      ['윤', '윤도현', '중2', '남', '한빛중', '재적', [1,0,1,1]],
+      ['강', '강예은', '중3', '여', '은혜중', '재적', [1,1,1,1]],
+      ['한', '한지우', '고1 A', '여', '대성고', '재적', [1,0,0,0]],
+      ['임', '임수빈', '고1 B', '여', '대성고', '재적', [1,1,1,0]]
+    ];
+    const rows = raw.map(([initial, name, grade, gender, school, status, d], i) => {
+      const c = P[gradeColor[grade.slice(0, 2)]];
+      return {
+        initial, name, grade, gender, school, status,
+        av: tile(avs[i % avs.length], 36) + 'font-weight:700;border-radius:50%;',
+        gradeStyle: `background:${c.bg};color:${c.fg};`,
+        badgeStyle: badges[status],
+        d1: dot(d[0]), d2: dot(d[1]), d3: dot(d[2]), d4: dot(d[3]),
+        dotsLabel: `최근 4주 중 ${d.filter(Boolean).length}주 출석`
+      };
+    });
+    const vb = 'padding:7px 18px;border-radius:9px;font-size:14px;font-weight:600;min-height:20px;';
+    return {
+      accent, soft, rows,
+      settingsStyle: base + 'color:#475467;font-weight:500;',
+      settingsTile: tile('slate', 30),
+      views: [
+        { label: '기본', on: true, style: vb + `background:#fff;color:${accent};font-weight:700;box-shadow:0 1px 2px rgba(16,24,40,.12)` },
+        { label: '상세(전체)', on: false, style: vb + 'color:#475467' },
+        { label: '반별', on: false, style: vb + 'color:#475467' }
+      ],
+      navMain: [
+        mk('대시보드', 'blue', 'M3 11l9-8 9 8v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z'),
+        mk('학생 명단', 'green', 'M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2M10 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM21 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8'),
+        mk('교사 명단', 'violet', 'M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z'),
+        mk('출석 체크', 'sky', 'M9 11l3 3L22 4M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11'),
+        mk('심방', 'pink', 'M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.5 1-1.1a5.5 5.5 0 0 0 0-7.8z', '2')
+      ],
+      navPlan: [
+        mk('연간 계획', 'orange', 'M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z'),
+        mk('사역 계획', 'teal', 'M4 22V4M4 4h13l-2 4 2 4H4'),
+        mk('공지사항', 'amber', 'M3 11v2a1 1 0 0 0 1 1h3l5 4V6L7 10H4a1 1 0 0 0-1 1zM16 9a4 4 0 0 1 0 6'),
+        mk('회의록', 'slate', 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6M8 13h8M8 17h8')
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

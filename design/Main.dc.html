@@ -1,0 +1,329 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>대시보드</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{text-decoration:none}
+</style>
+</helmet>
+<div style="width:1280px;height:1080px;box-sizing:border-box;display:flex;background:#F3F6FF;color:#17202A;font-family:'Noto Sans KR',system-ui,sans-serif;font-size:14px;line-height:1.5">
+
+  <aside style="width:248px;flex-shrink:0;box-sizing:border-box;background:#FFFFFF;border-right:1px solid #E1E7F5;padding:20px 14px;display:flex;flex-direction:column;gap:16px">
+    <div style="display:flex;align-items:center;gap:10px;padding:0 6px">
+      <div style="width:38px;height:38px;border-radius:12px;background:{{accent}};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:17px">은</div>
+      <div>
+        <div style="font-size:15px;font-weight:700;line-height:1.2">은혜교회</div>
+        <div style="font-size:12px;color:#5B6678">부서 관리</div>
+      </div>
+    </div>
+
+    <button aria-label="부서 전환" style="display:flex;align-items:center;justify-content:space-between;width:100%;box-sizing:border-box;padding:9px 12px;border:1px solid #D5DDF0;border-radius:12px;background:#F8FAFF;font-family:inherit;text-align:left;cursor:pointer;color:#17202A">
+      <span>
+        <span style="display:block;font-size:11px;color:#5B6678;line-height:1.2">부서</span>
+        <span style="display:block;font-size:15px;font-weight:600;line-height:1.4">중고등부</span>
+      </span>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5B6678" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 9l5-5 5 5M7 15l5 5 5-5"></path></svg>
+    </button>
+
+    <nav style="display:flex;flex-direction:column;gap:2px">
+      <sc-for list="{{navMain}}" as="item" hint-placeholder-count="5">
+        <a href="#" style="{{item.style}}">
+          <span style="{{item.tile}}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{item.d}}"></path></svg></span>
+          <span style="flex-grow:1">{{item.label}}</span>
+          <sc-if value="{{item.badge}}" hint-placeholder-val="{{ false }}">
+            <span style="min-width:20px;height:20px;padding:0 6px;box-sizing:border-box;border-radius:10px;background:#E11D48;color:#fff;font-size:12px;font-weight:600;display:inline-flex;align-items:center;justify-content:center">{{item.badge}}</span>
+          </sc-if>
+        </a>
+      </sc-for>
+      <div style="font-size:11.5px;font-weight:600;color:#5B6678;padding:14px 10px 4px;letter-spacing:.02em">계획 · 소통</div>
+      <sc-for list="{{navPlan}}" as="item" hint-placeholder-count="4">
+        <a href="#" style="{{item.style}}">
+          <span style="{{item.tile}}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{item.d}}"></path></svg></span>
+          <span style="flex-grow:1">{{item.label}}</span>
+        </a>
+      </sc-for>
+    </nav>
+
+    <div style="margin-top:auto;display:flex;flex-direction:column;gap:6px">
+      <a href="#" style="{{settingsStyle}}">
+        <span style="{{settingsTile}}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"></path></svg></span>
+        <span>설정</span>
+      </a>
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 10px;border-top:1px solid #E1E7F5">
+        <div style="width:34px;height:34px;border-radius:50%;background:#FFEBD0;color:#A04A07;display:flex;align-items:center;justify-content:center;font-weight:700">김</div>
+        <div style="line-height:1.3">
+          <div style="font-size:13.5px;font-weight:600">김선생</div>
+          <div style="font-size:12px;color:#5B6678">부장 · 관리자</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <main style="flex-grow:1;min-width:0;box-sizing:border-box;padding:28px 36px;display:flex;flex-direction:column;gap:22px">
+    <header style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px">
+      <div>
+        <h1 style="margin:0;font-size:24px;font-weight:700;line-height:1.3">대시보드</h1>
+        <div style="font-size:13.5px;color:#5B6678">2026년 10월 25일 주일 · 중고등부</div>
+      </div>
+      <div style="display:flex;gap:10px">
+        <button style="height:40px;padding:0 16px;border-radius:12px;border:1px solid #D5DDF0;background:#fff;color:#17202A;font-family:inherit;font-size:14px;font-weight:600;display:inline-flex;align-items:center;gap:8px;cursor:pointer">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#BE185D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.5 1-1.1a5.5 5.5 0 0 0 0-7.8z"></path></svg>
+          심방 기록
+        </button>
+        <button style="height:40px;padding:0 18px;border-radius:12px;border:0;background:{{accent}};color:#fff;font-family:inherit;font-size:14px;font-weight:600;display:inline-flex;align-items:center;gap:8px;cursor:pointer">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11l3 3L22 4M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+          출석 체크하기
+        </button>
+      </div>
+    </header>
+
+    <section style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px">
+      <sc-for list="{{stats}}" as="s" hint-placeholder-count="4">
+        <div style="background:#fff;border:1px solid #E1E7F5;border-radius:16px;padding:14px 16px 14px 18px;display:flex;align-items:center;justify-content:space-between;gap:10px">
+          <div>
+            <div style="font-size:13px;color:#475467">{{s.label}}</div>
+            <div style="display:flex;align-items:baseline;gap:6px">
+              <span style="font-size:30px;font-weight:700;line-height:1.25">{{s.value}}</span>
+              <span style="font-size:13px;color:#5B6678">{{s.unit}}</span>
+            </div>
+            <div style="font-size:12.5px;{{s.noteStyle}}">{{s.note}}</div>
+          </div>
+          <div style="{{s.tile}}"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{s.d}}"></path></svg></div>
+        </div>
+      </sc-for>
+    </section>
+
+    <section style="display:grid;grid-template-columns:1.8fr 1fr;gap:16px">
+      <div style="background:#fff;border:1px solid #E1E7F5;border-radius:16px;padding:16px 18px 14px;display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div>
+            <h2 style="margin:0;font-size:16px;font-weight:700;line-height:1.3">사역 캘린더</h2>
+            <div style="font-size:12.5px;color:#5B6678">생일 · 심방 · 부서 일정을 한눈에</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px">
+            <button aria-label="이전 달" style="width:36px;height:36px;border:1px solid #D5DDF0;border-radius:10px;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#17202A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"></path></svg></button>
+            <div style="min-width:92px;text-align:center;font-size:15px;font-weight:700">2026년 10월</div>
+            <button aria-label="다음 달" style="width:36px;height:36px;border:1px solid #D5DDF0;border-radius:10px;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#17202A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"></path></svg></button>
+            <button style="height:36px;padding:0 14px;margin-left:4px;border:0;border-radius:10px;background:{{soft}};color:{{accent}};font-family:inherit;font-size:13.5px;font-weight:700;cursor:pointer">오늘</button>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;text-align:center;font-size:12.5px;font-weight:600">
+          <sc-for list="{{weekdays}}" as="w" hint-placeholder-count="7">
+            <div style="{{w.style}}">{{w.label}}</div>
+          </sc-for>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px">
+          <sc-for list="{{cells}}" as="c" hint-placeholder-count="35">
+            <div style="{{c.style}}">
+              <div style="{{c.numStyle}}">{{c.day}}</div>
+              <sc-for list="{{c.chips}}" as="ch" hint-placeholder-count="2">
+                <div style="{{ch.style}}">{{ch.text}}</div>
+              </sc-for>
+              <sc-if value="{{c.more}}" hint-placeholder-val="{{ false }}">
+                <div style="font-size:10.5px;font-weight:600;color:#5B6678;padding-left:5px;line-height:1.3">{{c.more}}</div>
+              </sc-if>
+            </div>
+          </sc-for>
+        </div>
+
+        <div style="display:flex;gap:16px;flex-wrap:wrap;padding-top:2px">
+          <sc-for list="{{legend}}" as="l" hint-placeholder-count="5">
+            <span style="display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:#475467">
+              <span style="{{l.dot}}"></span>{{l.label}}
+            </span>
+          </sc-for>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div style="background:#fff;border:1px solid #E1E7F5;border-radius:16px;padding:16px 18px;display:flex;flex-direction:column;gap:4px;flex:1">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:4px">
+            <h2 style="margin:0;font-size:16px;font-weight:700">장기 결석</h2>
+            <span style="font-size:12px;font-weight:600;color:#A04A07;background:#FFEBD0;border-radius:999px;padding:2px 10px">연속 3주 이상</span>
+          </div>
+          <sc-for list="{{absent}}" as="p" hint-placeholder-count="3">
+            <div style="display:flex;align-items:center;gap:12px;padding:8px 0;border-top:1px solid #EDF1FA">
+              <div style="{{p.av}}">{{p.initial}}</div>
+              <div style="flex-grow:1;line-height:1.35">
+                <div style="font-weight:600">{{p.name}}</div>
+                <div style="font-size:12.5px;color:#5B6678">{{p.meta}}</div>
+              </div>
+              <a href="#" style="height:32px;padding:0 12px;border:1px solid #D5DDF0;border-radius:10px;font-size:13px;font-weight:600;color:#BE185D;background:#FFF5F9;display:inline-flex;align-items:center;box-sizing:border-box">심방</a>
+            </div>
+          </sc-for>
+        </div>
+
+        <div style="background:#fff;border:1px solid #E1E7F5;border-radius:16px;padding:16px 18px;display:flex;flex-direction:column;gap:4px;flex:1">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:4px">
+            <h2 style="margin:0;font-size:16px;font-weight:700">후속 조치가 남은 심방</h2>
+            <span style="font-size:12px;font-weight:600;color:#A04A07;background:#FFEBD0;border-radius:999px;padding:2px 10px">2건</span>
+          </div>
+          <sc-for list="{{followups}}" as="f" hint-placeholder-count="2">
+            <div style="padding:8px 0;border-top:1px solid #EDF1FA;line-height:1.4">
+              <div style="display:flex;justify-content:space-between;gap:8px"><span style="font-weight:600">{{f.who}}</span><span style="font-size:12.5px;color:#A04A07;font-weight:600;flex-shrink:0">~ {{f.due}}</span></div>
+              <div style="font-size:13px;color:#475467">{{f.what}}</div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </section>
+
+    <section style="display:grid;grid-template-columns:1.8fr 1fr;gap:16px">
+      <div style="background:#fff;border:1px solid #E1E7F5;border-radius:16px;padding:16px 20px 10px">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between">
+          <div>
+            <h2 style="margin:0;font-size:16px;font-weight:700">주별 출석 추이</h2>
+            <div style="font-size:12.5px;color:#5B6678">최근 12주 · 학생 출석 인원</div>
+          </div>
+          <a href="#" style="font-size:13px;font-weight:700;color:{{accent}};padding:6px 4px">표로 보기</a>
+        </div>
+        <svg viewBox="0 0 536 224" width="100%" role="img" aria-label="최근 12주 학생 출석 인원 꺾은선 그래프. 8월 9일 31명에서 시작해 10월 25일 38명, 최고 10월 4일 40명." style="display:block;margin-top:2px">
+          <line x1="30" y1="190" x2="522" y2="190" stroke="#DCE3F3" stroke-width="1"></line>
+          <line x1="30" y1="136.7" x2="522" y2="136.7" stroke="#EDF1FA" stroke-width="1"></line>
+          <line x1="30" y1="83.3" x2="522" y2="83.3" stroke="#EDF1FA" stroke-width="1"></line>
+          <line x1="30" y1="30" x2="522" y2="30" stroke="#EDF1FA" stroke-width="1"></line>
+          <text x="22" y="194" text-anchor="end" font-size="11" fill="#5B6678">0</text>
+          <text x="22" y="141" text-anchor="end" font-size="11" fill="#5B6678">15</text>
+          <text x="22" y="87.5" text-anchor="end" font-size="11" fill="#5B6678">30</text>
+          <text x="22" y="34" text-anchor="end" font-size="11" fill="#5B6678">45</text>
+          <path d="M30,190 L30,79.8 L74.7,69.1 L119.5,62 L164.2,72.7 L208.9,54.9 L253.7,65.6 L298.4,86.9 L343.1,58.4 L387.8,47.8 L432.6,62 L477.3,69.1 L522,54.9 L522,190 Z" fill="{{accent}}" fill-opacity="0.12"></path>
+          <polyline points="30,79.8 74.7,69.1 119.5,62 164.2,72.7 208.9,54.9 253.7,65.6 298.4,86.9 343.1,58.4 387.8,47.8 432.6,62 477.3,69.1 522,54.9" fill="none" stroke="{{accent}}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"></polyline>
+          <circle cx="387.8" cy="47.8" r="5" fill="{{accent}}" stroke="#fff" stroke-width="2"></circle>
+          <text x="387.8" y="34" text-anchor="middle" font-size="12" font-weight="600" fill="#17202A">40</text>
+          <circle cx="522" cy="54.9" r="5" fill="{{accent}}" stroke="#fff" stroke-width="2"></circle>
+          <text x="522" y="41" text-anchor="middle" font-size="12" font-weight="600" fill="#17202A">38</text>
+          <g font-size="11" fill="#5B6678" text-anchor="middle">
+            <text x="30" y="210">8/9</text><text x="74.7" y="210">8/16</text><text x="119.5" y="210">8/23</text><text x="164.2" y="210">8/30</text>
+            <text x="208.9" y="210">9/6</text><text x="253.7" y="210">9/13</text><text x="298.4" y="210">9/20</text><text x="343.1" y="210">9/27</text>
+            <text x="387.8" y="210">10/4</text><text x="432.6" y="210">10/11</text><text x="477.3" y="210">10/18</text><text x="522" y="210">10/25</text>
+          </g>
+        </svg>
+      </div>
+
+      <div style="background:#fff;border:1px solid #E1E7F5;border-radius:16px;padding:16px 18px;display:flex;flex-direction:column;gap:4px">
+        <h2 style="margin:0;font-size:16px;font-weight:700;padding-bottom:4px">공지사항</h2>
+        <sc-for list="{{notices}}" as="n" hint-placeholder-count="3">
+          <div style="padding:9px 0;border-top:1px solid #EDF1FA;line-height:1.4">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
+              <span style="font-size:11.5px;font-weight:600;border-radius:6px;padding:1px 8px;{{n.tagStyle}}">{{n.tag}}</span>
+              <span style="font-size:12.5px;color:#5B6678">{{n.date}}</span>
+            </div>
+            <div style="font-weight:600">{{n.title}}</div>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#2563EB","options":["#2563EB","#0D9488","#7C3AED","#EA580C"]},"$preview":{"width":1280,"height":1080}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const accent = this.props.accent ?? '#2563EB';
+    const soft = `color-mix(in srgb, ${accent} 12%, white)`;
+    const P = {
+      blue: { fg: '#1D4ED8', bg: '#E3ECFF' }, green: { fg: '#0F7B4A', bg: '#DDF5E8' }, violet: { fg: '#6D28D9', bg: '#ECE5FF' },
+      sky: { fg: '#0369A1', bg: '#DAF1FC' }, pink: { fg: '#BE185D', bg: '#FFE3EE' }, orange: { fg: '#A04A07', bg: '#FFEBD0' },
+      teal: { fg: '#0F766E', bg: '#D9F5F1' }, amber: { fg: '#92400E', bg: '#FEF3C7' }, slate: { fg: '#475467', bg: '#E8ECF3' }
+    };
+    const tile = (c, s) => `width:${s}px;height:${s}px;border-radius:${Math.round(s * 0.3)}px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:${P[c].bg};color:${P[c].fg};`;
+    const active = '대시보드';
+    const base = 'display:flex;align-items:center;gap:10px;padding:5px 10px;border-radius:12px;font-size:14px;min-height:42px;box-sizing:border-box;';
+    const mk = (label, color, d, badge) => ({
+      label, d, badge: badge || '', tile: tile(color, 30),
+      style: base + (label === active ? `background:${soft};color:#17202A;font-weight:700;` : 'color:#475467;font-weight:500;')
+    });
+    const avs = ['blue', 'green', 'orange', 'pink', 'violet', 'teal'];
+    const av = (i) => tile(avs[i % avs.length], 36) + 'font-weight:700;border-radius:50%;';
+
+    // 사역 캘린더: 2026년 10월 (일요일 시작, 5주)
+    const T = {
+      ministry: { name: '사역 일정', color: 'blue' }, birthday: { name: '생일', color: 'pink' },
+      visit: { name: '심방', color: 'green' }, due: { name: '마감 · 후속', color: 'orange' }, meeting: { name: '회의', color: 'violet' }
+    };
+    const events = {
+      4: [['ministry', '주일 공과']], 6: [['birthday', '서아 생일']],
+      11: [['ministry', '주일 공과'], ['visit', '시우 면담']], 14: [['birthday', '민재 생일']],
+      18: [['ministry', '주일 공과'], ['visit', '민재 문자']], 21: [['visit', '도현 전화']], 24: [['visit', '하윤 가정']],
+      25: [['ministry', '주일 공과']], 26: [['birthday', '하준 생일']], 27: [['birthday', '서윤 생일']],
+      29: [['birthday', '지안 생일']], 30: [['due', '하윤 후속']], 31: [['meeting', '교사회의'], ['due', '수련회 신청']]
+    };
+    const chip = (type, text) => ({
+      text,
+      style: `font-size:11px;line-height:1.4;padding:0 5px;border-radius:5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:${P[T[type].color].bg};color:${P[T[type].color].fg};`
+    });
+    const cells = [];
+    for (let i = 0; i < 35; i++) {
+      const offset = 4; // 10월 1일은 목요일
+      const dayNum = i - offset + 1;
+      const inMonth = dayNum >= 1 && dayNum <= 31;
+      const day = inMonth ? dayNum : (dayNum < 1 ? 30 + dayNum : dayNum - 31);
+      const list = inMonth ? (events[dayNum] || []) : [];
+      const isToday = inMonth && dayNum === 25;
+      const shown = list.length > 2 ? list.slice(0, 1) : list;
+      const col = i % 7;
+      cells.push({
+        day,
+        chips: shown.map(([t, x]) => chip(t, x)),
+        more: list.length > 2 ? `+${list.length - 1}건` : '',
+        style: 'min-width:0;height:64px;box-sizing:border-box;border-radius:10px;padding:4px 4px 3px;display:flex;flex-direction:column;gap:2px;overflow:hidden;' +
+          (isToday ? `background:${soft};border:1.5px solid ${accent};` : inMonth ? 'background:#F8FAFF;border:1px solid #EDF1FA;' : 'background:transparent;border:1px solid transparent;'),
+        numStyle: 'font-size:12.5px;font-weight:700;line-height:1.3;padding-left:3px;' +
+          (isToday ? `color:${accent};` : !inMonth ? 'color:#98A2B3;' : col === 0 ? 'color:#DC2626;' : col === 6 ? 'color:#1D4ED8;' : 'color:#17202A;')
+      });
+    }
+    return {
+      accent, soft, cells,
+      settingsStyle: base + 'color:#475467;font-weight:500;',
+      settingsTile: tile('slate', 30),
+      weekdays: ['일', '월', '화', '수', '목', '금', '토'].map((l, i) => ({ label: l, style: 'padding:2px 0;' + (i === 0 ? 'color:#DC2626;' : i === 6 ? 'color:#1D4ED8;' : 'color:#475467;') })),
+      legend: Object.values(T).map((t) => ({ label: t.name, dot: `width:10px;height:10px;border-radius:3px;background:${P[t.color].fg};display:inline-block;` })),
+      navMain: [
+        mk('대시보드', 'blue', 'M3 11l9-8 9 8v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z'),
+        mk('학생 명단', 'green', 'M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2M10 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM21 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8'),
+        mk('교사 명단', 'violet', 'M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z'),
+        mk('출석 체크', 'sky', 'M9 11l3 3L22 4M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11'),
+        mk('심방', 'pink', 'M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.5 1-1.1a5.5 5.5 0 0 0 0-7.8z', '2')
+      ],
+      navPlan: [
+        mk('연간 계획', 'orange', 'M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z'),
+        mk('사역 계획', 'teal', 'M4 22V4M4 4h13l-2 4 2 4H4'),
+        mk('공지사항', 'amber', 'M3 11v2a1 1 0 0 0 1 1h3l5 4V6L7 10H4a1 1 0 0 0-1 1zM16 9a4 4 0 0 1 0 6'),
+        mk('회의록', 'slate', 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6M8 13h8M8 17h8')
+      ],
+      stats: [
+        { label: '지난 주일 학생 출석', value: '38', unit: '/ 재적 54명', note: '▲ 4명 (전주 대비)', noteStyle: 'color:#0F7B4A;font-weight:600', tile: tile('blue', 48), d: 'M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2M10 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM21 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8' },
+        { label: '지난 주일 교사 출석', value: '10', unit: '/ 12명', note: '▼ 1명 (전주 대비)', noteStyle: 'color:#BE123C;font-weight:600', tile: tile('green', 48), d: 'M9 11l3 3L22 4M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11' },
+        { label: '새가족', value: '3', unit: '명', note: '이번 달 등록 · 정착 진행 중', noteStyle: 'color:#5B6678', tile: tile('orange', 48), d: 'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM19 8v6M22 11h-6' },
+        { label: '이번 주 생일', value: '4', unit: '명', note: '10/26 ~ 11/1', noteStyle: 'color:#5B6678', tile: tile('pink', 48), d: 'M20 12v10H4V12M2 7h20v5H2zM12 22V7M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z' }
+      ],
+      absent: [
+        { initial: '최', av: av(0), name: '최민재', meta: '중2 · 4주 연속 결석' },
+        { initial: '한', av: av(1), name: '한지우', meta: '고1 A반 · 3주 연속 결석' },
+        { initial: '오', av: av(2), name: '오세린', meta: '중1 A반 · 3주 연속 결석' }
+      ],
+      followups: [
+        { who: '정하윤 · 가정 심방', what: '어머니와 진로 상담 이어가기', due: '10/30' },
+        { who: '윤도현 · 전화', what: '시험 끝난 뒤 연락하기', due: '11/2' }
+      ],
+      notices: [
+        { tag: '교회 전체', tagStyle: `background:${P.blue.bg};color:${P.blue.fg}`, date: '10/22', title: '11월 학부모 간담회 안내' },
+        { tag: '고정', tagStyle: `background:${P.orange.bg};color:${P.orange.fg}`, date: '10/18', title: '겨울 수련회 장소 투표 (11/5까지)' },
+        { tag: '부서', tagStyle: `background:${P.green.bg};color:${P.green.fg}`, date: '10/11', title: '찬양팀 연습 시간 변경' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

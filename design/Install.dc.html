@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>설치 마법사</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{text-decoration:none}
+</style>
+</helmet>
+<div style="width:1280px;height:860px;box-sizing:border-box;display:flex;background:#F3F6FF;color:#17202A;font-family:'Noto Sans KR',system-ui,sans-serif;font-size:14px;line-height:1.5">
+
+  <aside style="width:320px;flex-shrink:0;box-sizing:border-box;background:#fff;border-right:1px solid #E1E7F5;padding:32px 28px;display:flex;flex-direction:column;gap:28px">
+    <div style="display:flex;align-items:center;gap:10px">
+      <div style="width:42px;height:42px;border-radius:13px;background:{{accent}};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:19px">d</div>
+      <div>
+        <div style="font-size:17px;font-weight:700;line-height:1.2">dep-manage</div>
+        <div style="font-size:12.5px;color:#5B6678">교회 부서 관리 · 설치</div>
+      </div>
+    </div>
+
+    <ol style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:0">
+      <sc-for list="{{steps}}" as="s" hint-placeholder-count="7">
+        <li style="display:flex;gap:14px;align-items:flex-start;padding:0 0 18px;position:relative" aria-current="{{s.current}}">
+          <div style="{{s.dotStyle}}">{{s.mark}}</div>
+          <div style="padding-top:3px;line-height:1.35">
+            <div style="{{s.labelStyle}}">{{s.label}}</div>
+            <div style="font-size:12.5px;color:#5B6678">{{s.sub}}</div>
+          </div>
+        </li>
+      </sc-for>
+    </ol>
+
+    <div style="margin-top:auto;font-size:12.5px;color:#5B6678;line-height:1.6">설치가 끝나면 이 주소(<b style="font-weight:700;color:#475467">/install</b>)는 자동으로 잠깁니다.</div>
+  </aside>
+
+  <main style="flex-grow:1;min-width:0;box-sizing:border-box;padding:40px 56px;display:flex;flex-direction:column;gap:20px">
+    <div>
+      <div style="display:inline-block;font-size:12.5px;font-weight:700;color:{{accent}};background:{{soft}};border-radius:999px;padding:2px 12px;margin-bottom:6px">5 / 7 단계</div>
+      <h1 style="margin:0;font-size:26px;font-weight:700;line-height:1.35">첫 번째 부서를 만들어요</h1>
+      <div style="font-size:14px;color:#5B6678">부서 종류를 고르면 학년 단계와 용어가 자동으로 채워집니다. 나머지 부서는 설치 후에 추가할 수 있어요.</div>
+    </div>
+
+    <div role="radiogroup" aria-label="부서 종류" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px">
+      <sc-for list="{{presets}}" as="p" hint-placeholder-count="8">
+        <button role="radio" aria-checked="{{p.on}}" style="{{p.style}}">
+          <span style="{{p.tile}}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{p.d}}"></path></svg></span>
+          <span style="font-size:15px;font-weight:700">{{p.name}}</span>
+          <span style="font-size:12.5px;color:#5B6678">{{p.range}}</span>
+        </button>
+      </sc-for>
+    </div>
+
+    <div style="background:#fff;border:1px solid #E1E7F5;border-radius:16px;padding:22px 24px;display:flex;flex-direction:column;gap:16px">
+      <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px">
+        <label style="display:flex;flex-direction:column;gap:6px">
+          <span style="font-size:13px;font-weight:700;color:#475467">부서 이름</span>
+          <input type="text" value="중고등부" style="height:44px;box-sizing:border-box;border:1px solid #D5DDF0;border-radius:12px;padding:0 12px;font-family:inherit;font-size:15px;color:#17202A">
+        </label>
+        <label style="display:flex;flex-direction:column;gap:6px">
+          <span style="font-size:13px;font-weight:700;color:#475467">담당 교역자</span>
+          <input type="text" placeholder="예: 김은혜 목사" style="height:44px;box-sizing:border-box;border:1px solid #D5DDF0;border-radius:12px;padding:0 12px;font-family:inherit;font-size:15px;color:#17202A">
+        </label>
+        <label style="display:flex;flex-direction:column;gap:6px">
+          <span style="font-size:13px;font-weight:700;color:#475467">부장 · 부서장</span>
+          <input type="text" placeholder="예: 박성실 집사" style="height:44px;box-sizing:border-box;border:1px solid #D5DDF0;border-radius:12px;padding:0 12px;font-family:inherit;font-size:15px;color:#17202A">
+        </label>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="font-size:13px;font-weight:700;color:#475467">학년 단계 <span style="font-weight:400;color:#5B6678">· 해가 바뀔 때 이 순서대로 올라갑니다</span></div>
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+          <sc-for list="{{grades}}" as="g" hint-placeholder-count="8">
+            <span style="display:inline-flex;align-items:center;gap:6px">
+              <span style="{{g.style}}">{{g.label}}</span>
+              <sc-if value="{{g.arrow}}" hint-placeholder-val="{{ true }}">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#98A2B3" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"></path></svg>
+              </sc-if>
+            </span>
+          </sc-for>
+        </div>
+        <div style="font-size:12.5px;color:#5B6678">설치 후 <b style="font-weight:700;color:#475467">설정 → 학년 · 반 구조</b>에서 단계를 추가하거나 이름을 바꿀 수 있어요.</div>
+      </div>
+    </div>
+
+    <div style="margin-top:auto;display:flex;justify-content:space-between;align-items:center">
+      <button style="height:46px;padding:0 22px;border-radius:12px;border:1px solid #D5DDF0;background:#fff;color:#17202A;font-family:inherit;font-size:15px;font-weight:600;cursor:pointer">이전</button>
+      <button style="height:46px;padding:0 28px;border-radius:12px;border:0;background:{{accent}};color:#fff;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer">다음: 관리자 계정</button>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#2563EB","options":["#2563EB","#0D9488","#7C3AED","#EA580C"]},"$preview":{"width":1280,"height":860}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const accent = this.props.accent ?? '#2563EB';
+    const soft = `color-mix(in srgb, ${accent} 12%, white)`;
+    const P = {
+      blue: { fg: '#1D4ED8', bg: '#E3ECFF' }, green: { fg: '#0F7B4A', bg: '#DDF5E8' }, violet: { fg: '#6D28D9', bg: '#ECE5FF' },
+      sky: { fg: '#0369A1', bg: '#DAF1FC' }, pink: { fg: '#BE185D', bg: '#FFE3EE' }, orange: { fg: '#A04A07', bg: '#FFEBD0' },
+      teal: { fg: '#0F766E', bg: '#D9F5F1' }, amber: { fg: '#92400E', bg: '#FEF3C7' }, slate: { fg: '#475467', bg: '#E8ECF3' }
+    };
+    const tile = (c, s) => `width:${s}px;height:${s}px;border-radius:${Math.round(s * 0.3)}px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:${P[c].bg};color:${P[c].fg};`;
+    const stepDefs = [
+      ['환경 점검', 'PHP · 폴더 권한'],
+      ['데이터베이스 연결', '접속 정보 입력'],
+      ['테이블 만들기', '자동으로 진행'],
+      ['교회 정보', '교회 이름'],
+      ['첫 부서', '종류 · 담당자'],
+      ['관리자 계정', '아이디 · 비밀번호'],
+      ['완료', '로그인하기']
+    ];
+    const cur = 4;
+    const steps = stepDefs.map(([label, sub], i) => {
+      const done = i < cur, now = i === cur;
+      const dot = 'width:28px;height:28px;border-radius:50%;box-sizing:border-box;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;';
+      return {
+        label, sub, current: now ? 'step' : 'false',
+        mark: done ? '✓' : String(i + 1),
+        dotStyle: dot + (done ? 'background:#0F8A55;color:#fff;' : now ? `border:2px solid ${accent};color:${accent};background:${soft};` : 'border:2px solid #D5DDF0;color:#5B6678;background:#fff;'),
+        labelStyle: 'font-size:14.5px;' + (now ? 'font-weight:700;color:#17202A;' : done ? 'font-weight:600;color:#475467;' : 'font-weight:500;color:#5B6678;')
+      };
+    });
+    const preset = (name, range, color, d, on) => ({
+      name, range, on, d, tile: tile(color, 36),
+      style: 'display:flex;flex-direction:column;gap:2px;align-items:flex-start;text-align:left;padding:12px 14px;border-radius:14px;font-family:inherit;color:#17202A;cursor:pointer;box-sizing:border-box;' +
+        (on ? `border:2px solid ${accent};background:${soft};` : 'border:1px solid #D5DDF0;background:#fff;')
+    });
+    const heart = 'M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.5 1-1.1a5.5 5.5 0 0 0 0-7.8z';
+    const star = 'M12 2l3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z';
+    const book = 'M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5v14zM20 17v4H6.5A2.5 2.5 0 0 1 4 18.5';
+    const users = 'M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2M10 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM21 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8';
+    const zap = 'M13 2L3 14h9l-1 8 10-12h-9z';
+    const compass = 'M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zM16 8l-2 6-6 2 2-6z';
+    const sliders = 'M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6';
+    const clock = 'M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zM12 6v6l4 2';
+    const gradeColor = { '중1': 'blue', '중2': 'green', '중3': 'orange', '고1': 'pink', '고2': 'violet', '고3': 'teal' };
+    const gradeLabels = ['예비 중1', '중1', '중2', '중3', '고1', '고2', '고3', '졸업'];
+    const grades = gradeLabels.map((label, i) => {
+      const c = gradeColor[label];
+      return {
+        label, arrow: i < gradeLabels.length - 1,
+        style: 'height:32px;padding:0 12px;border-radius:9px;display:inline-flex;align-items:center;font-size:13.5px;font-weight:700;' +
+          (c ? `background:${P[c].bg};color:${P[c].fg};` : label === '졸업' ? `background:${P.slate.bg};color:${P.slate.fg};` : 'background:#fff;border:1px dashed #98A2B3;color:#475467;')
+      };
+    });
+    return {
+      accent, soft, steps, grades,
+      presets: [
+        preset('영아부', '0 ~ 3세', 'pink', heart, false), preset('유치부', '4 ~ 7세', 'amber', star, false),
+        preset('유초등부', '초1 ~ 초6', 'green', book, false), preset('중고등부', '중1 ~ 고3', 'blue', users, true),
+        preset('청소년부', '중1 ~ 고3 · 용어 다름', 'orange', zap, false), preset('청년부', '대학 · 청년', 'violet', compass, false),
+        preset('직접 설정', '처음부터 만들기', 'teal', sliders, false), preset('나중에', '건너뛰고 설치', 'slate', clock, false)
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>
