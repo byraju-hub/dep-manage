@@ -1,0 +1,159 @@
+/* dep-manage 디자인 토큰과 공통 스타일.
+   화면 설계(design/)의 색과 간격을 그대로 옮겼다. */
+
+:root {
+	--accent: #2563eb;
+	--accent-soft: color-mix(in srgb, var(--accent) 12%, white);
+
+	--ground: #f3f6ff;
+	--surface: #ffffff;
+	--line: #e1e7f5;
+	--line-soft: #edf1fa;
+	--line-strong: #d5ddf0;
+	--field-bg: #f8faff;
+
+	--ink: #17202a;
+	--ink-2: #475467;
+	--muted: #5b6678;
+
+	--ok: #0f8a55;
+	--ok-ink: #0f6b40;
+	--online: #7c3aed;
+	--danger: #e11d48;
+	--danger-ink: #be123c;
+	--sun: #dc2626;
+	--sat: #1d4ed8;
+
+	--radius: 16px;
+	--radius-sm: 12px;
+
+	--font: 'Pretendard', 'Noto Sans KR', 'Malgun Gothic', 'Apple SD Gothic Neo', system-ui, sans-serif;
+}
+
+/* 색 톤: 배경(bg)과 글자/아이콘(fg) 한 쌍. 모든 쌍은 4.5:1 이상 대비를 가진다. */
+.tone-blue { --fg: #1d4ed8; --bg: #e3ecff; }
+.tone-green { --fg: #0f7b4a; --bg: #ddf5e8; }
+.tone-violet { --fg: #6d28d9; --bg: #ece5ff; }
+.tone-sky { --fg: #0369a1; --bg: #daf1fc; }
+.tone-pink { --fg: #be185d; --bg: #ffe3ee; }
+.tone-orange { --fg: #a04a07; --bg: #ffebd0; }
+.tone-teal { --fg: #0f766e; --bg: #d9f5f1; }
+.tone-amber { --fg: #92400e; --bg: #fef3c7; }
+.tone-slate { --fg: #475467; --bg: #e8ecf3; }
+
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+}
+
+html,
+body {
+	margin: 0;
+	background: var(--ground);
+	color: var(--ink);
+	font-family: var(--font);
+	font-size: 14px;
+	line-height: 1.5;
+	-webkit-text-size-adjust: 100%;
+}
+
+h1, h2, h3, p { margin: 0; }
+a { color: inherit; text-decoration: none; }
+button, input, select, textarea { font-family: inherit; font-size: inherit; color: inherit; }
+button { cursor: pointer; }
+
+:focus-visible {
+	outline: 2px solid var(--accent);
+	outline-offset: 2px;
+}
+
+/* 화면에는 보이지 않고 스크린 리더에만 읽히는 글 */
+.sr-only {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+	clip: rect(0 0 0 0);
+	white-space: nowrap;
+}
+
+.card {
+	background: var(--surface);
+	border: 1px solid var(--line);
+	border-radius: var(--radius);
+}
+
+/* ===== 버튼 ===== */
+.btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	height: 40px;
+	padding: 0 16px;
+	border-radius: var(--radius-sm);
+	border: 1px solid var(--line-strong);
+	background: var(--surface);
+	color: var(--ink);
+	font-weight: 600;
+	white-space: nowrap;
+}
+.btn:hover { background: var(--field-bg); }
+.btn-primary {
+	border-color: transparent;
+	background: var(--accent);
+	color: #fff;
+	font-weight: 700;
+}
+.btn-primary:hover { background: color-mix(in srgb, var(--accent) 90%, black); }
+.btn-lg { height: 46px; padding: 0 24px; font-size: 15px; }
+.btn-block { width: 100%; }
+
+/* ===== 입력 ===== */
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field > span, .field-label { font-size: 13px; font-weight: 700; color: var(--ink-2); }
+.input {
+	height: 42px;
+	width: 100%;
+	border: 1px solid var(--line-strong);
+	border-radius: var(--radius-sm);
+	padding: 0 12px;
+	background: var(--surface);
+}
+textarea.input { height: auto; padding: 10px 12px; line-height: 1.6; resize: vertical; }
+
+/* ===== 뱃지 ===== */
+.badge {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	padding: 1px 10px;
+	border-radius: 999px;
+	background: var(--bg);
+	color: var(--fg);
+	font-size: 12.5px;
+	font-weight: 600;
+	white-space: nowrap;
+}
+.badge-sq { border-radius: 8px; }
+
+/* ===== 페이지 레이아웃 ===== */
+.page { display: flex; flex-direction: column; gap: 18px; }
+.page-head {
+	display: flex;
+	align-items: flex-end;
+	justify-content: space-between;
+	gap: 16px;
+	flex-wrap: wrap;
+}
+.page-head h1 { font-size: 24px; font-weight: 700; line-height: 1.3; }
+.page-head .sub { font-size: 13.5px; color: var(--muted); }
+.actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+.muted { color: var(--muted); }
+
+@media (max-width: 720px) {
+	.page-head h1 { font-size: 21px; }
+	.btn { height: 44px; }
+}
