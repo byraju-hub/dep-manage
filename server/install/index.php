@@ -9,6 +9,7 @@ define('DM_DATA', DM_ROOT . '/data');
 require DM_ROOT . '/api/lib/util.php';
 require DM_ROOT . '/api/lib/migrate.php';
 require DM_ROOT . '/api/lib/sample.php';
+require __DIR__ . '/finalize.php';
 
 ini_set('display_errors', '0');
 date_default_timezone_set('Asia/Seoul');
@@ -81,7 +82,8 @@ table.chk{width:100%;border-collapse:collapse}table.chk td{padding:8px 0;border-
 
 // ===== 이미 설치된 경우 =====
 if (is_file(DM_DATA . '/config.php')) {
-    page('이미 설치됨', '<h1>이미 설치되어 있어요</h1><p class="sub">이 프로그램은 설치가 끝났습니다. 다시 설치하려면 서버의 <b>data/config.php</b> 를 지운 뒤 이 화면을 다시 여세요. (데이터베이스의 자료는 지워지지 않습니다.)</p><p><a class="btn p" href="' . h($base) . '/">프로그램으로 가기</a></p>');
+    $fixed = dm_needs_finalize() ? dm_finalize_web() : 0;
+    page('이미 설치됨', ($fixed ? '<div class="ok">새 버전의 화면 파일 ' . $fixed . '개를 이 폴더에 맞게 마무리했어요. 이제 프로그램을 여시면 돼요. 데이터베이스 변경이 있는 버전이면 로그인 후 설정 → 데이터에서 <b>업데이트 적용</b>을 눌러 주세요.</div>' : '') .  '<h1>이미 설치되어 있어요</h1><p class="sub">이 프로그램은 설치가 끝났습니다. 다시 설치하려면 서버의 <b>data/config.php</b> 를 지운 뒤 이 화면을 다시 여세요. (데이터베이스의 자료는 지워지지 않습니다.)</p><p><a class="btn p" href="' . h($base) . '/">프로그램으로 가기</a></p>');
 }
 
 $S = &$_SESSION['inst'];
@@ -216,6 +218,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         throw new RuntimeException('data/config.php 를 만들지 못했어요. data 폴더의 쓰기 권한을 확인해 주세요.');
                     }
                     @chmod(DM_DATA . '/config.php', 0600);
+                    dm_finalize_web();
                     $S['done'] = ['sample' => (bool)($org['sample'] && $grades)];
                     $S['step'] = 5;
                 } catch (Throwable $e) {

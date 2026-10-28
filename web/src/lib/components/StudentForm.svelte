@@ -1,11 +1,13 @@
 <script lang="ts">
 	import { ApiError } from '../api';
 	import { terms } from '../terms.svelte';
-	import type { Department, Guardian, StudentInput, StudentStatus } from '../types';
+	import type { CustomField, CustomValues, Department, Guardian, StudentInput, StudentStatus } from '../types';
+	import CustomFields from './CustomFields.svelte';
 
 	let {
 		dept,
 		classes,
+		fields = [],
 		initial,
 		submitLabel = '저장',
 		onsubmit,
@@ -13,6 +15,7 @@
 	}: {
 		dept: Department;
 		classes: Array<{ id: number; name: string }>;
+		fields?: CustomField[];
 		initial?: Partial<StudentInput>;
 		submitLabel?: string;
 		onsubmit: (v: StudentInput) => Promise<void>;
@@ -33,6 +36,7 @@
 	let mentor = $state(initial?.mentor ?? '');
 	let address = $state(initial?.address ?? '');
 	let notes = $state(initial?.notes ?? '');
+	let custom = $state<CustomValues>({ ...(initial?.custom ?? {}) });
 	let guardians = $state<Guardian[]>(initial?.guardians?.length ? initial.guardians.map((g) => ({ ...g })) : [{ relation: '모', name: '', phone: '' }, { relation: '부', name: '', phone: '' }]);
 
 	let error = $state('');
@@ -46,7 +50,7 @@
 		busy = true;
 		try {
 			await onsubmit({
-				name: name.trim(), gender, birthDate, phone, school, gradeId, classId, status, baptism, mentor, address, notes,
+				name: name.trim(), gender, birthDate, phone, school, gradeId, classId, status, baptism, mentor, address, notes, custom,
 				guardians: guardians.filter((g) => g.name.trim())
 			});
 		} catch (err) {
@@ -97,6 +101,8 @@
 			<button type="button" class="btn sm" onclick={() => guardians.push({ relation: '', name: '', phone: '' })}>+ 보호자 추가</button>
 		{/if}
 	</fieldset>
+
+	<CustomFields {fields} bind:values={custom} />
 
 	<label class="field"><span>비고</span><textarea class="input" rows="3" bind:value={notes}></textarea></label>
 

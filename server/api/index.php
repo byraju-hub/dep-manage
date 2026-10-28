@@ -24,7 +24,8 @@ if (!dm_config()) {
 require __DIR__ . '/lib/migrate.php';
 require __DIR__ . '/lib/sample.php';
 require __DIR__ . '/lib/photos.php';
-foreach (['system', 'auth', 'orgs', 'people', 'activity', 'files', 'extra'] as $c) {
+require __DIR__ . '/lib/custom.php';
+foreach (['system', 'auth', 'orgs', 'people', 'activity', 'files', 'extra', 'custom'] as $c) {
     require __DIR__ . '/controllers/' . $c . '.php';
 }
 

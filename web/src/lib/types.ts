@@ -58,6 +58,7 @@ export interface Student {
 	address: string;
 	guardians: Guardian[];
 	notes: string;
+	custom?: CustomValues;
 	/** 사진 토큰(없으면 null). 주소를 만들 때 쓴다. */
 	photo?: string | null;
 }
@@ -74,6 +75,7 @@ export interface Teacher {
 	classIds: number[];
 	photo?: string | null;
 	notes?: string;
+	custom?: CustomValues;
 }
 
 export interface ClassRoom {
@@ -253,6 +255,7 @@ export interface StudentInput {
 	address: string;
 	notes: string;
 	guardians: Guardian[];
+	custom?: CustomValues;
 }
 
 export interface TeacherInput {
@@ -264,6 +267,7 @@ export interface TeacherInput {
 	status: 'active' | 'inactive';
 	notes: string;
 	classIds: number[];
+	custom?: CustomValues;
 }
 
 export interface SampleCounts {
@@ -313,4 +317,19 @@ export interface PromotionPlan {
 	month: number;
 	applied: { at: string; count: number } | null;
 	changes: PromotionChange[];
+}
+
+/** 추가 항목(사용자 정의 항목). 부서 관리자가 만들고 학생·교사 입력 화면에 나타난다. */
+export type CustomType = 'text' | 'longtext' | 'bool' | 'select' | 'date' | 'number';
+export type CustomValue = string | number | boolean;
+export type CustomValues = Record<string, CustomValue>;
+
+export interface CustomField {
+	id: number;
+	deptId: number;
+	entity: 'student' | 'teacher';
+	label: string;
+	type: CustomType;
+	options: string[];
+	showInList: boolean;
 }

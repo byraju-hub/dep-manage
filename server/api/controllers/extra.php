@@ -39,8 +39,8 @@ route('POST', '/d/{dept}/students/bulk', function (array $p) {
                     continue;
                 }
                 $id = insert_id(
-                    'INSERT INTO ' . t('students') . ' (department_id, name, gender, birth_date, phone, school, grade_level_id, class_id, status, baptism, mentor, address, notes) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)',
-                    [$deptId, $in['name'], $in['gender'], $in['birth'], $in['phone'], $in['school'], $in['gradeId'], $in['classId'], $in['status'], $in['baptism'], $in['mentor'], $in['address'], $in['notes']]
+                    'INSERT INTO ' . t('students') . ' (department_id, name, gender, birth_date, phone, school, grade_level_id, class_id, status, baptism, mentor, address, notes, custom) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
+                    [$deptId, $in['name'], $in['gender'], $in['birth'], $in['phone'], $in['school'], $in['gradeId'], $in['classId'], $in['status'], $in['baptism'], $in['mentor'], $in['address'], $in['notes'], custom_encode($in['custom'])]
                 );
                 save_guardians($id, $in['guardians']);
                 $have[$key] = true;
@@ -80,14 +80,14 @@ route('POST', '/d/{dept}/teachers/bulk', function (array $p) {
             $name = is_array($it) ? trim((string)($it['name'] ?? '')) : '';
             try {
                 if (!is_array($it)) throw new ApiFail('invalid', '읽을 수 없는 줄입니다.');
-                $in = teacher_input($it);
+                $in = teacher_input($it, $deptId);
                 $key = $in[0] . '|' . ($in[3] ?? '');
                 if ($in[3] !== null && isset($have[$key])) {
                     $skipped[] = ['row' => $row, 'name' => $in[0]];
                     continue;
                 }
                 $id = insert_id(
-                    'INSERT INTO ' . t('teachers') . ' (department_id, name, position, officer_role, birth_date, phone, status, notes) VALUES (?,?,?,?,?,?,?,?)',
+                    'INSERT INTO ' . t('teachers') . ' (department_id, name, position, officer_role, birth_date, phone, status, notes, custom) VALUES (?,?,?,?,?,?,?,?,?)',
                     [$deptId, ...$in]
                 );
                 save_teacher_classes($id, $deptId, is_array($it['classIds'] ?? null) ? $it['classIds'] : []);
@@ -304,4 +304,30 @@ route('POST', '/d/{dept}/promotions/apply', function (array $p) {
     }
     audit('promotion.apply', 'department', $deptId, "{$year}년 " . count($changes) . '명');
     return ['year' => $year, 'count' => count($changes)];
+});
+
+// 학생을 다른 부서로 옮긴다 (졸업 후 상위 부서로, 전도 이동 등). 출석 기록은 학생을 따라가고, 심방 기록은 옛 부서에 남는다.
+route('POST', '/d/{dept}/transfer', function (array $p) {
+    $src = require_dept((int)$p['dept'], 'admin');
+    $b = body();
+    $toDept = (int)($b['toDeptId'] ?? 0);
+    $gradeId = (int)($b['gradeId'] ?? 0);
+    $status = in_enum($b, 'status', ['new', 'active', 'inactive'], 'new', '상태');
+    $ids = array_values(array_unique(array_map('intval', is_array($b['studentIds'] ?? null) ? $b['studentIds'] : [])));
+    if (!$ids) json_fail('invalid', '옮길 학생을 선택해 주세요.', 422);
+    if (count($ids) > 500) json_fail('invalid', '한 번에 500명까지 옮길 수 있어요.', 422);
+    if ($toDept === $src['deptId']) json_fail('invalid', '같은 부서로는 옮길 수 없어요.', 422);
+    require_dept($toDept, 'admin');
+    if (!val('SELECT 1 FROM ' . t('grade_levels') . ' WHERE id = ? AND department_id = ?', [$gradeId, $toDept])) {
+        json_fail('invalid', '옮겨 갈 부서의 학년을 골라 주세요.', 422);
+    }
+    $in = implode(',', array_fill(0, count($ids), '?'));
+    $found = (int)val('SELECT COUNT(*) FROM ' . t('students') . " WHERE department_id = ? AND id IN ($in)", [$src['deptId'], ...$ids]);
+    if ($found !== count($ids)) json_fail('invalid', '선택한 학생 중 이 부서 학생이 아닌 사람이 있어요.', 422);
+    q(
+        'UPDATE ' . t('students') . " SET department_id = ?, grade_level_id = ?, class_id = NULL, status = ? WHERE department_id = ? AND id IN ($in)",
+        [$toDept, $gradeId, $status, $src['deptId'], ...$ids]
+    );
+    audit('student.transfer', 'department', $src['deptId'], count($ids) . "명 → 부서 {$toDept}");
+    return ['moved' => count($ids)];
 });

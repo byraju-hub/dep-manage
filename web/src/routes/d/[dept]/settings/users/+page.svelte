@@ -1,13 +1,13 @@
 <script lang="ts">
 	import { invalidateAll } from '$app/navigation';
 	import { ApiError, createInvite, deleteInvite, resetUserPassword, updateUser } from '$lib/api';
-	import { session } from '$lib/session.svelte';
+	import { can, session } from '$lib/session.svelte';
 	import { url } from '$lib/url';
 	import type { Role, UserRow } from '$lib/types';
 
 	let { data } = $props();
 
-	const roleLabels: Record<Role, string> = { admin: '부서 관리자', teacher: '교사', viewer: '열람' };
+	const roleLabels: Record<Role, string> = { admin: '부서 관리자', teacher: '부서 교사', viewer: '열람' };
 	const statusLabels = { pending: '승인 대기', active: '사용 중', disabled: '사용 중지' } as const;
 	const statusTone = { pending: 'tone-orange', active: 'tone-green', disabled: 'tone-slate' } as const;
 
@@ -30,6 +30,8 @@
 			error = e instanceof ApiError ? e.message : '처리하지 못했어요.';
 		}
 	}
+
+	const roleOf = (u: UserRow, deptId: number) => u.memberships.find((m) => m.deptId === deptId)?.role ?? null;
 
 	async function setRole(u: UserRow, deptId: number, role: Role | null) {
 		await act(() => updateUser(u.id, { memberships: [{ deptId, role }] }));
@@ -67,7 +69,7 @@
 
 	<section class="card box">
 		<h2>사용자</h2>
-		<p class="sub">초대 코드로 가입한 사람은 <b>승인 대기</b> 상태로 들어와요. 승인하면 로그인할 수 있어요.</p>
+		<p class="sub">초대 코드로 가입한 사람은 <b>승인 대기</b> 상태로 들어와요. 승인하면 로그인할 수 있어요. 역할은 <b>부서마다</b> 따로 정해요. 한 사람이 여러 부서에 다른 역할로 들어갈 수 있고, <b>소속이 아닌 부서는 화면에 나타나지도, 열리지도 않아요</b>.</p>
 		<div class="scroll">
 			<table>
 				<caption class="sr-only">사용자 목록</caption>
@@ -79,21 +81,24 @@
 							<td class="c2">{u.loginId}</td>
 							<td><span class="badge {statusTone[u.status]}">{statusLabels[u.status]}</span></td>
 							<td>
-								{#each u.memberships as m (m.deptId)}
-									<div class="mem">
-										<span>{m.deptName}</span>
-										{#if !u.isOwner && u.id !== session.user?.id}
-											<select class="mini" value={m.role} aria-label="{u.name} {m.deptName} 역할" onchange={(e) => setRole(u, m.deptId, e.currentTarget.value as Role)}>
-												{#each Object.entries(roleLabels) as [k, l] (k)}<option value={k} disabled={k === 'admin' && !canInviteAdmin}>{l}</option>{/each}
-											</select>
-											<button class="x" aria-label="{m.deptName}에서 빼기" onclick={() => setRole(u, m.deptId, null)}>×</button>
-										{:else}
-											<span class="muted">{roleLabels[m.role]}</span>
-										{/if}
-									</div>
+								{#if u.isOwner}
+									<span class="muted">모든 부서 (교회 관리자)</span>
 								{:else}
-									<span class="muted">{u.isOwner ? '모든 부서' : '소속 없음'}</span>
-								{/each}
+									{#each data.depts as d (d.id)}
+										{@const cur = roleOf(u, d.id)}
+										<div class="mem">
+											<span class="dn">{d.name}</span>
+											{#if u.id !== session.user?.id && can(d.id, 'admin')}
+												<select class="mini" value={cur ?? ''} aria-label="{u.name} {d.name} 역할" onchange={(e) => setRole(u, d.id, (e.currentTarget.value || null) as Role | null)}>
+													<option value="">소속 아님</option>
+													{#each Object.entries(roleLabels) as [k, l] (k)}<option value={k} disabled={k === 'admin' && !canInviteAdmin}>{l}</option>{/each}
+												</select>
+											{:else}
+												<span class="muted">{cur ? roleLabels[cur] : '소속 아님'}</span>
+											{/if}
+										</div>
+									{/each}
+								{/if}
 							</td>
 							<td class="act">
 								{#if !u.isOwner && u.id !== session.user?.id}
@@ -171,7 +176,8 @@
 	td { padding: 8px; border-top: 1px solid var(--line-soft); vertical-align: middle; }
 	.strong { font-weight: 600; }
 	.c2 { color: var(--ink-2); }
-	.mem { display: flex; align-items: center; gap: 6px; margin: 2px 0; }
+	.mem { display: flex; align-items: center; gap: 8px; margin: 2px 0; }
+	.dn { min-width: 84px; font-size: 13.5px; }
 	.mini { height: 30px; border: 1px solid var(--line-strong); border-radius: 8px; padding: 0 6px; background: var(--surface); }
 	.x { width: 24px; height: 24px; border: 0; border-radius: 50%; background: transparent; color: var(--muted); font-size: 16px; }
 	.x:hover { background: var(--field-bg); }

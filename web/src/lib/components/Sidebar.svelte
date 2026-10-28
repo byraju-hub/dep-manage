@@ -35,13 +35,13 @@ import Icon from './Icon.svelte';
 {/snippet}
 
 <aside class="side">
-	<div class="brand">
+	<a class="brand" href={url(`/d/${dept.id}`)} aria-label="대시보드로 이동">
 		<ChurchLogo name={churchName} logo={churchLogo} size={38} />
 		<div>
 			<div class="church">{churchName}</div>
-			<div class="sub">부서 관리</div>
+			<div class="sub">{dept.name} 관리 프로그램</div>
 		</div>
-	</div>
+	</a>
 
 	<div class="switcher">
 		<button class="switch-btn" aria-haspopup="listbox" aria-expanded={open} aria-label="부서 전환" onclick={() => (open = !open)}>
@@ -69,6 +69,7 @@ import Icon from './Icon.svelte';
 	</nav>
 
 	<div class="bottom">
+		{@render link(nav.manual)}
 		{#if can(dept.id, 'admin')}{@render link(nav.settings)}{/if}
 		<div class="user">
 			<span class="me" aria-hidden="true">{session.user?.name.slice(0, 1) ?? '?'}</span>
@@ -98,7 +99,7 @@ import Icon from './Icon.svelte';
 		flex-direction: column;
 		gap: 16px;
 	}
-	.brand { display: flex; align-items: center; gap: 10px; padding: 0 6px; }
+	.brand { display: flex; align-items: center; gap: 10px; padding: 0 6px; color: inherit; text-decoration: none; }
 	.logo {
 		width: 38px; height: 38px; border-radius: 12px; background: var(--accent); color: #fff;
 		display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 17px;

@@ -4,6 +4,7 @@ import { age, dotted, shortMD } from '$lib/dates';
 	import Avatar from '$lib/components/Avatar.svelte';
 	import Icon from '$lib/components/Icon.svelte';
 	import { attendanceColor, methodTone } from '$lib/palette';
+	import { showCustom } from '$lib/custom';
 	import { can } from '$lib/session.svelte';
 import { terms } from '$lib/terms.svelte';
 	import { url } from '$lib/url';
@@ -42,6 +43,10 @@ import { terms } from '$lib/terms.svelte';
 				<div><dt>학교</dt><dd>{s.school}</dd></div>
 				<div><dt>세례</dt><dd>{s.baptism}</dd></div>
 				{#if s.mentor}<div><dt>인도자</dt><dd>{s.mentor}</dd></div>{/if}
+				{#each data.fields.filter((f) => f.entity === 'student') as f (f.id)}
+					{@const v = showCustom(f, s.custom)}
+					{#if v}<div><dt>{f.label}</dt><dd>{v}</dd></div>{/if}
+				{/each}
 			</dl>
 		</section>
 

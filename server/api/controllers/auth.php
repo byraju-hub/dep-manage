@@ -4,7 +4,7 @@ declare(strict_types=1);
 // 로그인, 로그아웃, 내 정보, 비밀번호 변경, 초대 코드로 가입.
 
 const MIN_PASSWORD = 8;
-const ROLE_LABELS = ['owner' => '교회 관리자', 'admin' => '부서 관리자', 'teacher' => '교사', 'viewer' => '열람'];
+const ROLE_LABELS = ['owner' => '교회 관리자', 'admin' => '부서 관리자', 'teacher' => '부서 교사', 'viewer' => '열람'];
 
 function me_payload(array $u): array
 {

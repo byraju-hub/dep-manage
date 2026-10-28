@@ -3,3 +3,4 @@ backups/
 # 서버에서 만들어지는 설정·로그·업로드는 올리지 않는다 (설치 정보와 개인정보가 들어 있다)
 server/data/*
 !server/data/.htaccess
+dist/

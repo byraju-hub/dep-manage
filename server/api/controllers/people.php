@@ -75,6 +75,7 @@ function map_students(array $students, array $grades, int $rank, bool $withRecen
             'address' => $full ? $s['address'] : '',
             'guardians' => $full ? ($guardians[$id] ?? []) : [],
             'notes' => $full ? (string)$s['notes'] : '',
+            'custom' => $full ? custom_decode($s['custom'] ?? null) : (object)[],
             'tone' => tone_of_grade($grades, (int)$s['grade_level_id']),
             'gradeLabel' => label_of_grade($grades, (int)$s['grade_level_id']),
             'className' => (string)($s['class_name'] ?? ''),
@@ -153,7 +154,8 @@ route('GET', '/students/{id}', function (array $p) {
         'SELECT v.* FROM ' . t('visits') . ' v JOIN ' . t('visit_targets') . " vt ON vt.visit_id = v.id AND vt.target_type = 'student' AND vt.target_id = ? ORDER BY v.visit_date DESC, v.id DESC",
         [$s['id']]
     ) as $v) {
-        if (visit_visible_to($v, $ctx['user'], $ctx['role'])) $visits[] = visit_json($v, [['type' => 'student', 'id' => (int)$s['id']]]);
+        $roleThere = dept_role($ctx['user'], (int)$v['department_id']);
+        if ($roleThere !== null && visit_visible_to($v, $ctx['user'], $roleThere)) $visits[] = visit_json($v, [['type' => 'student', 'id' => (int)$s['id']]]);
     }
     return [
         'student' => $student,
@@ -195,6 +197,7 @@ function student_input(array $b, int $deptId): array
         'address' => in_str($b, 'address', 255),
         'notes' => in_str($b, 'notes', 2000),
         'guardians' => $guardians,
+        'custom' => clean_custom($b['custom'] ?? null, $deptId, 'student'),
     ];
 }
 
@@ -210,8 +213,8 @@ route('POST', '/d/{dept}/students', function (array $p) {
     $ctx = require_dept((int)$p['dept'], 'admin');
     $in = student_input(body(), $ctx['deptId']);
     $id = insert_id(
-        'INSERT INTO ' . t('students') . ' (department_id, name, gender, birth_date, phone, school, grade_level_id, class_id, status, baptism, mentor, address, notes) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)',
-        [$ctx['deptId'], $in['name'], $in['gender'], $in['birth'], $in['phone'], $in['school'], $in['gradeId'], $in['classId'], $in['status'], $in['baptism'], $in['mentor'], $in['address'], $in['notes']]
+        'INSERT INTO ' . t('students') . ' (department_id, name, gender, birth_date, phone, school, grade_level_id, class_id, status, baptism, mentor, address, notes, custom) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
+        [$ctx['deptId'], $in['name'], $in['gender'], $in['birth'], $in['phone'], $in['school'], $in['gradeId'], $in['classId'], $in['status'], $in['baptism'], $in['mentor'], $in['address'], $in['notes'], custom_encode($in['custom'])]
     );
     save_guardians($id, $in['guardians']);
     audit('student.create', 'student', $id);
@@ -236,8 +239,8 @@ route('PUT', '/students/{id}', function (array $p) {
         json_fail('forbidden', '반을 옮기는 것은 부서 관리자만 할 수 있습니다.', 403);
     }
     q(
-        'UPDATE ' . t('students') . ' SET name=?, gender=?, birth_date=?, phone=?, school=?, grade_level_id=?, class_id=?, status=?, baptism=?, mentor=?, address=?, notes=? WHERE id=?',
-        [$in['name'], $in['gender'], $in['birth'], $in['phone'], $in['school'], $in['gradeId'], $in['classId'], $in['status'], $in['baptism'], $in['mentor'], $in['address'], $in['notes'], $s['id']]
+        'UPDATE ' . t('students') . ' SET name=?, gender=?, birth_date=?, phone=?, school=?, grade_level_id=?, class_id=?, status=?, baptism=?, mentor=?, address=?, notes=?, custom=? WHERE id=?',
+        [$in['name'], $in['gender'], $in['birth'], $in['phone'], $in['school'], $in['gradeId'], $in['classId'], $in['status'], $in['baptism'], $in['mentor'], $in['address'], $in['notes'], custom_encode($in['custom']), $s['id']]
     );
     save_guardians((int)$s['id'], $in['guardians']);
     audit('student.update', 'student', (int)$s['id']); // 값은 남기지 않고 바뀌었다는 사실만 기록한다
@@ -323,6 +326,7 @@ function teacher_json(array $t, int $rank, array $classNames): array
         'id' => (int)$t['id'], 'deptId' => (int)$t['department_id'], 'name' => $t['name'], 'position' => $t['position'],
         'officerRole' => $t['officer_role'], 'birthDate' => $full ? ($t['birth_date'] ?? '') : '', 'phone' => $full ? $t['phone'] : '',
         'status' => $t['status'], 'notes' => $full ? (string)$t['notes'] : '', 'photo' => $full ? $t['photo_path'] : null,
+        'custom' => $full ? custom_decode($t['custom'] ?? null) : (object)[],
         'classIds' => array_keys($classNames), 'classNames' => array_values($classNames),
     ];
 }
@@ -337,12 +341,13 @@ route('GET', '/d/{dept}/teachers', function (array $p) {
         rows('SELECT * FROM ' . t('teachers') . ' WHERE department_id = ? ORDER BY status, id', [$ctx['deptId']]));
 });
 
-function teacher_input(array $b): array
+function teacher_input(array $b, int $deptId): array
 {
     return [
         in_str($b, 'name', 50, true, '이름'), in_str($b, 'position', 20), in_str($b, 'officerRole', 20),
         in_date($b, 'birthDate', false, '생년월일'), normalize_phone(in_str($b, 'phone', 20)),
         in_enum($b, 'status', ['active', 'inactive'], 'active', '상태'), in_str($b, 'notes', 2000),
+        custom_encode(clean_custom($b['custom'] ?? null, $deptId, 'teacher')),
     ];
 }
 
@@ -359,7 +364,7 @@ function save_teacher_classes(int $teacherId, int $deptId, array $classIds): voi
 route('POST', '/d/{dept}/teachers', function (array $p) {
     $ctx = require_dept((int)$p['dept'], 'admin');
     $b = body();
-    $id = insert_id('INSERT INTO ' . t('teachers') . ' (department_id, name, position, officer_role, birth_date, phone, status, notes) VALUES (?,?,?,?,?,?,?,?)', [$ctx['deptId'], ...teacher_input($b)]);
+    $id = insert_id('INSERT INTO ' . t('teachers') . ' (department_id, name, position, officer_role, birth_date, phone, status, notes, custom) VALUES (?,?,?,?,?,?,?,?,?)', [$ctx['deptId'], ...teacher_input($b, $ctx['deptId'])]);
     save_teacher_classes($id, $ctx['deptId'], is_array($b['classIds'] ?? null) ? $b['classIds'] : []);
     audit('teacher.create', 'teacher', $id);
     return ['id' => $id];
@@ -370,7 +375,7 @@ route('PUT', '/teachers/{id}', function (array $p) {
     if (!$t) json_fail('not_found', '교사를 찾을 수 없습니다.', 404);
     $ctx = require_dept((int)$t['department_id'], 'admin');
     $b = body();
-    q('UPDATE ' . t('teachers') . ' SET name=?, position=?, officer_role=?, birth_date=?, phone=?, status=?, notes=? WHERE id=?', [...teacher_input($b), $t['id']]);
+    q('UPDATE ' . t('teachers') . ' SET name=?, position=?, officer_role=?, birth_date=?, phone=?, status=?, notes=?, custom=? WHERE id=?', [...teacher_input($b, $ctx['deptId']), $t['id']]);
     if (isset($b['classIds']) && is_array($b['classIds'])) save_teacher_classes((int)$t['id'], $ctx['deptId'], $b['classIds']);
     audit('teacher.update', 'teacher', (int)$t['id']);
     return null;

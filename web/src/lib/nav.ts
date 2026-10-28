@@ -13,7 +13,7 @@ export interface NavItem {
 }
 
 /** 사이드바 메뉴. 이름은 부서의 용어 설정을 따른다. */
-export function buildNav(terms: Terms, pendingVisits: number): { main: NavItem[]; plan: NavItem[]; settings: NavItem } {
+export function buildNav(terms: Terms, pendingVisits: number): { main: NavItem[]; plan: NavItem[]; manual: NavItem; settings: NavItem } {
 	return {
 		main: [
 			{ key: 'home', label: '대시보드', icon: 'home', tone: 'blue', href: '', tab: true },
@@ -28,6 +28,7 @@ export function buildNav(terms: Terms, pendingVisits: number): { main: NavItem[]
 			{ key: 'notices', label: '공지사항', icon: 'megaphone', tone: 'amber', href: '/notices' },
 			{ key: 'meetings', label: '회의록', icon: 'file', tone: 'slate', href: '/meetings' }
 		],
+		manual: { key: 'manual', label: '프로그램 매뉴얼', icon: 'book', tone: 'teal', href: '/manual' },
 		settings: { key: 'settings', label: '설정', icon: 'sliders', tone: 'slate', href: '/settings' }
 	};
 }

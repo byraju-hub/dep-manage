@@ -10,6 +10,9 @@ import type {
 	TeacherImportRow,
 	CalendarItem,
 	Church,
+	CustomField,
+	CustomType,
+	StudentStatus,
 	ClassRoom,
 	Department,
 	FontSettings,
@@ -304,6 +307,15 @@ export const getPromotions = (deptId: number) => get<PromotionPlan>(`/d/${deptId
 export const applyPromotions = (deptId: number, keepClass: boolean) => post<{ year: number; count: number }>(`/d/${deptId}/promotions/apply`, { confirm: 'promote', keepClass });
 
 // ===== 백업 · 업데이트 =====
+// 추가 항목, 부서 이동
+export const listCustomFields = (deptId: number) => get<CustomField[]>(`/d/${deptId}/custom-fields`);
+export const createCustomField = (deptId: number, v: { entity: 'student' | 'teacher'; label: string; type: CustomType; options?: string[]; showInList?: boolean }) =>
+	post<{ id: number }>(`/d/${deptId}/custom-fields`, v);
+export const updateCustomField = (id: number, v: { label: string; options?: string[]; showInList?: boolean }) => put(`/custom-fields/${id}`, v);
+export const deleteCustomField = (id: number) => del(`/custom-fields/${id}`);
+export const transferStudents = (deptId: number, v: { studentIds: number[]; toDeptId: number; gradeId: number; status: StudentStatus }) =>
+	post<{ moved: number }>(`/d/${deptId}/transfer`, v);
+
 export const backupUrl = () => url('/api/v1/system/backup');
 export const getMigrations = () => get<{ current: number; latest: number; pending: boolean }>('/system/migrations');
 export const runMigrations = () => post<{ applied: number; current: number }>('/system/migrate');

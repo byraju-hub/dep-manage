@@ -3,6 +3,7 @@
 	import { ApiError, deleteTeacher, updateTeacher } from '$lib/api';
 	import PhotoField from '$lib/components/PhotoField.svelte';
 import TeacherForm from '$lib/components/TeacherForm.svelte';
+	import { showCustom } from '$lib/custom';
 	import { can } from '$lib/session.svelte';
 	import { terms } from '$lib/terms.svelte';
 	import { url } from '$lib/url';
@@ -37,7 +38,8 @@ import TeacherForm from '$lib/components/TeacherForm.svelte';
 		<section class="card photo"><h2>사진</h2><PhotoField type="teacher" id={t.id} name={t.name} token={t.photo} tone="violet" /></section>
 		<TeacherForm
 			classes={data.classes}
-			initial={{ name: t.name, position: t.position, officerRole: t.officerRole, birthDate: t.birthDate, phone: t.phone, status: t.status, notes: t.notes, classIds: t.classIds }}
+			fields={data.fields.filter((f) => f.entity === 'teacher')}
+			initial={{ name: t.name, position: t.position, officerRole: t.officerRole, birthDate: t.birthDate, phone: t.phone, status: t.status, notes: t.notes, classIds: t.classIds, custom: t.custom }}
 			onsubmit={save}
 			oncancel={() => goto(url(`/d/${data.dept.id}/teachers`))}
 		/>
@@ -58,6 +60,10 @@ import TeacherForm from '$lib/components/TeacherForm.svelte';
 		<div class="card info">
 			<p>{t.position || '-'} · {t.officerRole || '임원 없음'}</p>
 			<p class="muted">담당 {terms.class}: {t.classNames.join(', ') || '-'}</p>
+			{#each data.fields.filter((f) => f.entity === 'teacher') as f (f.id)}
+				{@const v = showCustom(f, t.custom)}
+				{#if v}<p><span class="muted">{f.label}:</span> {v}</p>{/if}
+			{/each}
 		</div>
 	{/if}
 </div>

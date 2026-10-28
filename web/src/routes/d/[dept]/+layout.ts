@@ -1,5 +1,5 @@
 import { error, redirect } from '@sveltejs/kit';
-import { listDepartments, listVisits } from '$lib/api';
+import { listCustomFields, listDepartments, listVisits } from '$lib/api';
 import { loadSession, session } from '$lib/session.svelte';
 import { setTerms } from '$lib/terms.svelte';
 import { url } from '$lib/url';
@@ -20,5 +20,6 @@ export const load = async ({ params }) => {
 	setTerms(dept.terms);
 	// 열람 역할은 심방 기록을 볼 수 없어서 서버가 빈 목록을 준다.
 	const pending = (await listVisits(dept.id, 'pending').catch(() => [])).length;
-	return { dept, depts, pending };
+	const fields = await listCustomFields(dept.id).catch(() => []);
+	return { dept, depts, pending, fields };
 };

@@ -13,7 +13,7 @@ import Icon from './Icon.svelte';
 	let { dept, depts, pending, churchName, churchLogo = null }: { dept: Department; depts: Department[]; pending: number; churchName: string; churchLogo?: string | null } = $props();
 
 	const nav = $derived(buildNav(terms, pending));
-	const all = $derived([...nav.main, ...nav.plan, ...(can(dept.id, 'admin') ? [nav.settings] : [])]);
+	const all = $derived([...nav.main, ...nav.plan, nav.manual, ...(can(dept.id, 'admin') ? [nav.settings] : [])]);
 	const tabs = $derived(nav.main.filter((n) => n.tab));
 	let sheet = $state(false);
 
@@ -32,11 +32,13 @@ import Icon from './Icon.svelte';
 </script>
 
 <header class="top">
-	<ChurchLogo name={churchName} logo={churchLogo} size={34} />
-	<div class="t">
-		<div class="church">{churchName}</div>
-		<div class="dept">{dept.name}</div>
-	</div>
+	<a class="brand" href={url(`/d/${dept.id}`)} aria-label="대시보드로 이동">
+		<ChurchLogo name={churchName} logo={churchLogo} size={34} />
+		<div class="t">
+			<div class="church">{churchName}</div>
+			<div class="dept">{dept.name}</div>
+		</div>
+	</a>
 </header>
 
 <nav class="tabs" aria-label="주 메뉴">
@@ -84,6 +86,7 @@ import Icon from './Icon.svelte';
 		padding: 12px 16px; background: var(--surface); border-bottom: 1px solid var(--line);
 		position: sticky; top: 0; z-index: 10;
 	}
+	.brand { display: flex; align-items: center; gap: 10px; color: inherit; text-decoration: none; }
 	.church { font-size: 12px; color: var(--muted); line-height: 1.2; }
 	.dept { font-family: var(--font-title); font-size: 24px; font-weight: 700; line-height: 1.3; }
 

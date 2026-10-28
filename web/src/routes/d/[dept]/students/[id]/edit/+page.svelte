@@ -36,7 +36,8 @@ import StudentForm from '$lib/components/StudentForm.svelte';
 	<StudentForm
 		dept={data.dept}
 		classes={data.classes}
-		initial={{ name: s.name, gender: s.gender, birthDate: s.birthDate, phone: s.phone, school: s.school, gradeId: s.gradeId, classId: s.classId, status: s.status, baptism: s.baptism, mentor: s.mentor, address: s.address, notes: s.notes, guardians: s.guardians }}
+		fields={data.fields.filter((f) => f.entity === 'student')}
+		initial={{ name: s.name, gender: s.gender, birthDate: s.birthDate, phone: s.phone, school: s.school, gradeId: s.gradeId, classId: s.classId, status: s.status, baptism: s.baptism, mentor: s.mentor, address: s.address, notes: s.notes, guardians: s.guardians, custom: s.custom }}
 		onsubmit={save}
 		oncancel={() => goto(url(`/d/${data.dept.id}/students/${s.id}`))}
 	/>

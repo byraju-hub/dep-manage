@@ -16,5 +16,5 @@
 
 <div class="page">
 	<header class="page-head"><h1>{terms.teacher} 추가</h1></header>
-	<TeacherForm classes={data.classes} submitLabel="추가" onsubmit={save} oncancel={() => goto(url(`/d/${data.dept.id}/teachers`))} />
+	<TeacherForm classes={data.classes} fields={data.fields.filter((f) => f.entity === 'teacher')} submitLabel="추가" onsubmit={save} oncancel={() => goto(url(`/d/${data.dept.id}/teachers`))} />
 </div>

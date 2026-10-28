@@ -1,16 +1,19 @@
 <script lang="ts">
 	import { ApiError } from '../api';
 	import { terms } from '../terms.svelte';
-	import type { TeacherInput } from '../types';
+	import type { CustomField, CustomValues, TeacherInput } from '../types';
+	import CustomFields from './CustomFields.svelte';
 
 	let {
 		classes,
+		fields = [],
 		initial,
 		submitLabel = '저장',
 		onsubmit,
 		oncancel
 	}: {
 		classes: Array<{ id: number; name: string }>;
+		fields?: CustomField[];
 		initial?: Partial<TeacherInput>;
 		submitLabel?: string;
 		onsubmit: (v: TeacherInput) => Promise<void>;
@@ -24,6 +27,7 @@
 	let phone = $state(initial?.phone ?? '');
 	let status = $state<'active' | 'inactive'>(initial?.status ?? 'active');
 	let notes = $state(initial?.notes ?? '');
+	let custom = $state<CustomValues>({ ...(initial?.custom ?? {}) });
 	let classIds = $state<number[]>(initial?.classIds ? [...initial.classIds] : []);
 	let error = $state('');
 	let busy = $state(false);
@@ -38,7 +42,7 @@
 		if (!name.trim()) return void (error = '이름을 입력해 주세요.');
 		busy = true;
 		try {
-			await onsubmit({ name: name.trim(), position, officerRole, birthDate, phone, status, notes, classIds });
+			await onsubmit({ name: name.trim(), position, officerRole, birthDate, phone, status, notes, classIds, custom });
 		} catch (err) {
 			error = err instanceof ApiError ? err.message : '저장하지 못했어요.';
 		} finally {
@@ -69,6 +73,8 @@
 			{/each}
 		</div>
 	</fieldset>
+
+	<CustomFields {fields} bind:values={custom} />
 
 	<label class="field"><span>비고</span><textarea class="input" rows="3" bind:value={notes}></textarea></label>
 
