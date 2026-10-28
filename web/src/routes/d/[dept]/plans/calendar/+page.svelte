@@ -175,5 +175,5 @@
 	.t { font-weight: 600; }
 	.del { margin-left: auto; border: 0; background: transparent; color: var(--muted); font-size: 13px; text-decoration: underline; }
 	.none { padding: 28px; text-align: center; color: var(--muted); }
-	@media (max-width: 720px) { .add { grid-template-columns: 1fr 1fr; } .wide { grid-column: span 2; } .when { width: 100%; } }
+	@media (max-width: 720px) { .add { grid-template-columns: repeat(2, minmax(0, 1fr)); } .wide { grid-column: span 2; } .when { width: 100%; } }
 </style>

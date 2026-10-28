@@ -3,15 +3,16 @@
 	import { ApiError, importStudents, importTeachers } from '../api';
 	import { downloadStudentTemplate, downloadTeacherTemplate, readStudentFile, readTeacherFile, type ParseProblem } from '../excel';
 	import { terms } from '../terms.svelte';
-	import type { Department, ImportResult, StudentImportRow, TeacherImportRow } from '../types';
+	import type { CustomField, Department, ImportResult, StudentImportRow, TeacherImportRow } from '../types';
 	import { url } from '../url';
 	import Icon from './Icon.svelte';
 
 	let {
 		kind,
 		dept,
-		classes
-	}: { kind: 'students' | 'teachers'; dept: Department; classes: Array<{ id: number; name: string }> } = $props();
+		classes,
+		fields = []
+	}: { kind: 'students' | 'teachers'; dept: Department; classes: Array<{ id: number; name: string }>; fields?: CustomField[] } = $props();
 
 	const label = $derived(kind === 'students' ? terms.student : terms.teacher);
 	const listHref = $derived(url(`/d/${dept.id}/${kind}`));
@@ -32,7 +33,7 @@
 		fileName = file.name;
 		reading = true;
 		try {
-			parsed = kind === 'students' ? await readStudentFile(file, dept, classes) : await readTeacherFile(file, dept, classes);
+			parsed = kind === 'students' ? await readStudentFile(file, dept, classes, fields) : await readTeacherFile(file, dept, classes, fields);
 		} catch (err) {
 			error = err instanceof Error ? err.message : '파일을 읽지 못했어요.';
 		} finally {

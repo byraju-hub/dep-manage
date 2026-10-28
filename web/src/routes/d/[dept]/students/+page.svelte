@@ -5,6 +5,7 @@ import { age, dotted } from '$lib/dates';
 	import Avatar from '$lib/components/Avatar.svelte';
 	import ExcelMenu from '$lib/components/ExcelMenu.svelte';
 import Icon from '$lib/components/Icon.svelte';
+	import PhoneLink from '$lib/components/PhoneLink.svelte';
 	import ViewTabs from '$lib/components/ViewTabs.svelte';
 	import { can } from '$lib/session.svelte';
 	import { terms } from '$lib/terms.svelte';
@@ -78,7 +79,7 @@ import Icon from '$lib/components/Icon.svelte';
 			</div>
 		</div>
 		<div class="actions">
-			<ExcelMenu kind="students" {dept} students={data.students} />
+			<ExcelMenu kind="students" {dept} students={data.students} fields={data.fields.filter((f) => f.entity === 'student')} />
 			{#if can(dept.id, 'admin')}
 				<a class="btn btn-primary" href={url(`/d/${dept.id}/students/new`)}><Icon name="plus" size={18} stroke={2.2} />{terms.student} 추가</a>
 			{/if}
@@ -179,7 +180,7 @@ import Icon from '$lib/components/Icon.svelte';
 								<td class="c2">{s.gender}</td>
 								{#if data.view === 'full'}
 									<td class="c2">{dotted(s.birthDate)} <span class="muted">({age(s.birthDate)}세)</span></td>
-									<td class="c2 nowrap">{s.phone}</td>
+									<td class="c2 nowrap"><PhoneLink phone={s.phone} name={s.name} /></td>
 								{/if}
 								<td class="c2">{s.school}</td>
 								<td><span class="badge tone-{statusTone[s.status]}">{statusLabel[s.status]}</span></td>
@@ -232,7 +233,7 @@ import Icon from '$lib/components/Icon.svelte';
 	table.full { min-width: 1180px; }
 	thead tr { background: var(--ground); text-align: left; color: var(--ink-2); font-size: 12.5px; }
 	th { padding: 12px 10px; font-weight: 600; white-space: nowrap; }
-	td { padding: 8px 10px; border-top: 1px solid var(--line-soft); }
+	td { padding: 8px 10px; border-top: 1px solid var(--line-soft); white-space: nowrap; }
 	.first { padding-left: 20px; }
 	.end { padding-right: 20px; width: 32px; text-align: right; }
 	.end :global(svg) { color: var(--muted); }

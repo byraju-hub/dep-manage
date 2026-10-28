@@ -21,9 +21,9 @@ import { url } from '$lib/url';
 </div>
 
 <style>
-	.shell { display: flex; min-height: 100vh; }
-	.main { flex: 1; min-width: 0; }
-	.inner { max-width: 1120px; margin: 0 auto; padding: 28px 36px 48px; }
+	.shell { display: flex; min-height: 100vh; max-width: 100vw; }
+	.main { flex: 1; min-width: 0; max-width: 100%; }
+	.inner { max-width: 1120px; min-width: 0; margin: 0 auto; padding: 28px 36px 48px; }
 	.mobile { display: none; }
 	.update { display: block; background: #fff8ec; border-bottom: 1px solid #ffd9a8; color: #7a4a06; padding: 10px 20px; font-weight: 600; text-align: center; }
 

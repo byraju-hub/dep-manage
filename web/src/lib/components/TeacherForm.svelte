@@ -3,6 +3,7 @@
 	import { terms } from '../terms.svelte';
 	import type { CustomField, CustomValues, TeacherInput } from '../types';
 	import CustomFields from './CustomFields.svelte';
+	import { lunarText, solarToLunar } from '../lunar';
 
 	let {
 		classes,
@@ -29,6 +30,7 @@
 	let notes = $state(initial?.notes ?? '');
 	let custom = $state<CustomValues>({ ...(initial?.custom ?? {}) });
 	let classIds = $state<number[]>(initial?.classIds ? [...initial.classIds] : []);
+	const lunarOfBirth = $derived(birthDate ? solarToLunar(birthDate) : null);
 	let error = $state('');
 	let busy = $state(false);
 
@@ -56,7 +58,7 @@
 		<label class="field"><span>이름 *</span><input class="input" bind:value={name} autocomplete="off" /></label>
 		<label class="field"><span>직분</span><input class="input" bind:value={position} placeholder="집사, 권사, 청년…" /></label>
 		<label class="field"><span>임원</span><input class="input" bind:value={officerRole} placeholder="{terms.head}, 총무, 서기…" /></label>
-		<label class="field"><span>생년월일</span><input class="input" type="date" bind:value={birthDate} /></label>
+		<label class="field"><span>생년월일</span><input class="input" type="date" bind:value={birthDate} />{#if lunarOfBirth}<small class="hint">{lunarText(lunarOfBirth)}</small>{/if}</label>
 		<label class="field"><span>연락처</span><input class="input" type="tel" bind:value={phone} placeholder="010-0000-0000" /></label>
 		<label class="field"><span>상태</span>
 			<select class="input" bind:value={status}><option value="active">활동</option><option value="inactive">쉬는 중</option></select>
@@ -74,7 +76,7 @@
 		</div>
 	</fieldset>
 
-	<CustomFields {fields} bind:values={custom} />
+	<CustomFields {fields} {birthDate} bind:values={custom} />
 
 	<label class="field"><span>비고</span><textarea class="input" rows="3" bind:value={notes}></textarea></label>
 
@@ -100,4 +102,5 @@
 	button:disabled { opacity: 0.6; }
 	@media (max-width: 720px) { .form { padding: 18px 16px; } .grid { grid-template-columns: 1fr 1fr; } }
 	@media (max-width: 480px) { .grid { grid-template-columns: 1fr; } }
+	.hint { display: block; font-size: 12.5px; color: var(--muted); font-weight: 400; }
 </style>

@@ -3,6 +3,7 @@
 	import { terms } from '../terms.svelte';
 	import type { CustomField, CustomValues, Department, Guardian, StudentInput, StudentStatus } from '../types';
 	import CustomFields from './CustomFields.svelte';
+	import { lunarText, solarToLunar } from '../lunar';
 
 	let {
 		dept,
@@ -39,6 +40,7 @@
 	let custom = $state<CustomValues>({ ...(initial?.custom ?? {}) });
 	let guardians = $state<Guardian[]>(initial?.guardians?.length ? initial.guardians.map((g) => ({ ...g })) : [{ relation: '모', name: '', phone: '' }, { relation: '부', name: '', phone: '' }]);
 
+	const lunarOfBirth = $derived(birthDate ? solarToLunar(birthDate) : null);
 	let error = $state('');
 	let busy = $state(false);
 
@@ -67,7 +69,7 @@
 		<label class="field"><span>성별</span>
 			<select class="input" bind:value={gender}><option value="">선택 안 함</option><option value="남">남</option><option value="여">여</option></select>
 		</label>
-		<label class="field"><span>생년월일</span><input class="input" type="date" bind:value={birthDate} /></label>
+		<label class="field"><span>생년월일</span><input class="input" type="date" bind:value={birthDate} />{#if lunarOfBirth}<small class="hint">{lunarText(lunarOfBirth)}</small>{/if}</label>
 		<label class="field"><span>연락처</span><input class="input" type="tel" bind:value={phone} placeholder="010-0000-0000" /></label>
 		<label class="field"><span>학교</span><input class="input" bind:value={school} /></label>
 		<label class="field"><span>{terms.grade} *</span>
@@ -102,7 +104,7 @@
 		{/if}
 	</fieldset>
 
-	<CustomFields {fields} bind:values={custom} />
+	<CustomFields {fields} {birthDate} bind:values={custom} />
 
 	<label class="field"><span>비고</span><textarea class="input" rows="3" bind:value={notes}></textarea></label>
 
@@ -133,4 +135,5 @@
 		.g input:nth-of-type(3) { grid-column: 1 / 3; grid-row: 2; }
 	}
 	@media (max-width: 480px) { .grid { grid-template-columns: 1fr; } }
+	.hint { display: block; font-size: 12.5px; color: var(--muted); font-weight: 400; }
 </style>

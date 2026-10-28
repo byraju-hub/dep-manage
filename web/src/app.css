@@ -61,6 +61,21 @@ body {
 	font-size: 14px;
 	line-height: 1.5;
 	-webkit-text-size-adjust: 100%;
+	/* 모바일에서 두 손가락 확대·축소를 막고, 화면이 옆으로 밀리지 않게 한다. (표는 각자 안에서 가로 스크롤) */
+	touch-action: pan-y;
+	max-width: 100%;
+	overflow-x: hidden;
+	overflow-x: clip;
+	overscroll-behavior-x: none;
+}
+
+/* 표를 감싼 칸: 옆으로만 움직이고 위아래로는 따라 움직이지 않는다. (화면 위아래 스크롤은 페이지가 맡는다) */
+.scroll {
+	overflow-x: auto;
+	overflow-y: hidden;
+	touch-action: pan-x pan-y;
+	overscroll-behavior-x: contain;
+	-webkit-overflow-scrolling: touch;
 }
 
 h1, h2, h3, p { margin: 0; }
@@ -128,6 +143,23 @@ button { cursor: pointer; }
 	padding: 0 12px;
 	background: var(--surface);
 }
+.field { min-width: 0; }
+.input { min-width: 0; max-width: 100%; }
+/* 아이폰은 날짜 칸을 가운데 정렬하고 폭을 제멋대로 잡는다. 다른 입력 칸과 똑같이 맞춘다. */
+input.input[type='date'],
+input.input[type='time'] {
+	-webkit-appearance: none;
+	appearance: none;
+	display: flex;
+	align-items: center;
+	text-align: left;
+	min-height: 42px;
+	line-height: 42px;
+	padding-top: 0;
+	padding-bottom: 0;
+}
+input.input[type='date']::-webkit-date-and-time-value { text-align: left; margin: 0; min-height: 1.2em; line-height: normal; }
+input.input[type='date']::-webkit-datetime-edit { padding: 0; line-height: normal; }
 textarea.input { height: auto; padding: 10px 12px; line-height: 1.6; resize: vertical; }
 
 /* ===== 뱃지 ===== */

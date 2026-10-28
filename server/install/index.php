@@ -189,6 +189,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $pdo->prepare("INSERT INTO `{$p}departments` (name, pastor_name, head_name, terms, sort) VALUES (?,?,?,?,1)")
                         ->execute([$org['dept'], $org['pastor'], $org['head'], json_encode($terms, JSON_UNESCAPED_UNICODE)]);
                     $deptId = (int)$pdo->lastInsertId();
+                    $insCf = $pdo->prepare("INSERT INTO `{$p}custom_fields` (department_id, entity, label, field_type, options, sort) VALUES (?, 'student', ?, ?, ?, ?)");
+                    $insCf->execute([$deptId, '알레르기 · 건강 유의사항', 'longtext', null, 0]);
+                    $insCf->execute([$deptId, '사진 · 개인정보 이용 동의', 'select', json_encode(['동의', '일부 동의', '미동의', '확인 전'], JSON_UNESCAPED_UNICODE), 1]);
                     $tones = ['중1' => 'blue', '중2' => 'green', '중3' => 'orange', '고1' => 'pink', '고2' => 'violet', '고3' => 'teal', '졸업' => 'slate'];
                     $cycle = ['blue', 'green', 'orange', 'pink', 'violet', 'teal', 'sky', 'amber'];
                     $ci = 0;

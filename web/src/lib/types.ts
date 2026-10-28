@@ -320,7 +320,7 @@ export interface PromotionPlan {
 }
 
 /** 추가 항목(사용자 정의 항목). 부서 관리자가 만들고 학생·교사 입력 화면에 나타난다. */
-export type CustomType = 'text' | 'longtext' | 'bool' | 'select' | 'date' | 'number';
+export type CustomType = 'text' | 'longtext' | 'bool' | 'select' | 'date' | 'number' | 'lunar';
 export type CustomValue = string | number | boolean;
 export type CustomValues = Record<string, CustomValue>;
 

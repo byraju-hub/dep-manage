@@ -13,7 +13,7 @@
 			<p class="sub"><a class="back" href={url(`/d/${data.dept.id}/students`)}>← {terms.student} 명단</a></p>
 		</div>
 	</header>
-	<ImportWizard kind="students" dept={data.dept} classes={data.classes.map((c) => ({ id: c.id, name: c.name }))} />
+	<ImportWizard kind="students" dept={data.dept} classes={data.classes.map((c) => ({ id: c.id, name: c.name }))} fields={data.fields.filter((f) => f.entity === 'student')} />
 </div>
 
 <style>

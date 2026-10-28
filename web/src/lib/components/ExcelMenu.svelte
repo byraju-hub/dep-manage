@@ -3,7 +3,7 @@
 	import { downloadStudentList, downloadStudentTemplate, downloadTeacherList, downloadTeacherTemplate } from '../excel';
 	import { can } from '../session.svelte';
 	import { terms } from '../terms.svelte';
-	import type { Department } from '../types';
+	import type { CustomField, Department } from '../types';
 	import { url } from '../url';
 	import Icon from './Icon.svelte';
 
@@ -11,8 +11,9 @@
 		kind,
 		dept,
 		students = [],
-		teachers = []
-	}: { kind: 'students' | 'teachers'; dept: Department; students?: StudentRow[]; teachers?: TeacherRow[] } = $props();
+		teachers = [],
+		fields = []
+	}: { kind: 'students' | 'teachers'; dept: Department; students?: StudentRow[]; teachers?: TeacherRow[]; fields?: CustomField[] } = $props();
 
 	let open = $state(false);
 	let busy = $state(false);
@@ -42,18 +43,20 @@
 					await classNames(),
 					students.map((s) => ({
 						name: s.name, gender: s.gender, birthDate: s.birthDate, phone: s.phone, school: s.school, gradeLabel: s.gradeLabel, className: s.className,
-						status: s.status, baptism: s.baptism, mentor: s.mentor, address: s.address, guardians: s.guardians, notes: s.notes
-					}))
+						status: s.status, baptism: s.baptism, mentor: s.mentor, address: s.address, guardians: s.guardians, notes: s.notes, custom: s.custom
+					})),
+					fields
 				);
 			} else {
 				await downloadTeacherList(
 					dept,
-					teachers.map((t) => ({ name: t.name, position: t.position, officerRole: t.officerRole, birthDate: t.birthDate, phone: t.phone, status: t.status, classNames: t.classNames, notes: t.notes ?? '' }))
+					teachers.map((t) => ({ name: t.name, position: t.position, officerRole: t.officerRole, birthDate: t.birthDate, phone: t.phone, status: t.status, classNames: t.classNames, notes: t.notes ?? '', custom: t.custom }))
+					, fields
 				);
 			}
 		});
 
-	const template = () => run(async () => (kind === 'students' ? downloadStudentTemplate(dept, await classNames()) : downloadTeacherTemplate(dept, await classNames())));
+	const template = () => run(async () => (kind === 'students' ? downloadStudentTemplate(dept, await classNames(), fields) : downloadTeacherTemplate(dept, await classNames(), fields)));
 </script>
 
 <div class="wrap">

@@ -44,7 +44,7 @@
 <style>
 	.sub { font-size: 13.5px; color: var(--muted); }
 	.none { padding: 28px; color: var(--muted); text-align: center; }
-	.tabs { display: flex; gap: 4px; border-bottom: 1px solid #dce3f3; overflow-x: auto; }
-	.tabs a { padding: 10px 16px; font-size: 14px; font-weight: 700; margin-bottom: -1px; color: var(--ink-2); border-bottom: 3px solid transparent; white-space: nowrap; }
+	.tabs { display: flex; gap: 0 2px; flex-wrap: wrap; border-bottom: 1px solid #dce3f3; }
+	.tabs a { padding: 10px 12px; font-size: 14px; font-weight: 700; margin-bottom: -1px; color: var(--ink-2); border-bottom: 3px solid transparent; white-space: nowrap; }
 	.tabs a.on { color: var(--accent); border-bottom-color: var(--accent); }
 </style>

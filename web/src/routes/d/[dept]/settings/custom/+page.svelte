@@ -6,7 +6,7 @@
 
 	let { data } = $props();
 
-	const typeLabels: Record<CustomType, string> = { text: '짧은 글', longtext: '긴 글', bool: '예 / 아니오', select: '목록에서 고르기', date: '날짜', number: '숫자' };
+	const typeLabels: Record<CustomType, string> = { text: '짧은 글', longtext: '긴 글', bool: '예 / 아니오', select: '목록에서 고르기', date: '날짜', number: '숫자', lunar: '음력 날짜' };
 
 	type Entity = 'student' | 'teacher';
 	interface Quick { entity: Entity; label: string; type: CustomType; options?: string[]; hint: string }
@@ -17,6 +17,7 @@
 		{ entity: 'student', label: '장래희망', type: 'text', hint: '한 줄' },
 		{ entity: 'student', label: '알레르기 · 건강 유의사항', type: 'longtext', hint: '간식·행사 때 꼭 필요' },
 		{ entity: 'student', label: '사진 · 개인정보 이용 동의', type: 'select', options: ['동의', '일부 동의', '미동의', '확인 전'], hint: '미성년자는 보호자 동의가 필요해요' },
+		{ entity: 'student', label: '음력 생일', type: 'lunar', hint: '음력으로 생일을 지내는 경우. 양력 날짜로 바꿔서 보여줘요' },
 		{ entity: 'student', label: '입교(세례)일', type: 'date', hint: '' },
 		{ entity: 'student', label: '등록 경로', type: 'select', options: ['가족 중 교인', '친구 초청', '전도', '스스로 방문', '기타'], hint: '새가족 정착 돌봄에 도움' },
 		{ entity: 'student', label: '교통 지원 필요', type: 'bool', hint: '차량·픽업' },

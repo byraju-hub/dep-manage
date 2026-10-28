@@ -3,6 +3,7 @@
 import { age, dotted, shortMD } from '$lib/dates';
 	import Avatar from '$lib/components/Avatar.svelte';
 	import Icon from '$lib/components/Icon.svelte';
+	import PhoneLink from '$lib/components/PhoneLink.svelte';
 	import { attendanceColor, methodTone } from '$lib/palette';
 	import { showCustom } from '$lib/custom';
 	import { can } from '$lib/session.svelte';
@@ -39,7 +40,7 @@ import { terms } from '$lib/terms.svelte';
 			<h2>기본 정보</h2>
 			<dl>
 				<div><dt>생년월일</dt><dd>{dotted(s.birthDate)}</dd></div>
-				<div><dt>연락처</dt><dd>{s.phone}</dd></div>
+				<div><dt>연락처</dt><dd><PhoneLink phone={s.phone} name={s.name} /></dd></div>
 				<div><dt>학교</dt><dd>{s.school}</dd></div>
 				<div><dt>세례</dt><dd>{s.baptism}</dd></div>
 				{#if s.mentor}<div><dt>인도자</dt><dd>{s.mentor}</dd></div>{/if}
@@ -54,7 +55,7 @@ import { terms } from '$lib/terms.svelte';
 			<h2>보호자</h2>
 			<dl>
 				{#each s.guardians as g (g.relation)}
-					<div><dt>{g.relation}</dt><dd>{g.name} · {g.phone}</dd></div>
+					<div><dt>{g.relation}</dt><dd>{g.name} · <PhoneLink phone={g.phone} name={`${g.name}(${g.relation})`} /></dd></div>
 				{/each}
 			</dl>
 		</section>

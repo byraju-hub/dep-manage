@@ -1,7 +1,8 @@
 // 엑셀 양식 만들기, 명단 내려받기, 채워서 올린 파일 읽기.
 // 엑셀 처리 라이브러리는 용량이 커서 이 기능을 쓸 때만 불러온다. 파일은 브라우저 안에서만 읽고 만들며,
 // 읽은 내용은 줄 단위로 서버(API)에 보내서 서버가 다시 검사한다.
-import type { ClassRoom, Department, StudentImportRow, TeacherImportRow, Terms } from './types';
+import { lunarCell, parseLunarCell } from './lunar';
+import type { ClassRoom, CustomField, CustomValues, Department, StudentImportRow, TeacherImportRow, Terms } from './types';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Any = any;
@@ -41,7 +42,99 @@ interface Col {
 	aliases: string[];
 }
 
-function studentColumns(t: Terms): Col[] {
+/** 추가 항목을 엑셀 열로. 기본 열과 이름이 겹치면 제목 뒤에 (추가)를 붙인다. */
+function customColumns(fields: CustomField[], base: Col[]): Col[] {
+	const used = new Set(base.flatMap((c) => c.aliases.map(norm)));
+	return fields.map((f) => {
+		const header = used.has(norm(f.label)) ? `${f.label} (추가)` : f.label;
+		return { key: 'c' + f.id, header, width: f.type === 'longtext' ? 28 : 16, aliases: [header, f.label] };
+	});
+}
+
+const BOOL_YES = ['예', 'y', 'yes', 'true', 'o', '○', '1', 'v', '✓'];
+const BOOL_NO = ['아니오', '아니요', 'n', 'no', 'false', 'x', '0', '×'];
+
+/** 추가 항목 값 → 엑셀 칸에 적을 글 */
+function customToCell(f: CustomField, values: CustomValues | undefined): string {
+	const v = values?.[f.id];
+	if (v === undefined || v === null || v === '') return '';
+	if (f.type === 'bool') return v === true ? '예' : '아니오';
+	if (f.type === 'lunar') return lunarCell(String(v));
+	return String(v);
+}
+
+function customCells(fields: CustomField[], values: CustomValues | undefined): Record<string, string> {
+	return Object.fromEntries(fields.map((f) => ['c' + f.id, customToCell(f, values)]));
+}
+
+/** 추가 항목 열의 선택 목록 */
+function customLists(fields: CustomField[]): Record<string, string[]> {
+	const out: Record<string, string[]> = {};
+	for (const f of fields) {
+		if (f.type === 'bool') out['c' + f.id] = ['예', '아니오'];
+		else if (f.type === 'select') out['c' + f.id] = f.options;
+	}
+	return out;
+}
+
+const customTextKeys = (fields: CustomField[]) => fields.filter((f) => f.type === 'date' || f.type === 'lunar').map((f) => 'c' + f.id);
+
+/** 양식의 '작성 안내' 시트에 넣을 추가 항목 설명 */
+function customGuide(fields: CustomField[]): string[] {
+	if (!fields.length) return [];
+	const out = ['', '추가 항목 (이 부서에서 만든 칸이에요)'];
+	for (const f of fields) {
+		const how =
+			f.type === 'bool' ? '예 / 아니오 중에서 골라요'
+			: f.type === 'select' ? f.options.join(', ') + ' 중에서 골라요'
+			: f.type === 'date' ? '2010-05-03 처럼 적어요'
+			: f.type === 'lunar' ? '음력 날짜를 2012-04-13 처럼 적고, 윤달이면 뒤에 "윤"을 붙여요'
+			: f.type === 'number' ? '숫자로 적어요'
+			: '자유롭게 적어요';
+		out.push(`- ${f.label}: ${how}`);
+	}
+	return out;
+}
+
+/** 엑셀 칸의 글 → 추가 항목 값들. 문제가 있으면 message 를 돌려준다. */
+function parseCustom(fields: CustomField[], v: Record<string, string>): { custom: CustomValues; message: string } {
+	const custom: CustomValues = {};
+	for (const f of fields) {
+		const raw = (v['c' + f.id] ?? '').trim();
+		if (!raw) continue;
+		const bad = (hint: string) => ({ custom, message: `${f.label} "${raw}"을(를) 읽을 수 없어요. ${hint}` });
+		if (f.type === 'bool') {
+			const n = norm(raw);
+			if (BOOL_YES.includes(n)) custom[f.id] = true;
+			else if (BOOL_NO.includes(n)) custom[f.id] = false;
+			else return bad('(예, 아니오)');
+		} else if (f.type === 'select') {
+			const hit = f.options.find((o) => norm(o) === norm(raw));
+			if (!hit) return bad(`(${f.options.join(', ')} 중에서)`);
+			custom[f.id] = hit;
+		} else if (f.type === 'date') {
+			const d = parseDate(raw);
+			if (!d) return bad('2010-05-03 처럼 적어 주세요.');
+			custom[f.id] = d;
+		} else if (f.type === 'lunar') {
+			const l = parseLunarCell(raw);
+			if (!l) return bad('음력 날짜를 2012-04-13 처럼 적고, 윤달이면 뒤에 "윤"을 붙여 주세요.');
+			custom[f.id] = l;
+		} else if (f.type === 'number') {
+			const n = Number(raw.replace(/,/g, ''));
+			if (!Number.isFinite(n)) return bad('숫자로 적어 주세요.');
+			custom[f.id] = n;
+		} else custom[f.id] = raw;
+	}
+	return { custom, message: '' };
+}
+
+function studentColumns(t: Terms, fields: CustomField[] = []): Col[] {
+	const base = studentColumnsBase(t);
+	return [...base, ...customColumns(fields, base)];
+}
+
+function studentColumnsBase(t: Terms): Col[] {
 	return [
 		{ key: 'name', header: '이름', width: 12, required: true, aliases: ['이름', '성명'] },
 		{ key: 'gender', header: '성별', width: 8, aliases: ['성별'] },
@@ -64,7 +157,12 @@ function studentColumns(t: Terms): Col[] {
 	];
 }
 
-function teacherColumns(t: Terms): Col[] {
+function teacherColumns(t: Terms, fields: CustomField[] = []): Col[] {
+	const base = teacherColumnsBase(t);
+	return [...base, ...customColumns(fields, base)];
+}
+
+function teacherColumnsBase(t: Terms): Col[] {
 	return [
 		{ key: 'name', header: '이름', width: 12, required: true, aliases: ['이름', '성명'] },
 		{ key: 'position', header: '직분', width: 10, aliases: ['직분'] },
@@ -191,6 +289,7 @@ export interface StudentSheetRow {
 	address: string;
 	guardians: Array<{ relation: string; name: string; phone: string }>;
 	notes: string;
+	custom?: CustomValues;
 }
 
 function studentRowToCells(r: StudentSheetRow, t: Terms): Record<string, string> {
@@ -202,41 +301,42 @@ function studentRowToCells(r: StudentSheetRow, t: Terms): Record<string, string>
 	};
 }
 
-export async function downloadStudentTemplate(dept: Department, classes: Array<Pick<ClassRoom, 'name'>>) {
+export async function downloadStudentTemplate(dept: Department, classes: Array<Pick<ClassRoom, 'name'>>, fields: CustomField[] = []) {
 	const t = dept.terms;
 	const firstGrade = dept.gradeLevels.find((g) => !g.isGraduate)?.label ?? '';
 	const wb = await buildWorkbook({
 		sheetName: t.student,
 		title: `${dept.name} ${t.student} 명단 양식`,
-		cols: studentColumns(t),
+		cols: studentColumns(t, fields),
 		rows: [],
 		examples: [
 			studentRowToCells({ name: '예) 김하준', gender: '남', birthDate: '2012-05-03', phone: '010-1234-5678', school: '은혜중', gradeLabel: firstGrade, className: classes[0]?.name ?? '', status: 'active', baptism: '-', mentor: '', address: '', guardians: [{ relation: '모', name: '이미선', phone: '010-2222-3333' }], notes: '' }, t)
 		],
-		lists: studentLists(dept, classes),
+		lists: { ...studentLists(dept, classes), ...customLists(fields) },
 		guide: [
 			...guideCommon(),
 			`8. ${t.grade}은(는) 이 부서에서 쓰는 이름 그대로 적어요: ${dept.gradeLevels.map((g) => g.label).join(', ')}`,
 			`9. ${t.class}은(는) 이미 만들어 둔 이름만 쓸 수 있어요${classes.length ? `: ${classes.map((c) => c.name).join(', ')}` : ' (아직 없어요. 비워 두세요.)'}`,
 			`10. 상태는 재적, ${t.newMember}, 비활동 중에서 골라요. 비우면 재적이에요.`,
-			'11. 보호자는 두 명까지 적을 수 있어요. (관계 예: 부, 모, 조부모)'
+			'11. 보호자는 두 명까지 적을 수 있어요. (관계 예: 부, 모, 조부모)',
+			...customGuide(fields)
 		],
-		textKeys: ['phone', 'g1phone', 'g2phone', 'birthDate']
+		textKeys: ['phone', 'g1phone', 'g2phone', 'birthDate', ...customTextKeys(fields)]
 	});
 	await saveWorkbook(wb, safe(`${dept.name}_${t.student}_양식.xlsx`));
 }
 
-export async function downloadStudentList(dept: Department, classes: Array<Pick<ClassRoom, 'name'>>, rows: StudentSheetRow[]) {
+export async function downloadStudentList(dept: Department, classes: Array<Pick<ClassRoom, 'name'>>, rows: StudentSheetRow[], fields: CustomField[] = []) {
 	const t = dept.terms;
 	const wb = await buildWorkbook({
 		sheetName: t.student,
 		title: `${dept.name} ${t.student} 명단 (${today()})`,
-		cols: studentColumns(t),
-		rows: rows.map((r) => studentRowToCells(r, t)),
+		cols: studentColumns(t, fields),
+		rows: rows.map((r) => ({ ...studentRowToCells(r, t), ...customCells(fields, r.custom) })),
 		examples: [],
-		lists: studentLists(dept, classes),
+		lists: { ...studentLists(dept, classes), ...customLists(fields) },
 		guide: ['이 파일은 현재 명단을 내려받은 것이에요.', '고친 뒤 같은 양식으로 다시 올릴 수도 있어요. (이미 있는 사람은 건너뛰고, 새로 적은 사람만 추가돼요.)', ...guideCommon().slice(0, 0)],
-		textKeys: ['phone', 'g1phone', 'g2phone', 'birthDate']
+		textKeys: ['phone', 'g1phone', 'g2phone', 'birthDate', ...customTextKeys(fields)]
 	});
 	await saveWorkbook(wb, safe(`${dept.name}_${t.student}_명단_${today()}.xlsx`));
 }
@@ -252,6 +352,7 @@ export interface TeacherSheetRow {
 	status: string;
 	classNames: string[];
 	notes: string;
+	custom?: CustomValues;
 }
 
 const teacherRowToCells = (r: TeacherSheetRow): Record<string, string> => ({
@@ -259,36 +360,37 @@ const teacherRowToCells = (r: TeacherSheetRow): Record<string, string> => ({
 	status: r.status === 'inactive' ? '쉬는 중' : '활동', classes: r.classNames.join(', '), notes: r.notes
 });
 
-export async function downloadTeacherTemplate(dept: Department, classes: Array<Pick<ClassRoom, 'name'>>) {
+export async function downloadTeacherTemplate(dept: Department, classes: Array<Pick<ClassRoom, 'name'>>, fields: CustomField[] = []) {
 	const t = dept.terms;
 	const wb = await buildWorkbook({
 		sheetName: t.teacher,
 		title: `${dept.name} ${t.teacher} 명단 양식`,
-		cols: teacherColumns(t),
+		cols: teacherColumns(t, fields),
 		rows: [],
 		examples: [teacherRowToCells({ name: '예) 박은지', position: '집사', officerRole: t.head, birthDate: '1985-03-12', phone: '010-5555-6666', status: 'active', classNames: classes[0] ? [classes[0].name] : [], notes: '' })],
-		lists: { status: ['활동', '쉬는 중'] },
+		lists: { status: ['활동', '쉬는 중'], ...customLists(fields) },
 		guide: [
 			...guideCommon(),
 			`8. 담당 ${t.class}은(는) 이미 만들어 둔 이름만 쓸 수 있고, 여러 개면 쉼표로 나눠요${classes.length ? `: ${classes.map((c) => c.name).join(', ')}` : ' (아직 없어요. 비워 두세요.)'}`,
-			'9. 상태는 활동, 쉬는 중 중에서 골라요. 비우면 활동이에요.'
+			'9. 상태는 활동, 쉬는 중 중에서 골라요. 비우면 활동이에요.',
+			...customGuide(fields)
 		],
-		textKeys: ['phone', 'birthDate']
+		textKeys: ['phone', 'birthDate', ...customTextKeys(fields)]
 	});
 	await saveWorkbook(wb, safe(`${dept.name}_${t.teacher}_양식.xlsx`));
 }
 
-export async function downloadTeacherList(dept: Department, rows: TeacherSheetRow[]) {
+export async function downloadTeacherList(dept: Department, rows: TeacherSheetRow[], fields: CustomField[] = []) {
 	const t = dept.terms;
 	const wb = await buildWorkbook({
 		sheetName: t.teacher,
 		title: `${dept.name} ${t.teacher} 명단 (${today()})`,
-		cols: teacherColumns(t),
-		rows: rows.map(teacherRowToCells),
+		cols: teacherColumns(t, fields),
+		rows: rows.map((r) => ({ ...teacherRowToCells(r), ...customCells(fields, r.custom) })),
 		examples: [],
-		lists: { status: ['활동', '쉬는 중'] },
+		lists: { status: ['활동', '쉬는 중'], ...customLists(fields) },
 		guide: ['이 파일은 현재 명단을 내려받은 것이에요.'],
-		textKeys: ['phone', 'birthDate']
+		textKeys: ['phone', 'birthDate', ...customTextKeys(fields)]
 	});
 	await saveWorkbook(wb, safe(`${dept.name}_${t.teacher}_명단_${today()}.xlsx`));
 }
@@ -393,9 +495,9 @@ async function readSheet(file: File, sheetName: string, cols: Col[]) {
 
 const find = <T extends { name: string }>(list: T[], name: string) => list.find((x) => norm(x.name) === norm(name));
 
-export async function readStudentFile(file: File, dept: Department, classes: Array<{ id: number; name: string }>) {
+export async function readStudentFile(file: File, dept: Department, classes: Array<{ id: number; name: string }>, fields: CustomField[] = []) {
 	const t = dept.terms;
-	const cols = studentColumns(t);
+	const cols = studentColumns(t, fields);
 	const raw = await readSheet(file, t.student, cols);
 	const out: StudentImportRow[] = [];
 	const problems: ParseProblem[] = [];
@@ -452,21 +554,26 @@ export async function readStudentFile(file: File, dept: Department, classes: Arr
 			fail(`성별 "${v.gender}"을(를) 알 수 없어요. (남, 여)`);
 			continue;
 		}
+		const cu = parseCustom(fields, v);
+		if (cu.message) {
+			fail(cu.message);
+			continue;
+		}
 		const guardians = [
 			{ relation: v.g1rel, name: v.g1name, phone: fixPhone(v.g1phone) },
 			{ relation: v.g2rel, name: v.g2name, phone: fixPhone(v.g2phone) }
 		].filter((g) => g.name);
 		out.push({
 			row, name: v.name, gender, birthDate: birth, phone: fixPhone(v.phone), school: v.school, gradeId: grade.id, classId, status,
-			baptism, mentor: v.mentor, address: v.address, notes: v.notes, guardians
+			baptism, mentor: v.mentor, address: v.address, notes: v.notes, guardians, custom: cu.custom
 		});
 	}
 	return { rows: out, problems, total: raw.length };
 }
 
-export async function readTeacherFile(file: File, dept: Department, classes: Array<{ id: number; name: string }>) {
+export async function readTeacherFile(file: File, dept: Department, classes: Array<{ id: number; name: string }>, fields: CustomField[] = []) {
 	const t = dept.terms;
-	const cols = teacherColumns(t);
+	const cols = teacherColumns(t, fields);
 	const raw = await readSheet(file, t.teacher, cols);
 	const out: TeacherImportRow[] = [];
 	const problems: ParseProblem[] = [];
@@ -503,7 +610,12 @@ export async function readTeacherFile(file: File, dept: Department, classes: Arr
 			fail(`담당 ${t.class} "${bad}"을(를) 찾을 수 없어요. ${classes.length ? `(${classes.map((x) => x.name).join(', ')})` : ''}`);
 			continue;
 		}
-		out.push({ row, name: v.name, position: v.position, officerRole: v.officerRole, birthDate: birth, phone: fixPhone(v.phone), status, notes: v.notes, classIds });
+		const cu = parseCustom(fields, v);
+		if (cu.message) {
+			fail(cu.message);
+			continue;
+		}
+		out.push({ row, name: v.name, position: v.position, officerRole: v.officerRole, birthDate: birth, phone: fixPhone(v.phone), status, notes: v.notes, classIds, custom: cu.custom });
 	}
 	return { rows: out, problems, total: raw.length };
 }

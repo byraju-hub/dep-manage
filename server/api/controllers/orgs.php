@@ -64,6 +64,7 @@ route('POST', '/departments', function () {
         [$name, in_str($b, 'pastorName', 50), in_str($b, 'headName', 50), json_encode($terms, JSON_UNESCAPED_UNICODE), $sort]
     );
     create_grade_levels($id, $grades);
+    seed_custom_defaults($id);
     audit('department.create', 'department', $id, $name);
     return dept_row_to_json(row('SELECT * FROM ' . t('departments') . ' WHERE id = ?', [$id]), grade_levels_of($id));
 });
