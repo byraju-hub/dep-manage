@@ -2,6 +2,7 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { ApiError, listDepartments } from '$lib/api';
+import ChurchLogo from '$lib/components/ChurchLogo.svelte';
 	import { doLogin, doLogout, session } from '$lib/session.svelte';
 	import { url } from '$lib/url';
 
@@ -48,7 +49,7 @@
 
 	<div class="card box">
 		<div class="brand">
-			<div class="logo" aria-hidden="true">{data.church.name.slice(0, 1)}</div>
+			<ChurchLogo name={data.church.name} logo={data.church.logo} size={56} />
 			<div>
 				<h1>{data.church.name}</h1>
 				<p class="muted">부서 관리 시스템</p>

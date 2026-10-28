@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { invalidateAll } from '$app/navigation';
 	import { ApiError, updateChurchName, updateDepartmentInfo } from '$lib/api';
+import ChurchLogo from '$lib/components/ChurchLogo.svelte';
+import LogoField from '$lib/components/LogoField.svelte';
 import { session } from '$lib/session.svelte';
 
 	let { data } = $props();
@@ -39,6 +41,14 @@ let error = $state('');
 		<div class="grid one">
 			<label class="field"><span>교회 이름</span><input class="input" bind:value={churchName} oninput={() => (saved = false)} disabled={!session.user?.isOwner} />{#if !session.user?.isOwner}<small class="muted">교회 관리자만 바꿀 수 있어요</small>{/if}</label>
 		</div>
+		<div class="logorow">
+			<span class="field-label">교회 로고</span>
+			{#if session.user?.isOwner}
+				<LogoField name={data.church.name} logo={data.church.logo} />
+			{:else}
+				<div class="ro"><ChurchLogo name={data.church.name} logo={data.church.logo} size={56} /><small class="muted">교회 관리자만 바꿀 수 있어요</small></div>
+			{/if}
+		</div>
 	</section>
 
 	<section>
@@ -64,6 +74,8 @@ let error = $state('');
 	.sub { font-size: 13px; color: var(--muted); margin-bottom: 12px; }
 	.grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
 	.grid.one { grid-template-columns: minmax(0, 360px); }
+	.logorow { margin-top: 16px; display: flex; flex-direction: column; gap: 8px; }
+	.ro { display: flex; align-items: center; gap: 12px; }
 	.buttons { display: flex; justify-content: flex-end; align-items: center; gap: 12px; }
 	.ok { color: var(--ok-ink); font-weight: 700; }
 	.bad { color: var(--danger-ink); font-weight: 700; }

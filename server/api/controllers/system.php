@@ -12,7 +12,8 @@ function church_json(): array
     foreach (DEFAULT_FONTS as $role => $_) {
         if (is_array($fonts) && isset($fonts[$role]) && in_array($fonts[$role], FONT_IDS, true)) $out[$role] = $fonts[$role];
     }
-    return ['name' => (string)setting('church_name', '교회'), 'fonts' => $out];
+    $logo = setting('logo', null);
+    return ['name' => (string)setting('church_name', '교회'), 'fonts' => $out, 'logo' => is_string($logo) ? $logo : null];
 }
 
 // 데이터베이스 구조가 코드보다 낡았으면 needsUpdate. (설정 → 데이터에서 교회 관리자가 업데이트를 적용한다.)
@@ -44,6 +45,40 @@ route('PUT', '/church', function () {
     }
     audit('church.update');
     return church_json();
+});
+
+// ===== 교회 로고 =====
+
+// 로그인 화면과 브라우저 탭 아이콘에도 쓰이므로 로그인 없이 받을 수 있다. (개인정보가 아니다.)
+route('GET', '/church/logo', function () {
+    $token = setting('logo', null);
+    $file = is_string($token) ? logo_path_for($token, ($_GET['size'] ?? '') === 'icon') : null;
+    if (!$file || !is_file($file)) json_fail('not_found', '로고가 없습니다.', 404);
+    header('Content-Type: image/png');
+    header('Content-Length: ' . filesize($file));
+    header('Cache-Control: public, max-age=86400'); // 로고를 바꾸면 주소(v=)가 바뀌므로 오래 캐시해도 된다
+    header('X-Content-Type-Options: nosniff');
+    readfile($file);
+    exit;
+});
+
+route('POST', '/church/logo', function () {
+    require_owner();
+    $old = setting('logo', null);
+    $token = store_logo($_FILES['logo'] ?? []);
+    set_setting('logo', $token);
+    if (is_string($old)) delete_logo($old);
+    audit('church.logo');
+    return ['logo' => $token];
+});
+
+route('DELETE', '/church/logo', function () {
+    require_owner();
+    $old = setting('logo', null);
+    set_setting('logo', null);
+    if (is_string($old)) delete_logo($old);
+    audit('church.logo.delete');
+    return null;
 });
 
 // ===== 샘플 데이터 =====

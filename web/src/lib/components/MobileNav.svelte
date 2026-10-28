@@ -6,10 +6,11 @@
 	import { can, doLogout } from '../session.svelte';
 	import { terms } from '../terms.svelte';
 	import type { Department } from '../types';
-	import Icon from './Icon.svelte';
+	import ChurchLogo from './ChurchLogo.svelte';
+import Icon from './Icon.svelte';
 	import Tile from './Tile.svelte';
 
-	let { dept, depts, pending, churchName }: { dept: Department; depts: Department[]; pending: number; churchName: string } = $props();
+	let { dept, depts, pending, churchName, churchLogo = null }: { dept: Department; depts: Department[]; pending: number; churchName: string; churchLogo?: string | null } = $props();
 
 	const nav = $derived(buildNav(terms, pending));
 	const all = $derived([...nav.main, ...nav.plan, ...(can(dept.id, 'admin') ? [nav.settings] : [])]);
@@ -31,7 +32,8 @@
 </script>
 
 <header class="top">
-	<div>
+	<ChurchLogo name={churchName} logo={churchLogo} size={34} />
+	<div class="t">
 		<div class="church">{churchName}</div>
 		<div class="dept">{dept.name}</div>
 	</div>
@@ -78,7 +80,7 @@
 
 <style>
 	.top {
-		display: flex; align-items: center; justify-content: space-between;
+		display: flex; align-items: center; gap: 10px;
 		padding: 12px 16px; background: var(--surface); border-bottom: 1px solid var(--line);
 		position: sticky; top: 0; z-index: 10;
 	}

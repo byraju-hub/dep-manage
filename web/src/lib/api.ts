@@ -259,9 +259,9 @@ export function photoUrl(type: 'student' | 'teacher', id: number, token: string 
 	return url(`/api/v1/photos/${type}/${id}`) + `?v=${token}${thumb ? '&size=thumb' : ''}`;
 }
 
-async function sendFile<T>(path: string, file: File): Promise<T> {
+async function sendFile<T>(path: string, file: File, field = 'photo'): Promise<T> {
 	const fd = new FormData();
-	fd.append('photo', file);
+	fd.append(field, file);
 	let res: Response;
 	try {
 		// Content-Type 은 브라우저가 파일 경계(boundary)와 함께 정해야 해서 직접 쓰지 않는다.
@@ -280,6 +280,13 @@ async function sendFile<T>(path: string, file: File): Promise<T> {
 }
 
 export const uploadPhoto = (type: 'student' | 'teacher', id: number, file: File) => sendFile<{ photo: string }>(`/photos/${type}/${id}`, file);
+// ===== 교회 로고 =====
+export function logoUrl(token: string, icon = false): string {
+	return url('/api/v1/church/logo') + `?v=${token}${icon ? '&size=icon' : ''}`;
+}
+export const uploadLogo = (file: File) => sendFile<{ logo: string }>('/church/logo', file, 'logo');
+export const deleteLogo = () => del('/church/logo');
+
 export const deletePhoto = (type: 'student' | 'teacher', id: number) => del(`/photos/${type}/${id}`);
 
 // ===== 명단 가져오기 · 교사 출석 · 출석률 · 학년 승급 =====

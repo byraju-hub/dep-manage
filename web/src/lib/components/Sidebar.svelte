@@ -6,10 +6,11 @@
 	import { can, session, doLogout } from '../session.svelte';
 	import { terms } from '../terms.svelte';
 	import type { Department } from '../types';
-	import Icon from './Icon.svelte';
+	import ChurchLogo from './ChurchLogo.svelte';
+import Icon from './Icon.svelte';
 	import Tile from './Tile.svelte';
 
-	let { dept, depts, pending, churchName }: { dept: Department; depts: Department[]; pending: number; churchName: string } = $props();
+	let { dept, depts, pending, churchName, churchLogo = null }: { dept: Department; depts: Department[]; pending: number; churchName: string; churchLogo?: string | null } = $props();
 
 	const nav = $derived(buildNav(terms, pending));
 	let open = $state(false);
@@ -35,7 +36,7 @@
 
 <aside class="side">
 	<div class="brand">
-		<div class="logo" aria-hidden="true">{churchName.slice(0, 1)}</div>
+		<ChurchLogo name={churchName} logo={churchLogo} size={38} />
 		<div>
 			<div class="church">{churchName}</div>
 			<div class="sub">부서 관리</div>

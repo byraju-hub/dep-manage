@@ -148,6 +148,8 @@ export type FontSettings = Record<FontRole, FontId>;
 export interface Church {
 	name: string;
 	fonts: FontSettings;
+	/** 로고 토큰(없으면 null). 주소를 만들 때 쓴다. */
+	logo?: string | null;
 }
 
 export type Role = 'admin' | 'teacher' | 'viewer';

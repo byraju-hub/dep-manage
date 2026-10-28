@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { ApiError, checkInvite, join } from '$lib/api';
+import ChurchLogo from '$lib/components/ChurchLogo.svelte';
 	import { url } from '$lib/url';
 
 	let { data } = $props();
@@ -54,7 +55,7 @@
 <main class="wrap">
 	<div class="card box">
 		<div class="brand">
-			<div class="logo" aria-hidden="true">{data.church.name.slice(0, 1)}</div>
+			<ChurchLogo name={data.church.name} logo={data.church.logo} size={52} />
 			<div>
 				<h1>{data.church.name}</h1>
 				<p class="muted">초대 코드로 가입하기</p>
