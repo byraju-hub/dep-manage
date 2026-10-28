@@ -15,5 +15,5 @@ export const load = async () => {
 		await new Promise(() => {});
 	}
 	const church = await getChurch().catch(() => ({ name: 'dep-manage', fonts: { ...defaultFonts } }));
-	return { church };
+	return { church, needsUpdate: !!status?.needsUpdate };
 };

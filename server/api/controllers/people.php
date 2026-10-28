@@ -78,6 +78,7 @@ function map_students(array $students, array $grades, int $rank, bool $withRecen
             'tone' => tone_of_grade($grades, (int)$s['grade_level_id']),
             'gradeLabel' => label_of_grade($grades, (int)$s['grade_level_id']),
             'className' => (string)($s['class_name'] ?? ''),
+            'photo' => $full ? $s['photo_path'] : null,
             'recent' => $recent[$id] ?? [],
         ];
     }, $students);
@@ -247,6 +248,7 @@ route('DELETE', '/students/{id}', function (array $p) {
     $s = load_student((int)$p['id']);
     require_dept((int)$s['department_id'], 'admin');
     q('DELETE FROM ' . t('students') . ' WHERE id = ?', [$s['id']]);
+    delete_photo($s['photo_path'] ?? null);
     audit('student.delete', 'student', (int)$s['id']);
     return null;
 });
@@ -320,7 +322,7 @@ function teacher_json(array $t, int $rank, array $classNames): array
     return [
         'id' => (int)$t['id'], 'deptId' => (int)$t['department_id'], 'name' => $t['name'], 'position' => $t['position'],
         'officerRole' => $t['officer_role'], 'birthDate' => $full ? ($t['birth_date'] ?? '') : '', 'phone' => $full ? $t['phone'] : '',
-        'status' => $t['status'], 'notes' => $full ? (string)$t['notes'] : '',
+        'status' => $t['status'], 'notes' => $full ? (string)$t['notes'] : '', 'photo' => $full ? $t['photo_path'] : null,
         'classIds' => array_keys($classNames), 'classNames' => array_values($classNames),
     ];
 }
@@ -379,6 +381,7 @@ route('DELETE', '/teachers/{id}', function (array $p) {
     if (!$t) json_fail('not_found', '교사를 찾을 수 없습니다.', 404);
     require_dept((int)$t['department_id'], 'admin');
     q('DELETE FROM ' . t('teachers') . ' WHERE id = ?', [$t['id']]);
+    delete_photo($t['photo_path'] ?? null);
     audit('teacher.delete', 'teacher', (int)$t['id']);
     return null;
 });

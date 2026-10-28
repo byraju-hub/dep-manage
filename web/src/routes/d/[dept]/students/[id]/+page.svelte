@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { age, dotted, shortMD } from '$lib/dates';
+	import { photoUrl } from '$lib/api';
+import { age, dotted, shortMD } from '$lib/dates';
 	import Avatar from '$lib/components/Avatar.svelte';
 	import Icon from '$lib/components/Icon.svelte';
 	import { attendanceColor, methodTone } from '$lib/palette';
@@ -18,7 +19,7 @@ import { terms } from '$lib/terms.svelte';
 	<a class="back" href={url(`/d/${data.dept.id}/students`)}><Icon name="chevronLeft" size={16} />{terms.student} 명단</a>
 
 	<header class="hero card">
-		<Avatar name={s.name} tone={d.tone} size={64} />
+		<Avatar name={s.name} tone={d.tone} size={72} src={photoUrl('student', s.id, s.photo)} />
 		<div class="who grow">
 			<h1 class="tone-{d.tone}">{s.name}</h1>
 			<div class="chips">

@@ -13,8 +13,18 @@ function json_out(mixed $data = null, int $status = 200): never
     exit;
 }
 
+/** 한 건씩 검사하며 오류를 모아야 하는 곳(가져오기)에서는 바로 응답하지 않고 이 예외를 던지게 한다. */
+class ApiFail extends Exception
+{
+    public function __construct(public string $errCode, string $message, public int $httpStatus = 400)
+    {
+        parent::__construct($message);
+    }
+}
+
 function json_fail(string $code, string $message, int $status = 400): never
 {
+    if (!empty($GLOBALS['dm_throw'])) throw new ApiFail($code, $message, $status);
     http_response_code($status);
     header('Content-Type: application/json; charset=utf-8');
     header('Cache-Control: no-store');

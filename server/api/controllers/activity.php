@@ -15,7 +15,8 @@ route('GET', '/d/{dept}/attendance', function (array $p) {
         [$ctx['deptId'], $date]
     ), 'status', 'student_id');
     foreach ($students as &$s) {
-        $s['status'] = $map[$s['id']] ?? 'present';
+        // 학생의 상태(status: 재적/새가족/비활동)와 섞이지 않도록 출석 상태는 attendance 에 담는다.
+        $s['attendance'] = $map[$s['id']] ?? 'present';
         $s['checked'] = isset($map[$s['id']]);
     }
     unset($s);

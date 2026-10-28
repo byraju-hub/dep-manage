@@ -16,7 +16,3 @@
   </IfModule>
 </FilesMatch>
 
-# JSON 응답은 캐시하지 않는다.
-<IfModule mod_headers.c>
-  Header set Cache-Control "no-store"
-</IfModule>

@@ -15,7 +15,12 @@ function church_json(): array
     return ['name' => (string)setting('church_name', '교회'), 'fonts' => $out];
 }
 
-route('GET', '/system/status', fn() => ['installed' => true, 'version' => DM_VERSION]);
+// 데이터베이스 구조가 코드보다 낡았으면 needsUpdate. (설정 → 데이터에서 교회 관리자가 업데이트를 적용한다.)
+route('GET', '/system/status', fn() => [
+    'installed' => true,
+    'version' => DM_VERSION,
+    'needsUpdate' => latest_schema_version(DM_ROOT . '/migrations') > current_schema_version(db(), dm_config()['prefix']),
+]);
 
 // 로그인 화면에서도 쓰므로 교회 이름과 글꼴은 로그인 없이 읽을 수 있다.
 route('GET', '/church', fn() => church_json());

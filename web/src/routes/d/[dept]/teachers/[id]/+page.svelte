@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { goto, invalidateAll } from '$app/navigation';
 	import { ApiError, deleteTeacher, updateTeacher } from '$lib/api';
-	import TeacherForm from '$lib/components/TeacherForm.svelte';
+	import PhotoField from '$lib/components/PhotoField.svelte';
+import TeacherForm from '$lib/components/TeacherForm.svelte';
 	import { can } from '$lib/session.svelte';
 	import { terms } from '$lib/terms.svelte';
 	import { url } from '$lib/url';
@@ -33,6 +34,7 @@
 <div class="page">
 	<header class="page-head"><h1>{t.name}</h1></header>
 	{#if editable}
+		<section class="card photo"><h2>사진</h2><PhotoField type="teacher" id={t.id} name={t.name} token={t.photo} tone="violet" /></section>
 		<TeacherForm
 			classes={data.classes}
 			initial={{ name: t.name, position: t.position, officerRole: t.officerRole, birthDate: t.birthDate, phone: t.phone, status: t.status, notes: t.notes, classIds: t.classIds }}
@@ -61,6 +63,7 @@
 </div>
 
 <style>
+	.photo { padding: 18px 22px; max-width: 860px; display: flex; flex-direction: column; gap: 10px; }
 	.danger { padding: 18px 22px; max-width: 860px; display: flex; flex-direction: column; gap: 8px; border-color: #f5b8c7; background: #fffafb; }
 	.info { padding: 18px 22px; max-width: 860px; }
 	h2 { font-size: 16px; font-weight: 700; }

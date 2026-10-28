@@ -58,6 +58,8 @@ export interface Student {
 	address: string;
 	guardians: Guardian[];
 	notes: string;
+	/** 사진 토큰(없으면 null). 주소를 만들 때 쓴다. */
+	photo?: string | null;
 }
 
 export interface Teacher {
@@ -70,6 +72,8 @@ export interface Teacher {
 	phone: string;
 	status: 'active' | 'inactive';
 	classIds: number[];
+	photo?: string | null;
+	notes?: string;
 }
 
 export interface ClassRoom {
@@ -268,4 +272,43 @@ export interface SampleCounts {
 	events: number;
 	notices: number;
 	meetings: number;
+}
+
+/** 엑셀에서 읽은 한 줄 (몇 번째 줄인지 함께 보낸다) */
+export type StudentImportRow = StudentInput & { row: number };
+export type TeacherImportRow = TeacherInput & { row: number };
+
+export interface ImportResult {
+	created: number;
+	skipped: Array<{ row: number; name: string }>;
+	errors: Array<{ row: number; name: string; message: string }>;
+}
+
+export interface AttendanceStats {
+	who: 'students' | 'teachers';
+	weeks: number;
+	from: string;
+	to: string;
+	checkedWeeks: number;
+	overall: { rate: number | null; present: number; online: number; absent: number };
+	people: Array<{ id: number; name: string; tone: Tone; gradeLabel: string; className: string; present: number; online: number; absent: number; rate: number | null }>;
+	classes: Array<{ id: number; name: string; tone: Tone; members: number; rate: number | null }>;
+	byDate: Array<{ date: string; attended: number; recorded: number }>;
+}
+
+export interface PromotionChange {
+	id: number;
+	name: string;
+	fromLabel: string;
+	toLabel: string;
+	toTone: Tone;
+	graduate: boolean;
+	enroll: boolean;
+}
+
+export interface PromotionPlan {
+	year: number;
+	month: number;
+	applied: { at: string; count: number } | null;
+	changes: PromotionChange[];
 }

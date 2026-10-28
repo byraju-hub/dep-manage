@@ -1,38 +1,68 @@
 <script lang="ts">
 	import { goto, invalidateAll } from '$app/navigation';
-	import { ApiError, saveAttendance } from '$lib/api';
+	import { ApiError, photoUrl, saveAttendance, saveTeacherAttendance } from '$lib/api';
 	import { addDays, fullDate, longMD } from '$lib/dates';
 	import Avatar from '$lib/components/Avatar.svelte';
 	import Icon from '$lib/components/Icon.svelte';
 	import { attendanceColor } from '$lib/palette';
 	import { terms } from '$lib/terms.svelte';
 	import { url } from '$lib/url';
-	import type { AttendanceStatus } from '$lib/types';
+	import type { AttendanceStatus, Tone } from '$lib/types';
 
 	let { data } = $props();
 	const dept = $derived(data.dept);
-	const att = $derived(data.att);
+	const teachersMode = $derived(data.who === 'teachers');
+
+	interface Item {
+		id: number;
+		name: string;
+		meta: string;
+		tone: Tone | undefined;
+		photo: string | null;
+		status: AttendanceStatus;
+		classId: number | null;
+	}
+
+	// 학생과 교사를 같은 모양으로 만들어 한 화면에서 다룬다.
+	const all = $derived<Item[]>(
+		teachersMode
+			? (data.tatt?.teachers ?? []).map((t) => ({ id: t.id, name: t.name, meta: [t.position, t.officerRole].filter(Boolean).join(' · '), tone: 'violet' as Tone, photo: photoUrl('teacher', t.id, t.photo, true), status: t.status, classId: null }))
+			: (data.att?.students ?? []).map((s) => ({
+					id: s.id,
+					name: s.name,
+					meta: `${s.gradeLabel}${s.className ? ` · ${s.className}` : ''}${s.status === 'new' ? ` · ${terms.newMember}` : ''}`,
+					tone: s.tone,
+					photo: photoUrl('student', s.id, s.photo, true),
+					status: s.attendance,
+					classId: s.classId
+				}))
+	);
+	const date = $derived(data.date);
+	const classes = $derived(data.att?.classes ?? []);
 
 	// 저장하기 전까지는 화면에서만 바뀌는 임시 값
 	let draft = $state<Record<number, AttendanceStatus>>({});
 	let saved = $state(false);
+	let saveError = $state('');
 	$effect(() => {
-		draft = Object.fromEntries(att.students.map((s) => [s.id, s.status]));
+		draft = Object.fromEntries(all.map((i) => [i.id, i.status]));
 		saved = false;
+		saveError = '';
 	});
 
-	const list = $derived(att.students.filter((s) => !data.cls || s.classId === data.cls));
-	const count = (st: AttendanceStatus) => list.filter((s) => (draft[s.id] ?? 'present') === st).length;
+	const list = $derived(all.filter((i) => !data.cls || i.classId === data.cls));
+	const count = (st: AttendanceStatus) => list.filter((i) => (draft[i.id] ?? 'present') === st).length;
 	const total = $derived(list.length);
 	const pct = (n: number) => (total ? `${(n / total) * 100}%` : '0%');
 
-	function go(patch: { date?: string; cls?: number | null }) {
+	function go(patch: { date?: string; cls?: number | null; who?: 'students' | 'teachers' }) {
 		const p = new URLSearchParams();
-		const date = patch.date ?? data.date;
+		const who = patch.who ?? data.who;
+		p.set('date', patch.date ?? data.date);
+		if (who === 'teachers') p.set('who', 'teachers');
 		const cls = patch.cls === undefined ? data.cls : patch.cls;
-		p.set('date', date);
-		if (cls) p.set('class', String(cls));
-		goto(`${url(`/d/${dept.id}/attendance`)}?${p}`, { noScroll: true });
+		if (cls && who === 'students') p.set('class', String(cls));
+		void goto(`${url(`/d/${dept.id}/attendance`)}?${p}`, { noScroll: true });
 	}
 
 	function set(id: number, st: AttendanceStatus) {
@@ -40,11 +70,11 @@
 		saved = false;
 	}
 
-	let saveError = $state('');
 	async function save() {
 		saveError = '';
+		const entries = Object.entries(draft).map(([id, st]) => [Number(id), st] as [number, AttendanceStatus]);
 		try {
-			await saveAttendance(dept.id, att.date, Object.entries(draft).map(([id, st]) => [Number(id), st] as [number, AttendanceStatus]));
+			await (teachersMode ? saveTeacherAttendance(dept.id, date, entries) : saveAttendance(dept.id, date, entries));
 			saved = true;
 			await invalidateAll();
 		} catch (err) {
@@ -57,6 +87,7 @@
 		{ st: 'online', label: '온라인' },
 		{ st: 'absent', label: '결석' }
 	];
+	const who = $derived(teachersMode ? terms.teacher : terms.student);
 </script>
 
 <div class="page">
@@ -65,10 +96,16 @@
 			<h1>출석 체크</h1>
 			<p class="sub">{fullDate(data.date)} · {dept.name}</p>
 		</div>
-		<div class="actions desk">
-			<button class="btn btn-primary" onclick={save}><Icon name="check" size={18} />저장하기</button>
+		<div class="actions">
+			<a class="btn" href={url(`/d/${dept.id}/attendance/stats${teachersMode ? '?who=teachers' : ''}`)}><Icon name="calendar" size={18} />출석률 보기</a>
+			<button class="btn btn-primary desk" onclick={save}><Icon name="check" size={18} />저장하기</button>
 		</div>
 	</header>
+
+	<div class="tabs" role="tablist" aria-label="출석 대상">
+		<button role="tab" aria-selected={!teachersMode} class:on={!teachersMode} onclick={() => go({ who: 'students', cls: null })}>{terms.student}</button>
+		<button role="tab" aria-selected={teachersMode} class:on={teachersMode} onclick={() => go({ who: 'teachers', cls: null })}>{terms.teacher}</button>
+	</div>
 
 	<div class="date" role="group" aria-label="날짜 선택">
 		<button aria-label="이전 주" onclick={() => go({ date: addDays(data.date, -7) })}><Icon name="chevronLeft" size={20} /></button>
@@ -76,12 +113,14 @@
 		<button aria-label="다음 주" onclick={() => go({ date: addDays(data.date, 7) })}><Icon name="chevronRight" size={20} /></button>
 	</div>
 
-	<div class="chips" role="group" aria-label="{terms.class} 선택">
-		<button class:on={!data.cls} onclick={() => go({ cls: null })}>전체</button>
-		{#each att.classes as c (c.id)}
-			<button class:on={data.cls === c.id} onclick={() => go({ cls: c.id })}>{c.name}</button>
-		{/each}
-	</div>
+	{#if !teachersMode}
+		<div class="chips" role="group" aria-label="{terms.class} 선택">
+			<button class:on={!data.cls} onclick={() => go({ cls: null })}>전체</button>
+			{#each classes as c (c.id)}
+				<button class:on={data.cls === c.id} onclick={() => go({ cls: c.id })}>{c.name}</button>
+			{/each}
+		</div>
+	{/if}
 
 	<section class="summary" aria-live="polite">
 		<div class="box tone-green"><span>출석</span><strong>{count('present')}<small> 명</small></strong></div>
@@ -98,10 +137,10 @@
 		{#each list as s, i (s.id)}
 			{@const cur = draft[s.id] ?? 'present'}
 			<li class="row">
-				<Avatar name={s.name} tone={s.tone} size={40} />
+				<Avatar name={s.name} tone={s.tone} index={i} size={40} src={s.photo} />
 				<div class="nm">
-					<div class="n tone-{s.tone}">{s.name}</div>
-					<div class="m">{s.gradeLabel}{s.className ? ` · ${s.className}` : ''}{s.status === 'new' ? ` · ${terms.newMember}` : ''}</div>
+					<div class="n tone-{s.tone ?? 'slate'}">{s.name}</div>
+					<div class="m">{s.meta}</div>
 				</div>
 				<div class="seg" role="group" aria-label="{s.name} 출석 상태">
 					{#each choices as c (c.st)}
@@ -110,7 +149,7 @@
 				</div>
 			</li>
 		{:else}
-			<li class="none">이 {terms.class}에 {terms.student}이(가) 없습니다.</li>
+			<li class="none">{teachersMode ? `활동 중인 ${who}이(가) 없어요.` : `이 ${terms.class}에 ${who}이(가) 없어요.`}</li>
 		{/each}
 	</ul>
 
@@ -123,6 +162,9 @@
 
 <style>
 	.sub { font-size: 13.5px; color: var(--muted); }
+	.tabs { display: inline-flex; background: #e6ecfa; border-radius: 12px; padding: 4px; gap: 2px; width: fit-content; }
+	.tabs button { padding: 7px 22px; border: 0; border-radius: 9px; background: transparent; font-weight: 600; color: var(--ink-2); }
+	.tabs button.on { background: var(--surface); color: var(--accent); font-weight: 700; box-shadow: 0 1px 2px rgba(16, 24, 40, 0.12); }
 	.date { display: flex; align-items: center; justify-content: space-between; background: #eef2fb; border-radius: var(--radius-sm); padding: 4px; max-width: 420px; }
 	.date button { width: 44px; height: 40px; border: 0; background: transparent; display: flex; align-items: center; justify-content: center; border-radius: 10px; }
 	.date button:hover { background: rgba(255, 255, 255, 0.7); }
@@ -157,7 +199,7 @@
 	.desk { display: none; }
 
 	@media (min-width: 901px) {
-		.desk { display: flex; }
+		.desk { display: inline-flex; }
 		.savebar { display: none; }
 		.rows { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
 	}

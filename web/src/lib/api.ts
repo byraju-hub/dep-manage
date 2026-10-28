@@ -2,7 +2,12 @@
 // 주소는 /api/v1/... 이고, 로그인은 세션 쿠키, 변경 요청에는 X-CSRF-Token 을 붙인다.
 import { url } from './url';
 import type {
+	AttendanceStats,
 	AttendanceStatus,
+	ImportResult,
+	PromotionPlan,
+	StudentImportRow,
+	TeacherImportRow,
 	CalendarItem,
 	Church,
 	ClassRoom,
@@ -92,7 +97,7 @@ const patch = <T>(path: string, body?: unknown) => call<T>('PATCH', path, body ?
 const del = <T>(path: string) => call<T>('DELETE', path);
 
 // ===== 시스템 · 로그인 =====
-export const getStatus = () => get<{ installed: boolean; version: string }>('/system/status');
+export const getStatus = () => get<{ installed: boolean; version: string; needsUpdate?: boolean }>('/system/status');
 
 function remember(me: MeInfo): MeInfo {
 	csrf = me.csrf;
@@ -172,7 +177,7 @@ export const getAttendance = (deptId: number, date?: string) =>
 	get<{
 		date: string;
 		classes: Array<Pick<ClassRoom, 'id' | 'deptId' | 'year' | 'name' | 'tone'>>;
-		students: Array<StudentRow & { status: AttendanceStatus; checked: boolean }>;
+		students: Array<StudentRow & { attendance: AttendanceStatus; checked: boolean }>;
 	}>(`/d/${deptId}/attendance`, { date });
 
 export const saveAttendance = (deptId: number, date: string, entries: Array<[number, AttendanceStatus]>) => put<{ saved: number }>(`/d/${deptId}/attendance`, { date, entries });
@@ -246,3 +251,52 @@ export const deleteSampleData = () => del<SampleCounts>('/system/sample');
 export const createGradeLevel = (deptId: number, v: { label: string; tone: Tone }) => post<{ id: number }>(`/d/${deptId}/grade-levels`, v);
 export const updateGradeLevel = (id: number, v: { label: string; tone: Tone }) => put(`/grade-levels/${id}`, v);
 export const deleteGradeLevel = (id: number) => del(`/grade-levels/${id}`);
+
+
+// ===== 사진 =====
+export function photoUrl(type: 'student' | 'teacher', id: number, token: string | null | undefined, thumb = false): string | null {
+	if (!token) return null;
+	return url(`/api/v1/photos/${type}/${id}`) + `?v=${token}${thumb ? '&size=thumb' : ''}`;
+}
+
+async function sendFile<T>(path: string, file: File): Promise<T> {
+	const fd = new FormData();
+	fd.append('photo', file);
+	let res: Response;
+	try {
+		// Content-Type 은 브라우저가 파일 경계(boundary)와 함께 정해야 해서 직접 쓰지 않는다.
+		res = await fetch(url(`/api/v1${path}`), { method: 'POST', body: fd, credentials: 'same-origin', headers: csrf ? { 'X-CSRF-Token': csrf } : {} });
+	} catch {
+		throw new ApiError('network', '서버에 연결하지 못했어요.', 0);
+	}
+	const json = await res.json().catch(() => null);
+	if (!res.ok || !json?.ok) {
+		if (res.status === 401) onUnauthorized();
+		// JSON 이 아닌 응답은 호스팅의 업로드 보안 장치가 막은 경우다.
+		const blocked = json === null && res.status === 403 ? '서버의 보안 설정이 이 파일을 막았어요. 다른 사진으로 시도해 주세요.' : null;
+		throw new ApiError(json?.error?.code ?? 'error', json?.error?.message ?? blocked ?? '올리지 못했어요.', res.status);
+	}
+	return json.data as T;
+}
+
+export const uploadPhoto = (type: 'student' | 'teacher', id: number, file: File) => sendFile<{ photo: string }>(`/photos/${type}/${id}`, file);
+export const deletePhoto = (type: 'student' | 'teacher', id: number) => del(`/photos/${type}/${id}`);
+
+// ===== 명단 가져오기 · 교사 출석 · 출석률 · 학년 승급 =====
+export const importStudents = (deptId: number, items: StudentImportRow[]) => post<ImportResult>(`/d/${deptId}/students/bulk`, { items });
+export const importTeachers = (deptId: number, items: TeacherImportRow[]) => post<ImportResult>(`/d/${deptId}/teachers/bulk`, { items });
+
+export const getTeacherAttendance = (deptId: number, date?: string) =>
+	get<{ date: string; teachers: Array<{ id: number; name: string; position: string; officerRole: string; photo: string | null; status: AttendanceStatus; checked: boolean }> }>(`/d/${deptId}/teacher-attendance`, { date });
+export const saveTeacherAttendance = (deptId: number, date: string, entries: Array<[number, AttendanceStatus]>) => put<{ saved: number }>(`/d/${deptId}/teacher-attendance`, { date, entries });
+
+export const getAttendanceStats = (deptId: number, opts: { weeks?: number; who?: 'students' | 'teachers' } = {}) =>
+	get<AttendanceStats>(`/d/${deptId}/attendance/stats`, { weeks: opts.weeks, who: opts.who === 'teachers' ? 'teachers' : undefined });
+
+export const getPromotions = (deptId: number) => get<PromotionPlan>(`/d/${deptId}/promotions`);
+export const applyPromotions = (deptId: number, keepClass: boolean) => post<{ year: number; count: number }>(`/d/${deptId}/promotions/apply`, { confirm: 'promote', keepClass });
+
+// ===== 백업 · 업데이트 =====
+export const backupUrl = () => url('/api/v1/system/backup');
+export const getMigrations = () => get<{ current: number; latest: number; pending: boolean }>('/system/migrations');
+export const runMigrations = () => post<{ applied: number; current: number }>('/system/migrate');

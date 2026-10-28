@@ -1,9 +1,28 @@
 <script lang="ts">
 	import { goto, invalidateAll } from '$app/navigation';
-	import { ApiError, addSampleData, deleteSampleData } from '$lib/api';
+	import { ApiError, addSampleData, backupUrl, deleteSampleData, runMigrations } from '$lib/api';
+import { session } from '$lib/session.svelte';
 	import { url } from '$lib/url';
 
 	let { data } = $props();
+
+	let updating = $state(false);
+	let updateMsg = $state('');
+
+	async function update() {
+		updating = true;
+		error = updateMsg = '';
+		try {
+			const r = await runMigrations();
+			updateMsg = r.applied ? `업데이트를 적용했어요. (${r.applied}단계)` : '이미 최신이에요.';
+			await invalidateAll();
+			location.reload();
+		} catch (e) {
+			error = e instanceof ApiError ? e.message : '업데이트하지 못했어요.';
+		} finally {
+			updating = false;
+		}
+	}
 
 	let confirming = $state(false);
 	let busy = $state(false);
@@ -30,6 +49,26 @@
 		}
 	}
 </script>
+
+{#if session.user?.isOwner}
+	<section class="card box">
+		<h2>백업</h2>
+		<p class="sub">데이터베이스 전체와 학생·교사 사진을 zip 파일 하나로 내려받아요. 새 버전으로 올리기 전이나 정기적으로 받아 두세요. 파일 안의 <b>backup.sql</b>은 phpMyAdmin의 가져오기로 복원할 수 있어요.</p>
+		<p class="warnbox">이 파일에는 개인정보와 비밀번호 해시가 들어 있어요. 안전한 곳에만 보관하세요.</p>
+		<div><a class="btn btn-primary" href={backupUrl()} download>백업 파일 내려받기</a></div>
+	</section>
+
+	<section class="card box">
+		<h2>업데이트</h2>
+		{#if data.migrations?.pending}
+			<p class="warnbox">새 버전의 데이터베이스 변경이 아직 적용되지 않았어요. (현재 {data.migrations.current} → 최신 {data.migrations.latest})</p>
+			<div><button class="btn btn-primary" onclick={update} disabled={updating}>{updating ? '적용 중…' : '업데이트 적용'}</button></div>
+		{:else}
+			<p class="sub">데이터베이스가 최신 상태예요. (버전 {data.migrations?.current})</p>
+		{/if}
+		{#if updateMsg}<p class="okmsg" role="status">{updateMsg}</p>{/if}
+	</section>
+{/if}
 
 <section class="card box">
 	<h2>샘플 데이터</h2>
@@ -78,6 +117,7 @@
 	.btn.danger.solid { background: var(--danger); border-color: transparent; color: #fff; }
 	.confirm { background: #fff5f7; border: 1px solid #f5b8c7; border-radius: 12px; padding: 14px 16px; display: flex; flex-direction: column; gap: 12px; }
 	.row { display: flex; gap: 10px; }
+	.warnbox { background: #fff8ec; border: 1px solid #ffd9a8; color: #7a4a06; border-radius: 12px; padding: 10px 14px; font-size: 13.5px; }
 	.okmsg { color: var(--ok-ink); font-weight: 700; }
 	.err { color: var(--danger-ink); font-weight: 700; }
 	button:disabled { opacity: 0.6; }

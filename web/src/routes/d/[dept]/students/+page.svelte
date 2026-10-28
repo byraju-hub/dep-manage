@@ -1,8 +1,10 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { age, dotted } from '$lib/dates';
+	import { photoUrl } from '$lib/api';
+import { age, dotted } from '$lib/dates';
 	import Avatar from '$lib/components/Avatar.svelte';
-	import Icon from '$lib/components/Icon.svelte';
+	import ExcelMenu from '$lib/components/ExcelMenu.svelte';
+import Icon from '$lib/components/Icon.svelte';
 	import ViewTabs from '$lib/components/ViewTabs.svelte';
 	import { can } from '$lib/session.svelte';
 	import { terms } from '$lib/terms.svelte';
@@ -76,6 +78,7 @@
 			</div>
 		</div>
 		<div class="actions">
+			<ExcelMenu kind="students" {dept} students={data.students} />
 			{#if can(dept.id, 'admin')}
 				<a class="btn btn-primary" href={url(`/d/${dept.id}/students/new`)}><Icon name="plus" size={18} stroke={2.2} />{terms.student} 추가</a>
 			{/if}
@@ -123,7 +126,7 @@
 						{#each c.students.slice(0, 6) as s (s.id)}
 							<li>
 								<a href={url(`/d/${dept.id}/students/${s.id}`)}>
-									<Avatar name={s.name} tone={s.tone} size={28} />
+									<Avatar name={s.name} tone={s.tone} size={28} src={photoUrl('student', s.id, s.photo, true)} />
 									<span class="nm gname tone-{s.tone}">{s.name}</span>
 									{#if s.status === 'new'}<span class="badge badge-sq tone-orange sm">{terms.newMember}</span>{/if}
 								</a>
@@ -168,7 +171,7 @@
 							<tr>
 								<td class="first">
 									<a class="who" href={url(`/d/${dept.id}/students/${s.id}`)}>
-										<Avatar name={s.name} tone={s.tone} />
+										<Avatar name={s.name} tone={s.tone} src={photoUrl('student', s.id, s.photo, true)} />
 										<span class="strong gname tone-{s.tone}">{s.name}</span>
 									</a>
 								</td>

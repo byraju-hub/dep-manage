@@ -11,6 +11,7 @@
 		{ label: '용어', href: `${root}/terms` },
 		{ label: '학년 · 반 구조', href: `${root}/structure` },
 		{ label: '글꼴', href: `${root}/fonts` },
+		{ label: `${data.dept.terms.grade} 승급`, href: `${root}/promotion` },
 		{ label: '사용자', href: `${root}/users` },
 		...(session.user?.isOwner ? [{ label: '데이터', href: `${root}/data` }] : [])
 	]);
