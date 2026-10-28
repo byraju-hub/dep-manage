@@ -2,7 +2,9 @@
 	import { dotted } from '$lib/dates';
 	import Avatar from '$lib/components/Avatar.svelte';
 	import Icon from '$lib/components/Icon.svelte';
-	import { terms } from '$lib/terms.svelte';
+	import { can } from '$lib/session.svelte';
+import { terms } from '$lib/terms.svelte';
+import { url } from '$lib/url';
 
 	let { data } = $props();
 </script>
@@ -14,7 +16,9 @@
 			<p class="sub">활동 {data.teachers.filter((t) => t.status === 'active').length}명</p>
 		</div>
 		<div class="actions">
-			<button class="btn btn-primary"><Icon name="plus" size={18} stroke={2.2} />{terms.teacher} 추가</button>
+			{#if can(data.dept.id, 'admin')}
+				<a class="btn btn-primary" href={url(`/d/${data.dept.id}/teachers/new`)}><Icon name="plus" size={18} stroke={2.2} />{terms.teacher} 추가</a>
+			{/if}
 		</div>
 	</header>
 
@@ -35,7 +39,7 @@
 				<tbody>
 					{#each data.teachers as t, i (t.id)}
 						<tr>
-							<td class="first"><span class="who"><Avatar name={t.name} index={i + 2} /><span class="strong">{t.name}</span></span></td>
+							<td class="first"><a class="who" href={url(`/d/${data.dept.id}/teachers/${t.id}`)}><Avatar name={t.name} index={i + 2} /><span class="strong">{t.name}</span></a></td>
 							<td class="c2">{t.position}</td>
 							<td>{#if t.officerRole}<span class="badge badge-sq tone-violet">{t.officerRole}</span>{:else}<span class="muted">-</span>{/if}</td>
 							<td>{#if t.classNames.length}{#each t.classNames as c (c)}<span class="badge badge-sq tone-blue cls">{c}</span>{/each}{:else}<span class="muted">-</span>{/if}</td>

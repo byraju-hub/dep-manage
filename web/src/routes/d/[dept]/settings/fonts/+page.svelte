@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { invalidateAll } from '$app/navigation';
-	import { updateFonts } from '$lib/api';
+	import { ApiError, updateFonts } from '$lib/api';
+import { session } from '$lib/session.svelte';
 	import Tile from '$lib/components/Tile.svelte';
 	import { defaultFonts, ensureLoaded, fontDef, fonts, roleLabels } from '$lib/fonts';
 	import type { FontId, FontRole, FontSettings } from '$lib/types';
@@ -9,6 +10,7 @@
 
 	let form = $state<FontSettings>({ ...data.church.fonts });
 	let saved = $state(false);
+	let error = $state('');
 
 	$effect(() => {
 		form = { ...data.church.fonts };
@@ -29,9 +31,14 @@
 
 	async function save(e: SubmitEvent) {
 		e.preventDefault();
-		await updateFonts(form);
-		await invalidateAll();
-		saved = true;
+		error = '';
+		try {
+			await updateFonts(form);
+			await invalidateAll();
+			saved = true;
+		} catch (err) {
+			error = err instanceof ApiError ? err.message : '저장하지 못했어요.';
+		}
 	}
 
 	function reset() {
@@ -44,7 +51,7 @@
 	<form class="card main" onsubmit={save}>
 		<div>
 			<h2>글꼴</h2>
-			<p class="sub">세 곳의 글꼴을 따로 고를 수 있어요. 모든 부서에 적용되고, 글꼴 파일은 이 프로그램에 들어 있어서 인터넷 글꼴 서비스를 쓰지 않아요.</p>
+			<p class="sub">세 곳의 글꼴을 따로 고를 수 있어요. 모든 부서에 적용되고, 글꼴 파일은 이 프로그램에 들어 있어서 인터넷 글꼴 서비스를 쓰지 않아요.{#if !session.user?.isOwner} (저장은 교회 관리자만 할 수 있어요.){/if}</p>
 		</div>
 
 		{#each roles as role (role)}
@@ -61,6 +68,7 @@
 		<div class="foot">
 			<button type="button" class="link" onclick={reset}>기본 글꼴로 되돌리기</button>
 			<div class="buttons">
+				{#if error}<span class="bad" role="alert">{error}</span>{/if}
 				{#if saved}<span class="ok" role="status">저장했어요</span>{/if}
 				<button class="btn btn-primary" type="submit">저장</button>
 			</div>
@@ -108,6 +116,7 @@
 	.link { border: 0; background: transparent; color: var(--ink-2); font-weight: 600; text-decoration: underline; padding: 8px 4px; }
 	.buttons { display: flex; align-items: center; gap: 12px; }
 	.ok { color: var(--ok-ink); font-weight: 700; }
+	.bad { color: var(--danger-ink); font-weight: 700; }
 
 	.side { display: flex; flex-direction: column; gap: 12px; }
 	.sh { font-size: 13px; font-weight: 700; color: var(--ink-2); }

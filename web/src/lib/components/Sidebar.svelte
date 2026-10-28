@@ -3,7 +3,7 @@
 	import { page } from '$app/state';
 	import { buildNav, isActive, type NavItem } from '../nav';
 	import { url } from '../url';
-	import { session, logout } from '../session.svelte';
+	import { can, session, doLogout } from '../session.svelte';
 	import { terms } from '../terms.svelte';
 	import type { Department } from '../types';
 	import Icon from './Icon.svelte';
@@ -22,10 +22,7 @@
 		goto(url(`/d/${id}`));
 	}
 
-	async function signOut() {
-		logout();
-		await goto(url('/login'));
-	}
+	const signOut = doLogout;
 </script>
 
 {#snippet link(item: NavItem)}
@@ -71,13 +68,14 @@
 	</nav>
 
 	<div class="bottom">
-		{@render link(nav.settings)}
+		{#if can(dept.id, 'admin')}{@render link(nav.settings)}{/if}
 		<div class="user">
 			<span class="me" aria-hidden="true">{session.user?.name.slice(0, 1) ?? '?'}</span>
 			<div class="who">
 				<div class="name">{session.user?.name}</div>
 				<div class="role">{session.user?.roleLabel}</div>
 			</div>
+			<a class="out" href={url('/password')} aria-label="비밀번호 변경" title="비밀번호 변경"><Icon name="lock" size={18} /></a>
 			<button class="out" aria-label="로그아웃" title="로그아웃" onclick={signOut}><Icon name="logout" size={18} /></button>
 		</div>
 	</div>

@@ -4,7 +4,7 @@
 	import Avatar from '$lib/components/Avatar.svelte';
 	import Icon from '$lib/components/Icon.svelte';
 	import ViewTabs from '$lib/components/ViewTabs.svelte';
-	import { avatarTone } from '$lib/palette';
+	import { can } from '$lib/session.svelte';
 	import { terms } from '$lib/terms.svelte';
 	import { url } from '$lib/url';
 	import type { StudentStatus, Tone } from '$lib/types';
@@ -76,8 +76,9 @@
 			</div>
 		</div>
 		<div class="actions">
-			<button class="btn"><span class="g"><Icon name="download" size={18} /></span>내보내기</button>
-			<button class="btn btn-primary"><Icon name="plus" size={18} stroke={2.2} />{terms.student} 추가</button>
+			{#if can(dept.id, 'admin')}
+				<a class="btn btn-primary" href={url(`/d/${dept.id}/students/new`)}><Icon name="plus" size={18} stroke={2.2} />{terms.student} 추가</a>
+			{/if}
 		</div>
 	</header>
 

@@ -146,8 +146,126 @@ export interface Church {
 	fonts: FontSettings;
 }
 
+export type Role = 'admin' | 'teacher' | 'viewer';
+
 export interface SessionUser {
 	id: number;
 	name: string;
+	loginId: string;
+	isOwner: boolean;
+	mustChangePassword: boolean;
 	roleLabel: string;
+}
+
+export interface Membership {
+	deptId: number;
+	role: Role;
+}
+
+/** GET /auth/me 와 로그인 응답 */
+export interface MeInfo {
+	user: SessionUser;
+	memberships: Membership[];
+	csrf: string;
+}
+
+export interface UserRow {
+	id: number;
+	loginId: string;
+	name: string;
+	isOwner: boolean;
+	status: 'pending' | 'active' | 'disabled';
+	lastLoginAt: string | null;
+	createdAt: string;
+	memberships: Array<{ deptId: number; deptName: string; role: Role }>;
+}
+
+export interface InviteRow {
+	id: number;
+	code: string;
+	deptId: number | null;
+	deptName: string | null;
+	role: Role;
+	expiresAt: string | null;
+	maxUses: number;
+	usedCount: number;
+}
+
+export interface PlanEvent {
+	id: number;
+	deptId: number;
+	date: string;
+	endDate: string | null;
+	kind: EventKind;
+	title: string;
+	prayer: string;
+	notes: string;
+}
+
+export interface Meeting {
+	id: number;
+	deptId: number;
+	date: string;
+	title: string;
+	content: string;
+	attendees: string;
+}
+
+export interface MinistryPlanItem {
+	id?: number;
+	area: string;
+	title: string;
+	description: string;
+	period: string;
+	owner: string;
+	budget: number;
+	status: 'todo' | 'doing' | 'done';
+}
+
+export interface MinistryPlan {
+	year: number;
+	theme: string;
+	themeVerse: string;
+	vision: string;
+	goals: string;
+	status: 'draft' | 'final';
+	items: MinistryPlanItem[];
+}
+
+/** 학생을 새로 만들거나 고칠 때 보내는 값 */
+export interface StudentInput {
+	name: string;
+	gender: string;
+	birthDate: string;
+	phone: string;
+	school: string;
+	gradeId: number;
+	classId: number | null;
+	status: StudentStatus;
+	baptism: string;
+	mentor: string;
+	address: string;
+	notes: string;
+	guardians: Guardian[];
+}
+
+export interface TeacherInput {
+	name: string;
+	position: string;
+	officerRole: string;
+	birthDate: string;
+	phone: string;
+	status: 'active' | 'inactive';
+	notes: string;
+	classIds: number[];
+}
+
+export interface SampleCounts {
+	departments: number;
+	students: number;
+	teachers: number;
+	visits: number;
+	events: number;
+	notices: number;
+	meetings: number;
 }

@@ -1,7 +1,6 @@
-// 데이터 접근 계층. 화면은 이 파일의 함수만 부른다.
-// 지금은 mock/db.ts 의 가상 데이터를 돌려주고, 나중에 같은 함수 모양으로 fetch('/api/v1/...')를 부르도록 바꾼다.
-import { addDays, daysUntilBirthday, fromISO, monthKey, shortMD, sundayOf, today, toISO } from './dates';
-import { db, persist, resetDemo } from './mock/db';
+// 서버(PHP) API 와 이야기하는 곳. 화면은 이 파일의 함수만 부른다.
+// 주소는 /api/v1/... 이고, 로그인은 세션 쿠키, 변경 요청에는 X-CSRF-Token 을 붙인다.
+import { url } from './url';
 import type {
 	AttendanceStatus,
 	CalendarItem,
@@ -9,68 +8,127 @@ import type {
 	ClassRoom,
 	Department,
 	FontSettings,
-	MinistryEvent,
-	Notice,
+	InviteRow,
+	MeInfo,
+	Meeting,
+	MinistryPlan,
+	PlanEvent,
+	Role,
+	SampleCounts,
 	Student,
+	StudentInput,
 	Teacher,
+	TeacherInput,
 	Terms,
 	Tone,
+	UserRow,
 	Visit
 } from './types';
 
-const tick = () => Promise.resolve();
-
-/** 학년의 색. 색이 없는 단계(예비 등)는 회색 톤. */
-function gradeTone(dept: Department, gradeId: number): Tone {
-	return dept.gradeLevels.find((g) => g.id === gradeId)?.tone ?? 'slate';
+export class ApiError extends Error {
+	constructor(
+		public code: string,
+		message: string,
+		public status: number
+	) {
+		super(message);
+	}
 }
 
-// ===== 교회 (모든 부서에 적용되는 설정) =====
-export async function getChurch(): Promise<Church> {
-	await tick();
-	return db.church;
+let csrf = '';
+let onUnauthorized: () => void = () => {};
+
+/** 로그인이 풀렸을 때 할 일(로그인 화면으로 보내기)을 session 쪽에서 등록한다. */
+export function setUnauthorizedHandler(fn: () => void) {
+	onUnauthorized = fn;
 }
 
-export async function updateChurchName(name: string): Promise<void> {
-	await tick();
-	db.church.name = name.trim() || db.church.name;
-	persist();
+type Query = Record<string, string | number | null | undefined | boolean>;
+
+function qs(q?: Query): string {
+	if (!q) return '';
+	const p = new URLSearchParams();
+	for (const [k, v] of Object.entries(q)) if (v !== undefined && v !== null && v !== '' && v !== false) p.set(k, String(v));
+	const s = p.toString();
+	return s ? `?${s}` : '';
 }
 
-export async function updateFonts(fonts: FontSettings): Promise<void> {
-	await tick();
-	db.church.fonts = { ...fonts };
-	persist();
+async function call<T>(method: string, path: string, body?: unknown, query?: Query): Promise<T> {
+	const headers: Record<string, string> = { Accept: 'application/json' };
+	if (body !== undefined) headers['Content-Type'] = 'application/json';
+	if (method !== 'GET' && csrf) headers['X-CSRF-Token'] = csrf;
+
+	let res: Response;
+	try {
+		res = await fetch(url(`/api/v1${path}`) + qs(query), {
+			method,
+			headers,
+			body: body === undefined ? undefined : JSON.stringify(body),
+			credentials: 'same-origin'
+		});
+	} catch {
+		throw new ApiError('network', '서버에 연결하지 못했어요. 인터넷 연결을 확인한 뒤 다시 시도해 주세요.', 0);
+	}
+
+	let json: { ok?: boolean; data?: T; error?: { code?: string; message?: string } } | null = null;
+	try {
+		json = await res.json();
+	} catch {
+		// JSON 이 아닌 응답(서버 오류 화면 등)
+	}
+	if (!res.ok || !json?.ok) {
+		const code = json?.error?.code ?? 'error';
+		// 로그인/내 정보 확인 중의 401 은 정상 흐름이라 여기서 처리하지 않는다.
+		if (res.status === 401 && !path.startsWith('/auth/')) onUnauthorized();
+		throw new ApiError(code, json?.error?.message ?? '요청을 처리하지 못했어요. 잠시 뒤 다시 시도해 주세요.', res.status);
+	}
+	return json.data as T;
 }
+
+const get = <T>(path: string, query?: Query) => call<T>('GET', path, undefined, query);
+const post = <T>(path: string, body?: unknown) => call<T>('POST', path, body ?? {});
+const put = <T>(path: string, body?: unknown) => call<T>('PUT', path, body ?? {});
+const patch = <T>(path: string, body?: unknown) => call<T>('PATCH', path, body ?? {});
+const del = <T>(path: string) => call<T>('DELETE', path);
+
+// ===== 시스템 · 로그인 =====
+export const getStatus = () => get<{ installed: boolean; version: string }>('/system/status');
+
+function remember(me: MeInfo): MeInfo {
+	csrf = me.csrf;
+	return me;
+}
+
+export async function login(loginId: string, password: string): Promise<MeInfo> {
+	return remember(await post<MeInfo>('/auth/login', { loginId, password }));
+}
+export async function fetchMe(): Promise<MeInfo> {
+	return remember(await get<MeInfo>('/auth/me'));
+}
+export async function logout(): Promise<void> {
+	await post('/auth/logout');
+	csrf = '';
+}
+export const changePassword = (current: string, newPassword: string) => post('/auth/password', { current, newPassword });
+export const checkInvite = (code: string) => get<{ department: string | null; role: Role; roleLabel: string }>(`/invites/${encodeURIComponent(code)}/check`);
+export const join = (v: { code: string; loginId: string; name: string; password: string }) => post<{ status: string }>('/auth/join', v);
+
+// ===== 교회 =====
+export const getChurch = () => get<Church>('/church');
+export const updateChurchName = (name: string) => put('/church', { name });
+export const updateFonts = (fonts: FontSettings) => put('/church', { fonts });
 
 // ===== 부서 =====
-export async function listDepartments(): Promise<Department[]> {
-	await tick();
-	return db.departments;
-}
+export const listDepartments = () => get<Department[]>('/departments');
 
 export async function getDepartment(id: number): Promise<Department> {
-	await tick();
-	const d = db.departments.find((x) => x.id === id);
-	if (!d) throw new Error('부서를 찾을 수 없습니다.');
+	const d = (await listDepartments()).find((x) => x.id === id);
+	if (!d) throw new ApiError('not_found', '부서를 찾을 수 없습니다.', 404);
 	return d;
 }
-
-export async function updateTerms(deptId: number, terms: Terms): Promise<void> {
-	const d = await getDepartment(deptId);
-	d.terms = { ...terms };
-	d.name = terms.department;
-	persist();
-}
-
-export async function updateDepartmentInfo(deptId: number, info: { name: string; pastorName: string; headName: string }): Promise<void> {
-	const d = await getDepartment(deptId);
-	d.name = info.name;
-	d.terms = { ...d.terms, department: info.name };
-	d.pastorName = info.pastorName;
-	d.headName = info.headName;
-	persist();
-}
+export const createDepartment = (v: { name: string; pastorName: string; headName: string; terms: Terms; grades: string[] }) => post<Department>('/departments', v);
+export const updateDepartmentInfo = (deptId: number, info: { name: string; pastorName: string; headName: string }) => put(`/d/${deptId}`, info);
+export const updateTerms = (deptId: number, terms: Terms) => put(`/d/${deptId}/terms`, { terms });
 
 // ===== 학생 · 교사 · 반 =====
 export interface StudentRow extends Student {
@@ -81,240 +139,110 @@ export interface StudentRow extends Student {
 	recent: boolean[]; // 최근 4주 출석 (오래된 순서)
 }
 
-export async function listStudents(
-	deptId: number,
-	opts: { q?: string; gradeId?: number | null; status?: 'enrolled' | 'all' | 'inactive' } = {}
-): Promise<StudentRow[]> {
-	await tick();
-	const dept = await getDepartment(deptId);
-	const q = (opts.q ?? '').trim();
-	const status = opts.status ?? 'enrolled';
-	const sundays = recentSundays(4).reverse();
-	let rows = db.students.filter((s) => s.deptId === deptId);
-	if (status === 'enrolled') rows = rows.filter((s) => s.status !== 'inactive');
-	if (status === 'inactive') rows = rows.filter((s) => s.status === 'inactive');
-	if (opts.gradeId) rows = rows.filter((s) => s.gradeId === opts.gradeId);
-	if (q) rows = rows.filter((s) => s.name.includes(q) || s.school.includes(q));
-	// 학년 → 반 → 이름(가나다) 순
-	rows = [...rows].sort(
-		(a, b) => a.gradeId - b.gradeId || (a.classId ?? 99) - (b.classId ?? 99) || a.name.localeCompare(b.name, 'ko')
-	);
-	return rows.map((s) => ({
-		...s,
-		tone: gradeTone(dept, s.gradeId),
-		gradeLabel: dept.gradeLevels.find((g) => g.id === s.gradeId)?.label ?? '',
-		className: db.classes.find((c) => c.id === s.classId)?.name ?? '',
-		recent: sundays.map((d) => (db.attendance[d]?.[s.id] ?? 'absent') !== 'absent')
-	}));
-}
+export const listStudents = (deptId: number, opts: { q?: string; gradeId?: number | null; status?: 'enrolled' | 'all' | 'inactive'; classId?: number | null } = {}) =>
+	get<StudentRow[]>(`/d/${deptId}/students`, { q: opts.q, grade: opts.gradeId, status: opts.status === 'enrolled' ? undefined : opts.status, class: opts.classId });
 
-export async function getStudent(id: number) {
-	await tick();
-	const s = db.students.find((x) => x.id === id);
-	if (!s) throw new Error('학생을 찾을 수 없습니다.');
-	const dept = await getDepartment(s.deptId);
-	const sundays = recentSundays(12);
-	return {
-		student: s,
-		tone: gradeTone(dept, s.gradeId),
-		gradeLabel: dept.gradeLevels.find((g) => g.id === s.gradeId)?.label ?? '',
-		className: db.classes.find((c) => c.id === s.classId)?.name ?? '',
-		history: sundays.map((d) => ({ date: d, status: (db.attendance[d]?.[s.id] ?? 'absent') as AttendanceStatus })),
-		visits: db.visits.filter((v) => v.targets.some((t) => t.type === 'student' && t.id === id))
-	};
-}
+export const getStudent = (id: number) =>
+	get<{
+		student: StudentRow;
+		tone: Tone;
+		gradeLabel: string;
+		className: string;
+		history: Array<{ date: string; status: AttendanceStatus }>;
+		visits: VisitRow[];
+	}>(`/students/${id}`);
 
-export async function listClasses(deptId: number): Promise<Array<ClassRoom & { students: StudentRow[]; leaders: string[] }>> {
-	await tick();
-	const students = await listStudents(deptId);
-	return db.classes
-		.filter((c) => c.deptId === deptId)
-		.map((c) => ({
-			...c,
-			students: students.filter((s) => s.classId === c.id),
-			leaders: db.teachers.filter((t) => t.classIds.includes(c.id)).map((t) => t.name)
-		}));
-}
+export const createStudent = (deptId: number, v: StudentInput) => post<{ id: number }>(`/d/${deptId}/students`, v);
+export const updateStudent = (id: number, v: StudentInput) => put(`/students/${id}`, v);
+export const deleteStudent = (id: number) => del(`/students/${id}`);
 
-export async function listTeachers(deptId: number): Promise<Array<Teacher & { classNames: string[] }>> {
-	await tick();
-	return db.teachers
-		.filter((t) => t.deptId === deptId)
-		.map((t) => ({ ...t, classNames: t.classIds.map((id) => db.classes.find((c) => c.id === id)?.name ?? '') }));
-}
+export const listClasses = (deptId: number) => get<Array<ClassRoom & { students: StudentRow[]; leaders: string[] }>>(`/d/${deptId}/classes`);
+export const createClass = (deptId: number, v: { name: string; tone: Tone; year?: number }) => post<{ id: number }>(`/d/${deptId}/classes`, v);
+export const updateClass = (id: number, v: { name: string; tone: Tone; teacherIds?: number[] }) => put(`/classes/${id}`, v);
+export const deleteClass = (id: number) => del(`/classes/${id}`);
+
+export type TeacherRow = Teacher & { classNames: string[] };
+export const listTeachers = (deptId: number) => get<TeacherRow[]>(`/d/${deptId}/teachers`);
+export const createTeacher = (deptId: number, v: TeacherInput) => post<{ id: number }>(`/d/${deptId}/teachers`, v);
+export const updateTeacher = (id: number, v: TeacherInput) => put(`/teachers/${id}`, v);
+export const deleteTeacher = (id: number) => del(`/teachers/${id}`);
 
 // ===== 출석 =====
-/** 오늘 이전(또는 오늘)의 일요일을 최근 순으로 n개. */
-export function recentSundays(n: number): string[] {
-	const last = sundayOf(today());
-	return Array.from({ length: n }, (_, i) => addDays(last, -7 * i));
-}
+export const getAttendance = (deptId: number, date?: string) =>
+	get<{
+		date: string;
+		classes: Array<Pick<ClassRoom, 'id' | 'deptId' | 'year' | 'name' | 'tone'>>;
+		students: Array<StudentRow & { status: AttendanceStatus; checked: boolean }>;
+	}>(`/d/${deptId}/attendance`, { date });
 
-export async function getAttendance(deptId: number, date: string) {
-	await tick();
-	const students = await listStudents(deptId);
-	const map = db.attendance[date] ?? {};
-	return {
-		date,
-		classes: await listClasses(deptId),
-		students: students.map((s) => ({ ...s, status: (map[s.id] ?? 'present') as AttendanceStatus, checked: s.id in map }))
-	};
-}
-
-export async function setAttendance(date: string, studentId: number, status: AttendanceStatus): Promise<void> {
-	await tick();
-	db.attendance[date] ??= {};
-	db.attendance[date][studentId] = status;
-	persist();
-}
-
-/** 한꺼번에 저장: 아직 체크하지 않은 학생은 '출석'으로 기록한다. */
-export async function saveAttendance(date: string, entries: Array<[number, AttendanceStatus]>): Promise<void> {
-	await tick();
-	db.attendance[date] ??= {};
-	for (const [id, st] of entries) db.attendance[date][id] = st;
-	persist();
-}
+export const saveAttendance = (deptId: number, date: string, entries: Array<[number, AttendanceStatus]>) => put<{ saved: number }>(`/d/${deptId}/attendance`, { date, entries });
 
 // ===== 심방 =====
 export interface VisitRow extends Visit {
 	targetNames: string[];
 }
+export const listVisits = (deptId: number, filter: 'all' | 'pending' = 'all') => get<VisitRow[]>(`/d/${deptId}/visits`, { filter: filter === 'pending' ? 'pending' : undefined });
+export const searchPeople = (deptId: number, q: string) => (q.trim() ? get<Array<{ type: 'student' | 'teacher'; id: number; name: string; hint: string }>>(`/d/${deptId}/people`, { q }) : Promise.resolve([]));
+export const saveVisit = (deptId: number, v: Omit<Visit, 'id' | 'deptId' | 'author' | 'followUpDone'>) => post<{ id: number }>(`/d/${deptId}/visits`, v);
+export const completeFollowUp = (visitId: number) => post(`/visits/${visitId}/complete`);
+export const deleteVisit = (visitId: number) => del(`/visits/${visitId}`);
 
-function targetName(t: { type: 'student' | 'teacher'; id: number }): string {
-	const list = t.type === 'student' ? db.students : db.teachers;
-	return list.find((x) => x.id === t.id)?.name ?? '(삭제됨)';
-}
+// ===== 공지 · 일정 · 회의록 · 사역 계획 =====
+export const listNotices = (deptId: number) => get<Array<{ id: number; deptId: number | null; title: string; body: string; date: string; pinned: boolean }>>(`/d/${deptId}/notices`);
+export const createNotice = (deptId: number, v: { title: string; body: string; pinned: boolean; churchWide: boolean }) => post<{ id: number }>(`/d/${deptId}/notices`, v);
+export const deleteNotice = (id: number) => del(`/notices/${id}`);
 
-export async function listVisits(deptId: number, filter: 'all' | 'pending' = 'all'): Promise<VisitRow[]> {
-	await tick();
-	let rows = db.visits.filter((v) => v.deptId === deptId);
-	if (filter === 'pending') rows = rows.filter((v) => v.followUp && !v.followUpDone);
-	return [...rows]
-		.sort((a, b) => b.date.localeCompare(a.date) || b.id - a.id)
-		.map((v) => ({ ...v, targetNames: v.targets.map(targetName) }));
-}
+export const listEvents = (deptId: number, year: number) => get<PlanEvent[]>(`/d/${deptId}/events`, { year });
+export type EventInput = Pick<PlanEvent, 'date' | 'endDate' | 'kind' | 'title' | 'prayer' | 'notes'>;
+export const createEvent = (deptId: number, v: EventInput) => post<{ id: number }>(`/d/${deptId}/events`, v);
+export const createEventsBulk = (deptId: number, events: EventInput[]) => post<{ saved: number }>(`/d/${deptId}/events/bulk`, { events });
+export const updateEvent = (id: number, v: EventInput) => put(`/events/${id}`, v);
+export const deleteEvent = (id: number) => del(`/events/${id}`);
 
-export async function searchPeople(deptId: number, q: string) {
-	await tick();
-	const k = q.trim();
-	if (!k) return [];
-	return [
-		...db.students.filter((s) => s.deptId === deptId && s.name.includes(k)).map((s) => ({ type: 'student' as const, id: s.id, name: s.name, hint: '학생' })),
-		...db.teachers.filter((t) => t.deptId === deptId && t.name.includes(k)).map((t) => ({ type: 'teacher' as const, id: t.id, name: t.name, hint: '교사' }))
-	].slice(0, 8);
-}
+export const listMeetings = (deptId: number) => get<Meeting[]>(`/d/${deptId}/meetings`);
+export type MeetingInput = Pick<Meeting, 'date' | 'title' | 'content' | 'attendees'>;
+export const createMeeting = (deptId: number, v: MeetingInput) => post<{ id: number }>(`/d/${deptId}/meetings`, v);
+export const updateMeeting = (id: number, v: MeetingInput) => put(`/meetings/${id}`, v);
+export const deleteMeeting = (id: number) => del(`/meetings/${id}`);
 
-export async function saveVisit(v: Omit<Visit, 'id'>): Promise<Visit> {
-	await tick();
-	const visit: Visit = { ...v, id: Math.max(0, ...db.visits.map((x) => x.id)) + 1 };
-	db.visits.push(visit);
-	persist();
-	return visit;
-}
+export const getMinistryPlan = (deptId: number, year: number) => get<MinistryPlan | null>(`/d/${deptId}/ministry-plans/${year}`);
+export const saveMinistryPlan = (deptId: number, plan: MinistryPlan) => put(`/d/${deptId}/ministry-plans/${plan.year}`, plan);
 
-export async function completeFollowUp(visitId: number): Promise<void> {
-	await tick();
-	const v = db.visits.find((x) => x.id === visitId);
-	if (v) v.followUpDone = true;
-	persist();
-}
+// ===== 캘린더 · 대시보드 =====
+export const getCalendar = (deptId: number, month: string) => get<CalendarItem[]>(`/d/${deptId}/calendar`, { month });
 
-// ===== 공지 =====
-export async function listNotices(deptId: number): Promise<Notice[]> {
-	await tick();
-	return db.notices
-		.filter((n) => n.deptId === null || n.deptId === deptId)
-		.sort((a, b) => Number(b.pinned) - Number(a.pinned) || b.date.localeCompare(a.date));
-}
+export const getDashboard = (deptId: number) =>
+	get<{
+		lastSunday: string;
+		studentCount: number;
+		studentDiff: number;
+		enrolledTotal: number;
+		teacherCount: number;
+		teacherDiff: number;
+		teacherTotal: number;
+		newCount: number;
+		birthdayCount: number;
+		birthdayRange: string;
+		trend: Array<{ date: string; count: number }>;
+		absentees: Array<{ id: number; name: string; tone: Tone; weeks: number; gradeLabel: string; className: string }>;
+		followUps: VisitRow[];
+		notices: Array<{ id: number; deptId: number | null; title: string; body: string; date: string; pinned: boolean }>;
+	}>(`/d/${deptId}/dashboard`);
 
-// ===== 사역 캘린더 =====
-export async function getCalendar(deptId: number, month: string): Promise<CalendarItem[]> {
-	await tick();
-	const items: CalendarItem[] = [];
-	const [y, m] = month.split('-').map(Number);
-	const dept = await getDepartment(deptId);
+// ===== 사용자 · 초대 (설정) =====
+export const listUsers = () => get<UserRow[]>('/users');
+export const updateUser = (id: number, v: { status?: 'active' | 'disabled'; name?: string; memberships?: Array<{ deptId: number; role: Role | null }> }) => patch(`/users/${id}`, v);
+export const resetUserPassword = (id: number) => post<{ tempPassword: string }>(`/users/${id}/reset-password`);
+export const listInvites = () => get<InviteRow[]>('/invites');
+export const createInvite = (v: { deptId: number; role: Role; maxUses: number; days: number }) => post<{ id: number; code: string }>('/invites', v);
+export const deleteInvite = (id: number) => del(`/invites/${id}`);
 
-	for (const e of db.events as MinistryEvent[]) {
-		if (e.deptId === deptId && monthKey(e.date) === month) items.push({ date: e.date, kind: e.kind, label: e.title });
-	}
-	const people = [
-		...db.students.filter((s) => s.deptId === deptId && s.status !== 'inactive'),
-		...db.teachers.filter((t) => t.deptId === deptId)
-	];
-	for (const p of people) {
-		const b = fromISO(p.birthDate);
-		if (b.getMonth() + 1 === m) {
-			items.push({ date: toISO(new Date(y, m - 1, b.getDate())), kind: 'birthday', label: `${p.name.slice(1)} 생일` });
-		}
-	}
-	for (const v of db.visits.filter((x) => x.deptId === deptId)) {
-		if (monthKey(v.date) === month) {
-			const first = targetName(v.targets[0]);
-			items.push({ date: v.date, kind: 'visit', label: `${first.slice(1)} ${dept.terms.visit}` });
-		}
-		if (v.followUp && !v.followUpDone && v.followUpDue && monthKey(v.followUpDue) === month) {
-			items.push({ date: v.followUpDue, kind: 'due', label: `${targetName(v.targets[0]).slice(1)} 후속` });
-		}
-	}
-	return items;
-}
+// ===== 샘플 데이터 (설정 → 데이터) =====
+export const getSampleCounts = () => get<SampleCounts>('/system/sample');
+export const addSampleData = () => post<SampleCounts>('/system/sample');
+export const deleteSampleData = () => del<SampleCounts>('/system/sample');
 
-// ===== 대시보드 =====
-export async function getDashboard(deptId: number) {
-	await tick();
-	const dept = await getDepartment(deptId);
-	const sundays = recentSundays(12); // 최근 순
-	const [last, prev] = sundays;
-	const enrolled = db.students.filter((s) => s.deptId === deptId && s.status !== 'inactive');
-	const count = (date: string) =>
-		enrolled.filter((s) => (db.attendance[date]?.[s.id] ?? 'absent') !== 'absent').length;
-	const teachers = db.teachers.filter((t) => t.deptId === deptId && t.status === 'active');
-	const tCount = (date: string) => teachers.filter((t) => (db.teacherAttendance[date]?.[t.id] ?? 'absent') !== 'absent').length;
-
-	const todayISO = today();
-	const birthdays = [
-		...enrolled.map((s) => ({ name: s.name, birth: s.birthDate })),
-		...teachers.map((t) => ({ name: t.name, birth: t.birthDate }))
-	].filter((p) => daysUntilBirthday(p.birth, todayISO) <= 6);
-
-	// 연속 결석 주수 (가장 최근 주일부터 거슬러 올라가며 센다)
-	const absentees = enrolled
-		.map((s) => {
-			let weeks = 0;
-			for (const d of sundays) {
-				if ((db.attendance[d]?.[s.id] ?? 'absent') === 'absent') weeks++;
-				else break;
-			}
-			return { student: s, weeks };
-		})
-		.filter((x) => x.weeks >= 3)
-		.sort((a, b) => b.weeks - a.weeks)
-		.map((x) => ({
-			id: x.student.id,
-			name: x.student.name,
-			tone: gradeTone(dept, x.student.gradeId),
-			weeks: x.weeks,
-			gradeLabel: dept.gradeLevels.find((g) => g.id === x.student.gradeId)?.label ?? '',
-			className: db.classes.find((c) => c.id === x.student.classId)?.name ?? ''
-		}));
-
-	return {
-		lastSunday: last,
-		studentCount: count(last),
-		studentDiff: count(last) - count(prev),
-		enrolledTotal: enrolled.length,
-		teacherCount: tCount(last),
-		teacherDiff: tCount(last) - tCount(prev),
-		teacherTotal: teachers.length,
-		newCount: db.students.filter((s) => s.deptId === deptId && s.status === 'new').length,
-		birthdayCount: birthdays.length,
-		birthdayRange: `${shortMD(todayISO)} ~ ${shortMD(addDays(todayISO, 6))}`,
-		trend: [...sundays].reverse().map((d) => ({ date: d, count: count(d) })),
-		absentees,
-		followUps: (await listVisits(deptId, 'pending')).sort((a, b) => (a.followUpDue ?? '').localeCompare(b.followUpDue ?? '')),
-		notices: await listNotices(deptId)
-	};
-}
-
-export { resetDemo };
+// ===== 학년 단계 (설정 → 학년 · 반 구조) =====
+export const createGradeLevel = (deptId: number, v: { label: string; tone: Tone }) => post<{ id: number }>(`/d/${deptId}/grade-levels`, v);
+export const updateGradeLevel = (id: number, v: { label: string; tone: Tone }) => put(`/grade-levels/${id}`, v);
+export const deleteGradeLevel = (id: number) => del(`/grade-levels/${id}`);

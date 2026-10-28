@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { goto, invalidateAll } from '$app/navigation';
-	import { completeFollowUp, saveVisit, searchPeople } from '$lib/api';
+	import { ApiError, completeFollowUp, saveVisit, searchPeople } from '$lib/api';
 	import { addDays, dotted, shortMD, today } from '$lib/dates';
 	import Icon from '$lib/components/Icon.svelte';
 	import { methodTone, visitMethods } from '$lib/palette';
@@ -42,20 +42,21 @@
 		error = '';
 		if (!targets.length) return (error = '대상을 한 명 이상 추가해 주세요.');
 		if (!title.trim()) return (error = '제목을 입력해 주세요.');
-		await saveVisit({
-			deptId: dept.id,
-			date,
-			targets: targets.map(({ type, id }) => ({ type, id })),
-			method,
-			companions,
-			title: title.trim(),
-			content,
-			followUp: followUp.trim(),
-			followUpDue: followUp.trim() && followUpDue ? followUpDue : null,
-			followUpDone: false,
-			visibility,
-			author: session.user?.name ?? ''
-		});
+		try {
+			await saveVisit(dept.id, {
+				date,
+				targets: targets.map(({ type, id }) => ({ type, id })),
+				method,
+				companions,
+				title: title.trim(),
+				content,
+				followUp: followUp.trim(),
+				followUpDue: followUp.trim() && followUpDue ? followUpDue : null,
+				visibility
+			});
+		} catch (err) {
+			return (error = err instanceof ApiError ? err.message : '저장하지 못했어요.');
+		}
 		ok = `${terms.visit} 기록을 저장했어요.`;
 		targets = [];
 		title = content = followUp = followUpDue = companions = '';

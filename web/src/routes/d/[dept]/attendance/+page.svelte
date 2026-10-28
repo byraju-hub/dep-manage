@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { goto, invalidateAll } from '$app/navigation';
-	import { saveAttendance } from '$lib/api';
+	import { ApiError, saveAttendance } from '$lib/api';
 	import { addDays, fullDate, longMD } from '$lib/dates';
 	import Avatar from '$lib/components/Avatar.svelte';
 	import Icon from '$lib/components/Icon.svelte';
@@ -40,10 +40,16 @@
 		saved = false;
 	}
 
+	let saveError = $state('');
 	async function save() {
-		await saveAttendance(att.date, Object.entries(draft).map(([id, st]) => [Number(id), st]));
-		saved = true;
-		await invalidateAll();
+		saveError = '';
+		try {
+			await saveAttendance(dept.id, att.date, Object.entries(draft).map(([id, st]) => [Number(id), st] as [number, AttendanceStatus]));
+			saved = true;
+			await invalidateAll();
+		} catch (err) {
+			saveError = err instanceof ApiError ? err.message : '저장하지 못했어요.';
+		}
 	}
 
 	const choices: Array<{ st: AttendanceStatus; label: string }> = [
@@ -110,6 +116,7 @@
 
 	<div class="savebar">
 		{#if saved}<span class="ok" role="status">저장했어요</span>{/if}
+		{#if saveError}<span class="bad" role="alert">{saveError}</span>{/if}
 		<button class="btn btn-primary btn-lg btn-block" onclick={save}>저장하기</button>
 	</div>
 </div>
@@ -145,6 +152,7 @@
 
 	.savebar { display: flex; align-items: center; gap: 12px; }
 	.ok { color: var(--ok-ink); font-weight: 700; white-space: nowrap; }
+	.bad { color: var(--danger-ink); font-weight: 700; font-size: 13px; }
 	.savebar :global(.btn) { max-width: 360px; }
 	.desk { display: none; }
 

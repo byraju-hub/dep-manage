@@ -3,7 +3,7 @@
 	import { page } from '$app/state';
 	import { buildNav, isActive, type NavItem } from '../nav';
 	import { url } from '../url';
-	import { logout } from '../session.svelte';
+	import { can, doLogout } from '../session.svelte';
 	import { terms } from '../terms.svelte';
 	import type { Department } from '../types';
 	import Icon from './Icon.svelte';
@@ -12,7 +12,7 @@
 	let { dept, depts, pending, churchName }: { dept: Department; depts: Department[]; pending: number; churchName: string } = $props();
 
 	const nav = $derived(buildNav(terms, pending));
-	const all = $derived([...nav.main, ...nav.plan, nav.settings]);
+	const all = $derived([...nav.main, ...nav.plan, ...(can(dept.id, 'admin') ? [nav.settings] : [])]);
 	const tabs = $derived(nav.main.filter((n) => n.tab));
 	let sheet = $state(false);
 
@@ -25,8 +25,8 @@
 		await goto(path);
 	}
 	async function signOut() {
-		logout();
-		await go(url('/login'));
+		sheet = false;
+		await doLogout();
 	}
 </script>
 

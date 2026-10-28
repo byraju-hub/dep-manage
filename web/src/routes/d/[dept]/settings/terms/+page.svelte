@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { invalidateAll } from '$app/navigation';
-	import { updateTerms } from '$lib/api';
+	import { ApiError, updateTerms } from '$lib/api';
 	import Tile from '$lib/components/Tile.svelte';
 	import { presets } from '$lib/presets';
 	import type { Terms } from '$lib/types';
@@ -9,6 +9,7 @@
 
 	let form = $state<Terms>({ ...data.dept.terms });
 	let saved = $state(false);
+	let error = $state('');
 	let picked = $state('');
 
 	$effect(() => {
@@ -38,9 +39,14 @@
 
 	async function save(e: SubmitEvent) {
 		e.preventDefault();
-		await updateTerms(data.dept.id, { ...form, department: form.department.trim() || data.dept.name });
-		await invalidateAll();
-		saved = true;
+		error = '';
+		try {
+			await updateTerms(data.dept.id, { ...form, department: form.department.trim() || data.dept.name });
+			await invalidateAll();
+			saved = true;
+		} catch (err) {
+			error = err instanceof ApiError ? err.message : '저장하지 못했어요.';
+		}
 	}
 
 	function reset() {
@@ -82,6 +88,7 @@
 		<div class="foot">
 			<button type="button" class="link" onclick={reset}>저장하지 않은 변경 되돌리기</button>
 			<div class="buttons">
+				{#if error}<span class="bad" role="alert">{error}</span>{/if}
 				{#if saved}<span class="ok" role="status">저장했어요</span>{/if}
 				<button class="btn btn-primary" type="submit">저장</button>
 			</div>
@@ -125,6 +132,7 @@
 	.link { border: 0; background: transparent; color: var(--ink-2); font-weight: 600; text-decoration: underline; padding: 8px 4px; }
 	.buttons { display: flex; align-items: center; gap: 12px; }
 	.ok { color: var(--ok-ink); font-weight: 700; }
+	.bad { color: var(--danger-ink); font-weight: 700; }
 
 	.side { display: flex; flex-direction: column; gap: 12px; }
 	.sh { font-size: 13px; font-weight: 700; color: var(--ink-2); }

@@ -3,7 +3,8 @@
 	import Avatar from '$lib/components/Avatar.svelte';
 	import Icon from '$lib/components/Icon.svelte';
 	import { attendanceColor, methodTone } from '$lib/palette';
-	import { terms } from '$lib/terms.svelte';
+	import { can } from '$lib/session.svelte';
+import { terms } from '$lib/terms.svelte';
 	import { url } from '$lib/url';
 
 	let { data } = $props();
@@ -18,7 +19,7 @@
 
 	<header class="hero card">
 		<Avatar name={s.name} tone={d.tone} size={64} />
-		<div class="who">
+		<div class="who grow">
 			<h1 class="tone-{d.tone}">{s.name}</h1>
 			<div class="chips">
 				<span class="badge badge-sq tone-blue">{d.gradeLabel}{d.className ? ` · ${d.className}` : ''}</span>
@@ -26,6 +27,9 @@
 				<span class="muted">{s.gender} · 만 {age(s.birthDate)}세</span>
 			</div>
 		</div>
+		{#if can(data.dept.id, 'teacher')}
+			<a class="btn" href={url(`/d/${data.dept.id}/students/${s.id}/edit`)}>수정</a>
+		{/if}
 	</header>
 
 	<div class="cols">
