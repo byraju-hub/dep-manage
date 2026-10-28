@@ -83,6 +83,8 @@
 	}
 	.pop button, .pop a { text-align: left; padding: 10px 12px; border: 0; border-radius: 8px; background: transparent; font-weight: 500; color: var(--ink); }
 	.pop button:hover, .pop a:hover { background: var(--field-bg); }
+	/* 버튼이 화면 왼쪽에 있는 모바일에서는 왼쪽에 맞춰 연다 */
+	@media (max-width: 900px) { .pop { right: auto; left: 0; max-width: calc(100vw - 32px); } }
 	.pop button:disabled { opacity: 0.6; }
 	.err { color: var(--danger-ink); font-size: 13px; padding: 4px 12px; }
 </style>

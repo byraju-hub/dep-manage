@@ -59,4 +59,9 @@ export function applyFonts(settings: FontSettings): void {
 		root.style.setProperty(`--font-${role}`, fontDef(settings[role]).stack);
 		void ensureLoaded(settings[role]);
 	}
+	// 고운돋움·나눔고딕은 얇아 보여서 기본 글자를 굵게 쓴다. (고운돋움은 굵은 글꼴 파일이 없어 브라우저가 굵게 만들어 준다)
+	const weight = settings.body === 'nanum-gothic' || settings.body === 'gowun-dodum' ? '700' : '400';
+	root.style.setProperty('--weight-body', weight);
+	const synth = (['title', 'menu', 'body'] as FontRole[]).some((r) => settings[r] === 'gowun-dodum');
+	root.style.fontSynthesis = synth ? 'weight' : 'none';
 }
