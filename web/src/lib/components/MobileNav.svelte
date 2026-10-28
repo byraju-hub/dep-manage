@@ -85,7 +85,7 @@ import Icon from './Icon.svelte';
 		position: sticky; top: 0; z-index: 10;
 	}
 	.church { font-size: 12px; color: var(--muted); line-height: 1.2; }
-	.dept { font-family: var(--font-title); font-size: 18px; font-weight: 700; line-height: 1.35; }
+	.dept { font-family: var(--font-title); font-size: 24px; font-weight: 700; line-height: 1.3; }
 
 	.tabs, .sheet { font-family: var(--font-menu); }
 	.tabs {

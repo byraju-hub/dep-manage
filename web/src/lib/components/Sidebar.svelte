@@ -103,7 +103,7 @@ import Icon from './Icon.svelte';
 		width: 38px; height: 38px; border-radius: 12px; background: var(--accent); color: #fff;
 		display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 17px;
 	}
-	.church { font-family: var(--font-title); font-size: 15px; font-weight: 700; line-height: 1.2; }
+	.church { font-family: var(--font-title); font-size: 21px; font-weight: 700; line-height: 1.2; overflow-wrap: anywhere; }
 	.sub { font-size: 12px; color: var(--muted); }
 
 	.switcher { position: relative; }

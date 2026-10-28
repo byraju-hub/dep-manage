@@ -95,7 +95,7 @@ import { terms } from '$lib/terms.svelte';
 <style>
 	.back { display: inline-flex; align-items: center; gap: 4px; color: var(--accent); font-weight: 700; font-size: 13.5px; width: fit-content; padding: 4px 0; }
 	.hero { display: flex; align-items: center; gap: 18px; padding: 18px 22px; }
-	h1 { font-size: 24px; font-weight: 700; color: var(--fg); }
+	h1 { font-size: 32px; font-weight: 700; line-height: 1.25; color: var(--fg); }
 	.chips { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 4px; }
 	.cols { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 	.box { padding: 16px 20px; display: flex; flex-direction: column; gap: 8px; }
