@@ -5,7 +5,7 @@
 카페24 같은 저가 PHP + MariaDB 웹호스팅에서 설치해 쓸 수 있도록 만들고, 무상으로 배포합니다.
 
 - 구조 설계: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
-- 화면 설계: [design/](design/) (디자인 캔버스 원본)
+- 디자인 기준(색·원칙): [docs/DESIGN.md](docs/DESIGN.md)
 - 진행 계획: [PLAN.md](PLAN.md)
 - 라이선스: [GNU AGPL-3.0](LICENSE)
 
