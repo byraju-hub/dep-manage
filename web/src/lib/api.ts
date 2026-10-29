@@ -198,6 +198,7 @@ export const deleteVisit = (visitId: number) => del(`/visits/${visitId}`);
 // ===== 공지 · 일정 · 회의록 · 사역 계획 =====
 export const listNotices = (deptId: number) => get<Array<{ id: number; deptId: number | null; title: string; body: string; date: string; pinned: boolean }>>(`/d/${deptId}/notices`);
 export const createNotice = (deptId: number, v: { title: string; body: string; pinned: boolean; churchWide: boolean }) => post<{ id: number }>(`/d/${deptId}/notices`, v);
+export const updateNotice = (id: number, v: { title: string; body: string; pinned: boolean }) => put(`/notices/${id}`, v);
 export const deleteNotice = (id: number) => del(`/notices/${id}`);
 
 export const listEvents = (deptId: number, year: number) => get<PlanEvent[]>(`/d/${deptId}/events`, { year });

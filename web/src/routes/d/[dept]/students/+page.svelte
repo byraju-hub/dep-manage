@@ -1,6 +1,7 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
-	import { photoUrl } from '$lib/api';
+	import { goto, invalidateAll } from '$app/navigation';
+	import { ApiError, deleteStudent, photoUrl } from '$lib/api';
+	import { confirmDeletePerson } from '$lib/confirm';
 import { age, dotted } from '$lib/dates';
 	import Avatar from '$lib/components/Avatar.svelte';
 	import ExcelMenu from '$lib/components/ExcelMenu.svelte';
@@ -14,6 +15,16 @@ import Icon from '$lib/components/Icon.svelte';
 
 	let { data } = $props();
 	const dept = $derived(data.dept);
+
+	async function removeStudent(id: number, name: string) {
+		if (!confirmDeletePerson(name, terms.student)) return;
+		try {
+			await deleteStudent(id);
+			await invalidateAll();
+		} catch (e) {
+			alert(e instanceof ApiError ? e.message : '삭제하지 못했어요.');
+		}
+	}
 
 	const views = $derived([
 		{ key: 'basic', label: '기본' },
@@ -190,7 +201,13 @@ import Icon from '$lib/components/Icon.svelte';
 									<td class="c2 nowrap">{guardian(s.guardians)}</td>
 								{/if}
 								<td>{@render dots(s.recent)}</td>
-								<td class="end"><a href={url(`/d/${dept.id}/students/${s.id}`)} aria-label="{s.name} 상세"><Icon name="chevronRight" size={18} /></a></td>
+								<td class="end">
+										<span class="acts">
+											{#if can(dept.id, 'teacher')}<a class="ico" href={url(`/d/${dept.id}/students/${s.id}/edit`)} aria-label="{s.name} 수정" title="수정"><Icon name="edit" size={17} /></a>{/if}
+											{#if can(dept.id, 'admin')}<button class="ico del" onclick={() => removeStudent(s.id, s.name)} aria-label="{s.name} 삭제" title="삭제"><Icon name="trash" size={17} /></button>{/if}
+											<a class="ico" href={url(`/d/${dept.id}/students/${s.id}`)} aria-label="{s.name} 상세" title="상세"><Icon name="chevronRight" size={18} /></a>
+										</span>
+									</td>
 							</tr>
 						{:else}
 							<tr><td colspan="12" class="none">조건에 맞는 {terms.student}이(가) 없습니다.</td></tr>
@@ -235,8 +252,11 @@ import Icon from '$lib/components/Icon.svelte';
 	th { padding: 12px 10px; font-weight: 600; white-space: nowrap; }
 	td { padding: 8px 10px; border-top: 1px solid var(--line-soft); white-space: nowrap; }
 	.first { padding-left: 20px; }
-	.end { padding-right: 20px; width: 32px; text-align: right; }
-	.end :global(svg) { color: var(--muted); }
+	.end { padding-right: 16px; text-align: right; white-space: nowrap; }
+	.acts { display: inline-flex; gap: 4px; }
+	.ico { width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--line-strong); border-radius: 10px; background: var(--surface); color: var(--ink-2); }
+	.ico:hover { background: var(--field-bg); }
+	.ico.del { color: var(--danger-ink); }
 	.c2 { color: var(--ink-2); }
 	.nowrap { white-space: nowrap; }
 	.who { display: flex; align-items: center; gap: 12px; }

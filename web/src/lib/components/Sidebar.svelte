@@ -80,6 +80,7 @@ import Icon from './Icon.svelte';
 			<a class="out" href={url('/password')} aria-label="비밀번호 변경" title="비밀번호 변경"><Icon name="lock" size={18} /></a>
 			<button class="out" aria-label="로그아웃" title="로그아웃" onclick={signOut}><Icon name="logout" size={18} /></button>
 		</div>
+		<p class="copy">ⓒ {new Date().getFullYear()} {churchName}. All Rights Reserved.</p>
 	</div>
 </aside>
 
@@ -106,6 +107,7 @@ import Icon from './Icon.svelte';
 	}
 	.church { font-family: var(--font-title); font-size: 21px; font-weight: 700; line-height: 1.2; overflow-wrap: anywhere; }
 	.sub { font-size: 12px; color: var(--muted); }
+	.copy { margin: 4px 6px 0; font-size: 11px; line-height: 1.4; color: var(--muted); overflow-wrap: anywhere; }
 
 	.switcher { position: relative; }
 	.switch-btn {

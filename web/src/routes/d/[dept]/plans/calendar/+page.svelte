@@ -1,11 +1,12 @@
 <script lang="ts">
 	import { goto, invalidateAll } from '$app/navigation';
-	import { ApiError, createEvent, createEventsBulk, deleteEvent, type EventInput } from '$lib/api';
+	import { ApiError, createEvent, createEventsBulk, deleteEvent, updateEvent, type EventInput } from '$lib/api';
+	import Icon from '$lib/components/Icon.svelte';
 	import { dotted, shortMD, today, weekdayLabels, fromISO } from '$lib/dates';
 	import { eventKinds } from '$lib/palette';
 	import { can } from '$lib/session.svelte';
 	import { url } from '$lib/url';
-	import type { EventKind } from '$lib/types';
+	import type { EventKind, PlanEvent } from '$lib/types';
 
 	let { data } = $props();
 	const canWrite = $derived(can(data.dept.id, 'admin'));
@@ -34,13 +35,41 @@
 		void goto(`${url(`/d/${data.dept.id}/plans/calendar`)}?year=${data.year + delta}`);
 	}
 
+	// 고치는 중인 일정 (없으면 새로 추가)
+	let editing = $state<PlanEvent | null>(null);
+
+	function startEdit(ev: PlanEvent) {
+		editing = ev;
+		date = ev.date;
+		endDate = ev.endDate && ev.endDate !== ev.date ? ev.endDate : '';
+		kind = ev.kind;
+		title = ev.title;
+		prayer = ev.prayer ?? '';
+		error = message = '';
+		window.scrollTo({ top: 0, behavior: 'smooth' });
+	}
+
+	function cancelEdit() {
+		editing = null;
+		title = prayer = endDate = '';
+		date = today();
+		kind = 'ministry';
+	}
+
 	async function add(e: SubmitEvent) {
 		e.preventDefault();
 		error = message = '';
 		if (!title.trim()) return void (error = '제목을 입력해 주세요.');
 		try {
-			await createEvent(data.dept.id, { date, endDate: endDate || null, kind, title: title.trim(), prayer, notes: '' });
-			title = prayer = '';
+			const v = { date, endDate: endDate || null, kind, title: title.trim(), prayer, notes: editing?.notes ?? '' };
+			if (editing) {
+				await updateEvent(editing.id, v);
+				message = '고쳤어요.';
+				cancelEdit();
+			} else {
+				await createEvent(data.dept.id, v);
+				title = prayer = '';
+			}
 			await invalidateAll();
 		} catch (err) {
 			error = err instanceof ApiError ? err.message : '저장하지 못했어요.';
@@ -115,7 +144,10 @@
 			</label>
 			<label class="field wide"><span>제목</span><input class="input" bind:value={title} placeholder="예: 주일 공과, 수련회" /></label>
 			<label class="field"><span>기도자 (선택)</span><input class="input" bind:value={prayer} /></label>
-			<div class="go"><button class="btn btn-primary" type="submit">일정 추가</button></div>
+			<div class="go">
+				<button class="btn btn-primary" type="submit">{editing ? '수정 저장' : '일정 추가'}</button>
+				{#if editing}<button class="btn" type="button" onclick={cancelEdit}>취소</button>{/if}
+			</div>
 		</form>
 
 		<div class="bulk">
@@ -143,7 +175,12 @@
 						<span class="badge badge-sq tone-{eventKinds[ev.kind].tone}">{eventKinds[ev.kind].label}</span>
 						<span class="t">{ev.title}</span>
 						{#if ev.prayer}<span class="muted">기도 · {ev.prayer}</span>{/if}
-						{#if canWrite}<button class="del" onclick={() => remove(ev.id)} aria-label="{dotted(ev.date)} {ev.title} 삭제">삭제</button>{/if}
+						{#if canWrite}
+							<span class="acts">
+								<button class="ico" onclick={() => startEdit(ev)} aria-label="{dotted(ev.date)} {ev.title} 수정" title="수정"><Icon name="edit" size={17} /></button>
+								<button class="ico del" onclick={() => confirm(`'${ev.title}' 일정을 지울까요?`) && remove(ev.id)} aria-label="{dotted(ev.date)} {ev.title} 삭제" title="삭제"><Icon name="trash" size={17} /></button>
+							</span>
+						{/if}
 					</li>
 				{/each}
 			</ul>
@@ -160,7 +197,7 @@
 	.yr strong { min-width: 72px; text-align: center; }
 	.add { padding: 16px 20px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; align-items: end; }
 	.wide { grid-column: span 2; }
-	.go { display: flex; }
+	.go { display: flex; gap: 8px; }
 	.bulk { display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
 	.paste { padding: 16px 20px; width: 100%; display: flex; flex-direction: column; gap: 10px; }
 	.err { color: var(--danger-ink); font-weight: 700; }
@@ -173,7 +210,10 @@
 	.when { width: 120px; font-weight: 600; flex-shrink: 0; }
 	.when small { color: var(--muted); font-weight: 400; margin-left: 2px; }
 	.t { font-weight: 600; }
-	.del { margin-left: auto; border: 0; background: transparent; color: var(--muted); font-size: 13px; text-decoration: underline; }
+	.acts { margin-left: auto; display: flex; gap: 4px; }
+	.ico { width: 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--line-strong); border-radius: 10px; background: var(--surface); color: var(--ink-2); }
+	.ico:hover { background: var(--field-bg); }
+	.ico.del { color: var(--danger-ink); }
 	.none { padding: 28px; text-align: center; color: var(--muted); }
 	@media (max-width: 720px) { .add { grid-template-columns: repeat(2, minmax(0, 1fr)); } .wide { grid-column: span 2; } .when { width: 100%; } }
 </style>

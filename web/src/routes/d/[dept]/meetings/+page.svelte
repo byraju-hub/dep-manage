@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { invalidateAll } from '$app/navigation';
 	import { ApiError, createMeeting, deleteMeeting, updateMeeting } from '$lib/api';
+	import Icon from '$lib/components/Icon.svelte';
 	import { dotted, today } from '$lib/dates';
 	import { can } from '$lib/session.svelte';
 	import { terms } from '$lib/terms.svelte';
@@ -98,7 +99,10 @@
 						{#if m.attendees}<p class="muted">참석 · {m.attendees}</p>{/if}
 						<p class="txt">{m.content || '내용이 없어요.'}</p>
 						{#if canWrite}
-							<div class="row"><button class="btn sm" onclick={() => startEdit(m)}>수정</button><button class="btn sm" onclick={() => remove(m.id)}>삭제</button></div>
+							<div class="row">
+								<button class="ico" onclick={() => startEdit(m)} aria-label="{m.title} 수정" title="수정"><Icon name="edit" size={17} /></button>
+								<button class="ico del" onclick={() => confirm(`'${m.title}' 회의록을 지울까요?`) && remove(m.id)} aria-label="{m.title} 삭제" title="삭제"><Icon name="trash" size={17} /></button>
+							</div>
 						{/if}
 					</div>
 				{/if}
@@ -125,7 +129,9 @@
 	.body { padding: 0 0 16px 124px; display: flex; flex-direction: column; gap: 8px; }
 	.txt { white-space: pre-line; line-height: 1.7; }
 	.row { display: flex; gap: 8px; }
-	.btn.sm { height: 34px; padding: 0 12px; font-size: 13px; }
+	.ico { width: 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--line-strong); border-radius: 10px; background: var(--surface); color: var(--ink-2); }
+	.ico:hover { background: var(--field-bg); }
+	.ico.del { color: var(--danger-ink); }
 	.none { color: var(--muted); padding: 24px; text-align: center; }
 	@media (max-width: 720px) { .two { grid-template-columns: 1fr; } .d { width: 90px; } .body { padding-left: 0; } }
 </style>
