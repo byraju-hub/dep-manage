@@ -169,6 +169,8 @@ function can_manage_user(array $caller, array $target): bool
     $managed = managed_dept_ids($caller);
     if ($managed === null) return true;
     $theirs = array_keys(memberships((int)$target['id']));
+    // 초대 코드 없이 가입해 아직 어느 부서에도 속하지 않은 승인 대기자는 모든 부서 관리자가 볼 수 있다.
+    if (!$theirs && $target['status'] === 'pending') return true;
     return (bool)array_intersect($managed, $theirs);
 }
 
@@ -180,7 +182,7 @@ route('GET', '/users', function () {
     $out = [];
     foreach ($users as $u) {
         $mem = memberships((int)$u['id']);
-        if ($managed !== null && !array_intersect($managed, array_keys($mem)) && (int)$u['id'] !== (int)$caller['id']) continue;
+        if ($managed !== null && !array_intersect($managed, array_keys($mem)) && (int)$u['id'] !== (int)$caller['id'] && !(!$mem && $u['status'] === 'pending')) continue;
         $out[] = [
             'id' => (int)$u['id'], 'loginId' => $u['login_id'], 'name' => $u['name'], 'isOwner' => (int)$u['is_owner'] === 1,
             'status' => $u['status'], 'lastLoginAt' => $u['last_login_at'], 'createdAt' => $u['created_at'],

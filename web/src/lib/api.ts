@@ -119,11 +119,12 @@ export async function logout(): Promise<void> {
 }
 export const changePassword = (current: string, newPassword: string) => post('/auth/password', { current, newPassword });
 export const checkInvite = (code: string) => get<{ department: string | null; role: Role; roleLabel: string }>(`/invites/${encodeURIComponent(code)}/check`);
-export const join = (v: { code: string; loginId: string; name: string; password: string }) => post<{ status: string }>('/auth/join', v);
+export const join = (v: { code?: string; loginId: string; name: string; password: string }) => post<{ status: string }>('/auth/join', v);
 
 // ===== 교회 =====
 export const getChurch = () => get<Church>('/church');
 export const updateChurchName = (name: string) => put('/church', { name });
+export const updateOpenSignup = (openSignup: boolean) => put('/church', { openSignup });
 export const updateFonts = (fonts: FontSettings) => put('/church', { fonts });
 
 // ===== 부서 =====

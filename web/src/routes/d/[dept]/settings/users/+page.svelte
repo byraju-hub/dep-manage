@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { invalidateAll } from '$app/navigation';
-	import { ApiError, createInvite, deleteInvite, resetUserPassword, updateUser } from '$lib/api';
+	import { onMount } from 'svelte';
+	import { ApiError, createInvite, getChurch, updateOpenSignup, deleteInvite, resetUserPassword, updateUser } from '$lib/api';
 	import { can, session } from '$lib/session.svelte';
 	import { url } from '$lib/url';
 	import type { Role, UserRow } from '$lib/types';
@@ -12,6 +13,19 @@
 	const statusTone = { pending: 'tone-orange', active: 'tone-green', disabled: 'tone-slate' } as const;
 
 	let error = $state('');
+	let openSignup = $state(false);
+	onMount(async () => {
+		try { openSignup = !!(await getChurch()).openSignup; } catch { /* 표시만 못 할 뿐 */ }
+	});
+	async function toggleSignup(on: boolean) {
+		error = '';
+		try {
+			await updateOpenSignup(on);
+			openSignup = on;
+		} catch (e) {
+			error = e instanceof ApiError ? e.message : '바꾸지 못했어요.';
+		}
+	}
 	let tempPassword = $state<{ name: string; pw: string } | null>(null);
 	let newInvite = $state<{ code: string } | null>(null);
 
@@ -119,6 +133,14 @@
 		</div>
 	</section>
 
+	{#if session.user?.isOwner}
+		<section class="card box">
+			<h2>코드 없는 가입 신청</h2>
+			<label class="chk"><input type="checkbox" checked={openSignup} onchange={(e) => toggleSignup(e.currentTarget.checked)} /> 초대 코드 없이도 가입 신청을 받기</label>
+			<p class="sub">켜면 가입 화면에서 코드를 비워 두고 신청할 수 있어요. 신청한 사람은 <b>어느 부서에도 속하지 않은 승인 대기</b> 상태로 들어오고, 위 사용자 목록에서 <b>승인</b>하고 부서·역할을 정해 주기 전에는 아무것도 볼 수 없어요. (같은 IP에서 한 시간에 5번까지만 신청할 수 있어요.)</p>
+		</section>
+	{/if}
+
 	<section class="card box">
 		<h2>초대 코드</h2>
 		<p class="sub">코드를 받은 사람이 <b>가입 화면</b>에 입력하면 이 부서에 이 역할로 가입 신청을 해요.</p>
@@ -188,4 +210,5 @@
 	.newcode { background: var(--accent-soft); border-radius: 12px; padding: 12px 16px; display: flex; flex-direction: column; gap: 4px; }
 	.link { word-break: break-all; }
 	.inv { min-width: 560px; }
+	.chk { display: flex; align-items: center; gap: 8px; font-weight: 600; }
 </style>

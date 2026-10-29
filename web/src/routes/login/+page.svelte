@@ -76,7 +76,7 @@ import ChurchLogo from '$lib/components/ChurchLogo.svelte';
 			</form>
 
 			<div class="foot">
-				<a href={url('/join')} class="link">초대 코드로 가입하기</a>
+				<a href={url('/join')} class="link">{data.church.openSignup ? '가입 신청하기' : '초대 코드로 가입하기'}</a>
 				<p class="muted small">가입 후 관리자가 승인하면 사용할 수 있어요.<br />비밀번호를 5번 틀리면 15분 동안 잠겨요.</p>
 			</div>
 		{/if}

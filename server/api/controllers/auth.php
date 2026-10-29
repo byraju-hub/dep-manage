@@ -122,7 +122,16 @@ route('GET', '/invites/{code}/check', function (array $p) {
 route('POST', '/auth/join', function () {
     check_origin();
     $b = body();
-    $code = strtoupper(in_str($b, 'code', 32, true, '초대 코드'));
+    $code = strtoupper(trim((string)($b['code'] ?? '')));
+    if ($code === '') {
+        // 초대 코드 없는 가입: 교회 관리자가 열어 둔 경우에만. 어느 부서에도 속하지 않은 승인 대기 상태로 들어온다.
+        if (!setting('open_signup', false)) json_fail('invalid_code', '초대 코드를 입력해 주세요.', 422);
+        $ip = client_ip();
+        if ((int)val('SELECT COUNT(*) FROM ' . t('login_attempts') . " WHERE ip = ? AND login_id = '#join' AND attempted_at > (NOW() - INTERVAL 1 HOUR)", [$ip]) >= 5) {
+            json_fail('throttled', '가입 신청을 너무 많이 했어요. 한 시간 뒤에 다시 시도해 주세요.', 429);
+        }
+        q('INSERT INTO ' . t('login_attempts') . " (ip, login_id) VALUES (?, '#join')", [$ip]);
+    }
     $loginId = in_str($b, 'loginId', 50, true, '아이디');
     $name = in_str($b, 'name', 50, true, '이름');
     $pw = (string)($b['password'] ?? '');
@@ -132,8 +141,8 @@ route('POST', '/auth/join', function () {
     $pdo = db();
     $pdo->beginTransaction();
     try {
-        $inv = row('SELECT * FROM ' . t('invites') . ' WHERE code = ? FOR UPDATE', [$code]);
-        if (!$inv || ($inv['expires_at'] !== null && strtotime($inv['expires_at']) <= time()) || (int)$inv['used_count'] >= (int)$inv['max_uses']) {
+        $inv = $code === '' ? null : row('SELECT * FROM ' . t('invites') . ' WHERE code = ? FOR UPDATE', [$code]);
+        if ($code !== '' && (!$inv || ($inv['expires_at'] !== null && strtotime($inv['expires_at']) <= time()) || (int)$inv['used_count'] >= (int)$inv['max_uses'])) {
             json_fail('invalid_code', '초대 코드가 올바르지 않거나 기간이 지났습니다.', 404);
         }
         if (val('SELECT 1 FROM ' . t('users') . ' WHERE login_id = ?', [$loginId])) {
@@ -143,10 +152,10 @@ route('POST', '/auth/join', function () {
             'INSERT INTO ' . t('users') . " (login_id, password_hash, name, status) VALUES (?, ?, ?, 'pending')",
             [$loginId, password_hash($pw, PASSWORD_DEFAULT), $name]
         );
-        if ($inv['department_id'] !== null) {
+        if ($inv && $inv['department_id'] !== null) {
             q('INSERT INTO ' . t('memberships') . ' (user_id, department_id, role) VALUES (?, ?, ?)', [$uid, $inv['department_id'], $inv['role']]);
         }
-        q('UPDATE ' . t('invites') . ' SET used_count = used_count + 1 WHERE id = ?', [$inv['id']]);
+        if ($inv) q('UPDATE ' . t('invites') . ' SET used_count = used_count + 1 WHERE id = ?', [$inv['id']]);
         $pdo->commit();
     } catch (Throwable $e) {
         if ($pdo->inTransaction()) $pdo->rollBack();

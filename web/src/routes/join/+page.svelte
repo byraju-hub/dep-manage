@@ -36,11 +36,11 @@ import ChurchLogo from '$lib/components/ChurchLogo.svelte';
 	async function submit(e: SubmitEvent) {
 		e.preventDefault();
 		error = '';
-		if (!code.trim() || !name.trim() || !loginId.trim() || !password) return void (error = '모든 칸을 입력해 주세요.');
+		if ((!data.church.openSignup && !code.trim()) || !name.trim() || !loginId.trim() || !password) return void (error = '모든 칸을 입력해 주세요.');
 		if (password !== password2) return void (error = '비밀번호가 서로 일치하지 않아요.');
 		busy = true;
 		try {
-			await join({ code: code.trim(), loginId: loginId.trim(), name: name.trim(), password });
+			await join({ code: code.trim() || undefined, loginId: loginId.trim(), name: name.trim(), password });
 			done = true;
 		} catch (err) {
 			error = err instanceof ApiError ? err.message : '가입하지 못했어요. 잠시 뒤 다시 시도해 주세요.';
@@ -58,20 +58,20 @@ import ChurchLogo from '$lib/components/ChurchLogo.svelte';
 			<ChurchLogo name={data.church.name} logo={data.church.logo} size={52} />
 			<div>
 				<h1>{data.church.name}</h1>
-				<p class="muted">초대 코드로 가입하기</p>
+				<p class="muted">{data.church.openSignup ? '가입 신청하기' : '초대 코드로 가입하기'}</p>
 			</div>
 		</div>
 
 		{#if done}
 			<div class="ok" role="status">
 				<strong>가입 신청이 끝났어요.</strong>
-				<p>관리자가 승인하면 로그인할 수 있어요. 승인되면 방금 만든 아이디와 비밀번호로 들어오세요.</p>
+				<p>관리자가 승인하면 로그인할 수 있어요. 승인되면 방금 만든 아이디와 비밀번호로 들어오세요.{!code.trim() ? ' 어느 부서에서 일하는지 관리자에게 알려 주세요.' : ''}</p>
 			</div>
 			<a class="btn btn-primary btn-lg btn-block" href={url('/login')}>로그인 화면으로</a>
 		{:else}
 			<form onsubmit={submit} novalidate>
 				<label class="field">
-					<span>초대 코드</span>
+					<span>초대 코드{data.church.openSignup ? ' (없으면 비워 두세요)' : ''}</span>
 					<input class="input big mono" bind:value={code} autocapitalize="characters" autocomplete="off" />
 				</label>
 				{#if info}
