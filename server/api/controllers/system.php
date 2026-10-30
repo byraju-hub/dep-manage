@@ -5,7 +5,7 @@ declare(strict_types=1);
 
 const DEFAULT_FONTS = ['title' => 'noto-sans', 'menu' => 'noto-sans', 'body' => 'noto-sans'];
 
-const DEMO_LOGIN = 'test';
+const DEMO_LOGIN = 'demo';
 const DEMO_PASSWORD = '1234';
 
 function demo_account_exists(): bool

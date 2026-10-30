@@ -24,8 +24,8 @@ import ChurchLogo from '$lib/components/ChurchLogo.svelte';
 	// 소개 페이지의 '데모 사이트 구경하기'(?demo=1)로 들어오면 체험 계정으로 바로 로그인한다.
 	onMount(() => {
 		if (page.url.searchParams.get('demo') === '1' && data.church.demoAccount && !session.user) {
-			loginId = 'test';
-			void signIn('test', '1234');
+			loginId = 'demo';
+			void signIn('demo', '1234');
 		}
 	});
 
@@ -90,7 +90,7 @@ import ChurchLogo from '$lib/components/ChurchLogo.svelte';
 
 			<div class="foot">
 				<a href={url('/join')} class="link">{data.church.openSignup ? '가입 신청하기' : '초대 코드로 가입하기'}</a>
-				{#if data.church.demoAccount}<p class="demo">체험해 보기 · 아이디 <b>test</b> / 비밀번호 <b>1234</b> (보기만 할 수 있어요)</p>{/if}
+				{#if data.church.demoAccount}<p class="demo">체험해 보기 · 아이디 <b>demo</b> / 비밀번호 <b>1234</b> (보기만 할 수 있어요)</p>{/if}
 				<p class="muted small">가입 후 관리자가 승인하면 사용할 수 있어요.<br />비밀번호를 5번 틀리면 15분 동안 잠겨요.</p>
 			</div>
 		{/if}

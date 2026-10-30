@@ -90,7 +90,7 @@ import { session } from '$lib/session.svelte';
 	{#if !data.migrations?.pending && !session.user?.isDemo}
 		<section class="card box">
 			<h2>체험 계정</h2>
-			<p class="sub">누구나 둘러볼 수 있는 <b>보기 전용</b> 계정이에요. 아이디 <b>test</b>, 비밀번호 <b>1234</b>. 모든 화면을 볼 수 있지만 저장·수정·삭제는 서버가 막고, 초대 코드·사용자 목록·백업은 볼 수 없어요. 로그인 화면에 이 계정 안내가 함께 나와요.</p>
+			<p class="sub">누구나 둘러볼 수 있는 <b>보기 전용</b> 계정이에요. 아이디 <b>demo</b>, 비밀번호 <b>1234</b>. 모든 화면을 볼 수 있지만 저장·수정·삭제는 서버가 막고, 초대 코드·사용자 목록·백업은 볼 수 없어요. 로그인 화면에 이 계정 안내가 함께 나와요.</p>
 			<p class="warnbox">체험 계정으로 들어온 사람에게 <b>지금 들어 있는 학생·교사 정보가 모두 보여요.</b> 샘플 데이터만 있는 곳에서 켜 두세요.</p>
 			<div>
 				{#if demoOn}

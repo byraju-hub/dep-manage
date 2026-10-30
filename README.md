@@ -54,3 +54,7 @@ RewriteRule ^ index.html [L]
 
 서버 요구사항: PHP 8.1 이상 (pdo_mysql, mbstring, gd 권장), MariaDB/MySQL, Apache mod_rewrite.
 데이터베이스 구조를 바꾸는 새 버전은 로그인한 교회 관리자가 설정 → 데이터 → **업데이트 적용**을 눌러 반영합니다.
+
+---
+
+**제작: [byraju](https://github.com/byraju-hub) / 문의 : [byraju@naver.com](mailto:byraju@naver.com)**

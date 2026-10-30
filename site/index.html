@@ -32,6 +32,9 @@
 	.note { background: var(--accent-soft); border-color: transparent; }
 	code { background: var(--accent-soft); border-radius: 6px; padding: 1px 6px; font-size: 0.92em; }
 	footer { text-align: center; font-size: 13px; color: var(--ink2); }
+	.credit { text-align: center; background: var(--card); border: 2px solid var(--accent); border-radius: 16px; padding: 16px 20px; font-size: 16px; font-weight: 700; color: var(--ink); line-height: 1.8; }
+	.credit a { font-weight: 800; }
+	.credit .sep { color: var(--ink2); margin: 0 6px; font-weight: 400; }
 	a { color: var(--accent); }
 </style>
 </head>
@@ -70,7 +73,7 @@
 
 		<div class="demo-box">
 			<a class="btn demo" href="https://byraju.mycafe24.com/dm/login?demo=1">데모 사이트 구경하기</a>
-			<p class="cred">체험용 ID : <b>test</b> &nbsp; PW : <b>1234</b></p>
+			<p class="cred">체험용 ID : <b>demo</b> &nbsp; PW : <b>1234</b></p>
 			<p>버튼을 누르면 체험 계정으로 바로 로그인돼요. 모든 화면을 볼 수 있지만, 저장하거나 바꿀 수는 없어요.</p>
 		</div>
 	</section>
@@ -79,6 +82,8 @@
 		<h2>이 페이지는 소개용이에요</h2>
 		<p>프로그램은 PHP 서버가 있어야 동작합니다. 이 소개 페이지에서는 로그인하거나 데이터를 입력할 수 없고, 실제 사용은 직접 설치한 웹호스팅에서 하게 됩니다.</p>
 	</section>
+
+	<p class="credit">제작: <a href="https://github.com/byraju-hub">byraju</a><span class="sep">/</span>문의 : <a href="mailto:byraju@naver.com">byraju@naver.com</a></p>
 
 	<footer>GNU AGPL-3.0 라이선스 · 누구나 자유롭게 설치해서 쓸 수 있어요</footer>
 </main>
