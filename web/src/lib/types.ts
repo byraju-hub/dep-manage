@@ -154,6 +154,8 @@ export interface Church {
 	logo?: string | null;
 	/** 초대 코드 없이도 가입 신청을 받는지 */
 	openSignup?: boolean;
+	/** 체험 계정이 만들어져 있는지 */
+	demoAccount?: boolean;
 }
 
 export type Role = 'admin' | 'teacher' | 'viewer';
@@ -163,6 +165,8 @@ export interface SessionUser {
 	name: string;
 	loginId: string;
 	isOwner: boolean;
+	/** 체험 계정: 모든 화면을 볼 수 있지만 보기만 가능 */
+	isDemo?: boolean;
 	mustChangePassword: boolean;
 	roleLabel: string;
 }

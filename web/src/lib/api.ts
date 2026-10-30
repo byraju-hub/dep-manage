@@ -124,6 +124,8 @@ export const join = (v: { code?: string; loginId: string; name: string; password
 // ===== 교회 =====
 export const getChurch = () => get<Church>('/church');
 export const updateChurchName = (name: string) => put('/church', { name });
+export const createDemoAccount = () => post<{ loginId: string }>('/system/demo-account');
+export const deleteDemoAccount = () => del('/system/demo-account');
 export const updateOpenSignup = (openSignup: boolean) => put('/church', { openSignup });
 export const updateFonts = (fonts: FontSettings) => put('/church', { fonts });
 

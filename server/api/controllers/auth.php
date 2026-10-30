@@ -21,6 +21,7 @@ function me_payload(array $u): array
             'name' => $u['name'],
             'loginId' => $u['login_id'],
             'isOwner' => (int)$u['is_owner'] === 1,
+            'isDemo' => (int)($u['is_demo'] ?? 0) === 1,
             'mustChangePassword' => (int)$u['must_change_password'] === 1,
             'roleLabel' => ROLE_LABELS[$best ?? 'viewer'],
         ],

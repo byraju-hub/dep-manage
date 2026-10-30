@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { ApiError, listDepartments } from '$lib/api';
@@ -17,14 +18,26 @@ import ChurchLogo from '$lib/components/ChurchLogo.svelte';
 
 	async function submit(e: SubmitEvent) {
 		e.preventDefault();
+		await signIn(loginId, password);
+	}
+
+	// 소개 페이지의 '데모 사이트 구경하기'(?demo=1)로 들어오면 체험 계정으로 바로 로그인한다.
+	onMount(() => {
+		if (page.url.searchParams.get('demo') === '1' && data.church.demoAccount && !session.user) {
+			loginId = 'test';
+			void signIn('test', '1234');
+		}
+	});
+
+	async function signIn(id: string, pw: string) {
 		error = '';
-		if (!loginId.trim() || !password) {
+		if (!id.trim() || !pw) {
 			error = '아이디와 비밀번호를 입력해 주세요.';
 			return;
 		}
 		busy = true;
 		try {
-			await doLogin(loginId.trim(), password);
+			await doLogin(id.trim(), pw);
 			password = '';
 			if (session.user?.mustChangePassword) return void (await goto(url('/password')));
 			const depts = await listDepartments();
@@ -77,6 +90,7 @@ import ChurchLogo from '$lib/components/ChurchLogo.svelte';
 
 			<div class="foot">
 				<a href={url('/join')} class="link">{data.church.openSignup ? '가입 신청하기' : '초대 코드로 가입하기'}</a>
+				{#if data.church.demoAccount}<p class="demo">체험해 보기 · 아이디 <b>test</b> / 비밀번호 <b>1234</b> (보기만 할 수 있어요)</p>{/if}
 				<p class="muted small">가입 후 관리자가 승인하면 사용할 수 있어요.<br />비밀번호를 5번 틀리면 15분 동안 잠겨요.</p>
 			</div>
 		{/if}
@@ -105,4 +119,5 @@ import ChurchLogo from '$lib/components/ChurchLogo.svelte';
 	.d4 { left: -20px; bottom: 60px; width: 110px; height: 110px; border-radius: 34px; background: #ece5ff; }
 	.d5 { right: -50px; bottom: -40px; width: 170px; height: 170px; border-radius: 50%; background: #d9f5f1; }
 	.d6 { right: 110px; bottom: 30px; width: 44px; height: 44px; border-radius: 14px; background: #e3ecff; }
+	.demo { background: var(--accent-soft); border-radius: 10px; padding: 8px 12px; font-size: 13.5px; text-align: center; }
 </style>

@@ -5,6 +5,18 @@ declare(strict_types=1);
 
 const DEFAULT_FONTS = ['title' => 'noto-sans', 'menu' => 'noto-sans', 'body' => 'noto-sans'];
 
+const DEMO_LOGIN = 'test';
+const DEMO_PASSWORD = '1234';
+
+function demo_account_exists(): bool
+{
+    try {
+        return (bool)val('SELECT 1 FROM ' . t('users') . ' WHERE login_id = ? AND is_demo = 1', [DEMO_LOGIN]);
+    } catch (Throwable $e) {
+        return false; // 업데이트(열 추가)를 아직 적용하지 않은 경우
+    }
+}
+
 function church_json(): array
 {
     $fonts = setting('fonts', DEFAULT_FONTS);
@@ -13,7 +25,7 @@ function church_json(): array
         if (is_array($fonts) && isset($fonts[$role]) && in_array($fonts[$role], FONT_IDS, true)) $out[$role] = $fonts[$role];
     }
     $logo = setting('logo', null);
-    return ['name' => (string)setting('church_name', '교회'), 'fonts' => $out, 'logo' => is_string($logo) ? $logo : null, 'openSignup' => (bool)setting('open_signup', false)];
+    return ['name' => (string)setting('church_name', '교회'), 'fonts' => $out, 'logo' => is_string($logo) ? $logo : null, 'openSignup' => (bool)setting('open_signup', false), 'demoAccount' => demo_account_exists()];
 }
 
 // 데이터베이스 구조가 코드보다 낡았으면 needsUpdate. (설정 → 데이터에서 교회 관리자가 업데이트를 적용한다.)
@@ -109,4 +121,27 @@ route('DELETE', '/system/sample', function () {
     $deleted = sample_delete(db(), dm_config()['prefix']);
     audit('sample.delete', null, null, json_encode($deleted));
     return $deleted;
+});
+
+// ===== 체험 계정 (교회 관리자가 만들고 지운다) =====
+
+route('POST', '/system/demo-account', function () {
+    require_owner();
+    $hash = password_hash(DEMO_PASSWORD, PASSWORD_DEFAULT);
+    $cur = row('SELECT id, is_demo FROM ' . t('users') . ' WHERE login_id = ?', [DEMO_LOGIN]);
+    if ($cur && (int)$cur['is_demo'] !== 1) json_fail('taken', "'" . DEMO_LOGIN . "' 아이디를 이미 다른 사람이 쓰고 있어요.", 409);
+    if ($cur) {
+        q('UPDATE ' . t('users') . " SET password_hash = ?, status = 'active', is_owner = 1, must_change_password = 0 WHERE id = ?", [$hash, $cur['id']]);
+    } else {
+        q('INSERT INTO ' . t('users') . " (login_id, password_hash, name, is_owner, is_demo, status) VALUES (?, ?, '체험 계정', 1, 1, 'active')", [DEMO_LOGIN, $hash]);
+    }
+    audit('demo.create');
+    return ['loginId' => DEMO_LOGIN];
+});
+
+route('DELETE', '/system/demo-account', function () {
+    require_owner();
+    q('DELETE FROM ' . t('users') . ' WHERE login_id = ? AND is_demo = 1', [DEMO_LOGIN]);
+    audit('demo.delete');
+    return null;
 });

@@ -13,7 +13,10 @@ import { url } from '$lib/url';
 	<div class="desktop"><Sidebar dept={data.dept} depts={data.depts} pending={data.pending} churchName={data.church.name} churchLogo={data.church.logo} /></div>
 	<div class="mobile"><MobileNav dept={data.dept} depts={data.depts} pending={data.pending} churchName={data.church.name} churchLogo={data.church.logo} /></div>
 	<main class="main">
-		{#if data.needsUpdate && session.user?.isOwner}
+		{#if session.user?.isDemo}
+			<p class="demo" role="status">체험 계정으로 보고 있어요. 모든 화면을 볼 수 있지만, 저장하거나 바꿀 수는 없어요.</p>
+		{/if}
+		{#if data.needsUpdate && session.user?.isOwner && !session.user?.isDemo}
 			<a class="update" href={url(`/d/${data.dept.id}/settings/data`)}>새 버전의 데이터베이스 변경을 적용해야 해요. 눌러서 '업데이트 적용'을 해 주세요.</a>
 		{/if}
 		<div class="inner">{@render children()}</div>
@@ -25,6 +28,7 @@ import { url } from '$lib/url';
 	.main { flex: 1; min-width: 0; max-width: 100%; }
 	.inner { max-width: 1120px; min-width: 0; margin: 0 auto; padding: 28px 36px 48px; }
 	.mobile { display: none; }
+	.demo { background: #e8f1ff; border-bottom: 1px solid #b9d2ff; color: #1b4aa8; padding: 10px 20px; font-weight: 600; text-align: center; }
 	.update { display: block; background: #fff8ec; border-bottom: 1px solid #ffd9a8; color: #7a4a06; padding: 10px 20px; font-weight: 600; text-align: center; }
 
 	@media (max-width: 900px) {

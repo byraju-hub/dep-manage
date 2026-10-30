@@ -69,6 +69,7 @@ function route(string $method, string $pattern, callable $handler): void
 function dispatch(string $path): never
 {
     $method = req_method();
+    guard_demo($method, $path);
     $pathExists = false;
     foreach ($GLOBALS['dm_routes'] as [$m, $re, $handler]) {
         if (preg_match($re, $path, $mt)) {
@@ -116,4 +117,18 @@ function in_enum(array $a, string $key, array $allowed, string $default, string 
     if ($v === '') return $default;
     if (!in_array($v, $allowed, true)) json_fail('invalid', ($label ?: $key) . ' 값이 올바르지 않습니다.', 422);
     return $v;
+}
+
+/** 체험 계정(is_demo)은 보기만 할 수 있다. 로그아웃만 예외이고, 초대 코드·사용자 목록·백업은 읽는 것도 막는다. */
+function guard_demo(string $method, string $path): void
+{
+    if ($path === '/auth/login' || $path === '/auth/join') return;
+    $u = current_user();
+    if (!$u || (int)($u['is_demo'] ?? 0) !== 1) return;
+    if ($method !== 'GET' && $method !== 'HEAD' && $path !== '/auth/logout') {
+        json_fail('demo_readonly', '체험 계정은 보기만 할 수 있어요. 저장하거나 바꿀 수는 없어요.', 403);
+    }
+    if (preg_match('#^/(invites|users|system/backup)(/|$)#', $path)) {
+        json_fail('demo_readonly', '체험 계정에서는 볼 수 없는 화면이에요.', 403);
+    }
 }

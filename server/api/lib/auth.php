@@ -64,7 +64,7 @@ function current_user(): ?array
     session_boot();
     $id = $_SESSION['uid'] ?? null;
     if (!$id) return $u = null;
-    $row = row('SELECT id, login_id, name, is_owner, status, must_change_password FROM ' . t('users') . ' WHERE id = ?', [$id]);
+    $row = row('SELECT * FROM ' . t('users') . ' WHERE id = ?', [$id]);
     if (!$row || $row['status'] !== 'active') {
         unset($_SESSION['uid']);
         return $u = null;

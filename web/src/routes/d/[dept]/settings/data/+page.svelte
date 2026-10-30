@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { goto, invalidateAll } from '$app/navigation';
-	import { ApiError, addSampleData, backupUrl, deleteSampleData, runMigrations } from '$lib/api';
+	import { ApiError, addSampleData, backupUrl, createDemoAccount, deleteDemoAccount, deleteSampleData, getChurch, runMigrations } from '$lib/api';
+	import { onMount } from 'svelte';
 import { session } from '$lib/session.svelte';
 	import { url } from '$lib/url';
 
@@ -21,6 +22,23 @@ import { session } from '$lib/session.svelte';
 			error = e instanceof ApiError ? e.message : '업데이트하지 못했어요.';
 		} finally {
 			updating = false;
+		}
+	}
+
+	let demoOn = $state(false);
+	let demoMsg = $state('');
+	onMount(async () => {
+		try { demoOn = !!(await getChurch()).demoAccount; } catch { /* 표시만 못 할 뿐 */ }
+	});
+	async function toggleDemo(on: boolean) {
+		error = demoMsg = '';
+		try {
+			if (on) await createDemoAccount();
+			else await deleteDemoAccount();
+			demoOn = on;
+			demoMsg = on ? '체험 계정을 만들었어요.' : '체험 계정을 지웠어요.';
+		} catch (e) {
+			error = e instanceof ApiError ? e.message : '처리하지 못했어요.';
 		}
 	}
 
@@ -68,6 +86,22 @@ import { session } from '$lib/session.svelte';
 		{/if}
 		{#if updateMsg}<p class="okmsg" role="status">{updateMsg}</p>{/if}
 	</section>
+
+	{#if !data.migrations?.pending && !session.user?.isDemo}
+		<section class="card box">
+			<h2>체험 계정</h2>
+			<p class="sub">누구나 둘러볼 수 있는 <b>보기 전용</b> 계정이에요. 아이디 <b>test</b>, 비밀번호 <b>1234</b>. 모든 화면을 볼 수 있지만 저장·수정·삭제는 서버가 막고, 초대 코드·사용자 목록·백업은 볼 수 없어요. 로그인 화면에 이 계정 안내가 함께 나와요.</p>
+			<p class="warnbox">체험 계정으로 들어온 사람에게 <b>지금 들어 있는 학생·교사 정보가 모두 보여요.</b> 샘플 데이터만 있는 곳에서 켜 두세요.</p>
+			<div>
+				{#if demoOn}
+					<button class="btn danger" onclick={() => toggleDemo(false)}>체험 계정 지우기</button>
+				{:else}
+					<button class="btn btn-primary" onclick={() => toggleDemo(true)}>체험 계정 만들기</button>
+				{/if}
+			</div>
+			{#if demoMsg}<p class="okmsg" role="status">{demoMsg}</p>{/if}
+		</section>
+	{/if}
 {/if}
 
 <section class="card box">
