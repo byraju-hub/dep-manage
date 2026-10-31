@@ -10,6 +10,7 @@
 		classes,
 		fields = [],
 		initial,
+		cmLinked = false,
 		submitLabel = '저장',
 		onsubmit,
 		oncancel
@@ -18,6 +19,8 @@
 		classes: Array<{ id: number; name: string }>;
 		fields?: CustomField[];
 		initial?: Partial<StudentInput>;
+		/** 교적 관리와 연결된 학생이면 교적이 주인인 칸(이름·성별·생년월일·연락처·세례·주소)을 잠근다 */
+		cmLinked?: boolean;
 		submitLabel?: string;
 		onsubmit: (v: StudentInput) => Promise<void>;
 		oncancel: () => void;
@@ -64,13 +67,14 @@
 </script>
 
 <form class="card form" onsubmit={submit} novalidate>
+	{#if cmLinked}<p class="cm-note" role="note">교적 관리(ch-manage)와 연결된 {terms.student}이에요. <b>이름·성별·생년월일·연락처·주소·세례</b>는 교적에서 수정해 주세요. 그러면 여기에도 자동으로 맞춰져요.</p>{/if}
 	<div class="grid">
-		<label class="field"><span>이름 *</span><input class="input" bind:value={name} autocomplete="off" /></label>
+		<label class="field"><span>이름 *</span><input class="input" bind:value={name} autocomplete="off" disabled={cmLinked} /></label>
 		<label class="field"><span>성별</span>
-			<select class="input" bind:value={gender}><option value="">선택 안 함</option><option value="남">남</option><option value="여">여</option></select>
+			<select class="input" bind:value={gender} disabled={cmLinked}><option value="">선택 안 함</option><option value="남">남</option><option value="여">여</option></select>
 		</label>
-		<label class="field"><span>생년월일</span><input class="input" type="date" bind:value={birthDate} />{#if lunarOfBirth}<small class="hint">{lunarText(lunarOfBirth)}</small>{/if}</label>
-		<label class="field"><span>연락처</span><input class="input" type="tel" bind:value={phone} placeholder="010-0000-0000" /></label>
+		<label class="field"><span>생년월일</span><input class="input" type="date" bind:value={birthDate} disabled={cmLinked} />{#if lunarOfBirth}<small class="hint">{lunarText(lunarOfBirth)}</small>{/if}</label>
+		<label class="field"><span>연락처</span><input class="input" type="tel" bind:value={phone} placeholder="010-0000-0000" disabled={cmLinked} /></label>
 		<label class="field"><span>학교</span><input class="input" bind:value={school} /></label>
 		<label class="field"><span>{terms.grade} *</span>
 			<select class="input" bind:value={gradeId}>{#each dept.gradeLevels as g (g.id)}<option value={g.id}>{g.label}</option>{/each}</select>
@@ -82,12 +86,12 @@
 			<select class="input" bind:value={status}><option value="active">재적</option><option value="new">{terms.newMember}</option><option value="inactive">비활동</option></select>
 		</label>
 		<label class="field"><span>세례</span>
-			<select class="input" bind:value={baptism}>{#each ['-', '유아', '입교', '학습', '세례'] as b (b)}<option value={b}>{b === '-' ? '없음' : b}</option>{/each}</select>
+			<select class="input" bind:value={baptism} disabled={cmLinked}>{#each ['-', '유아', '입교', '학습', '세례'] as b (b)}<option value={b}>{b === '-' ? '없음' : b}</option>{/each}</select>
 		</label>
 		<label class="field"><span>인도자</span><input class="input" bind:value={mentor} /></label>
 	</div>
 
-	<label class="field"><span>주소</span><input class="input" bind:value={address} /></label>
+	<label class="field"><span>주소</span><input class="input" bind:value={address} disabled={cmLinked} /></label>
 
 	<fieldset>
 		<legend>보호자</legend>
@@ -136,4 +140,5 @@
 	}
 	@media (max-width: 480px) { .grid { grid-template-columns: 1fr; } }
 	.hint { display: block; font-size: 12.5px; color: var(--muted); font-weight: 400; }
+	.cm-note { margin: 0 0 14px; padding: 10px 14px; border-radius: 12px; background: #eef1ff; color: #2b3e95; font-size: 13.5px; line-height: 1.5; }
 </style>

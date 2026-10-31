@@ -39,6 +39,7 @@ import TeacherForm from '$lib/components/TeacherForm.svelte';
 		<TeacherForm
 			classes={data.classes}
 			fields={data.fields.filter((f) => f.entity === 'teacher')}
+			cmLinked={t.cmLinked}
 			initial={{ name: t.name, position: t.position, officerRole: t.officerRole, birthDate: t.birthDate, phone: t.phone, status: t.status, notes: t.notes, classIds: t.classIds, custom: t.custom }}
 			onsubmit={save}
 			oncancel={() => goto(url(`/d/${data.dept.id}/teachers`))}

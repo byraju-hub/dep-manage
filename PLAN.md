@@ -39,6 +39,11 @@
 - 왼쪽 위 교회 이름 → 대시보드, 부제 '(부서) 관리 프로그램', 프로그램 매뉴얼 메뉴(설정 위)
 - 배포: `scripts/build-release.sh` + `.github/workflows/release.yml`(태그 v* → zip 릴리스), 설치 마법사가 주소 자리표시자를 실제 폴더로 바꾸고 .htaccess 생성(업데이트 때는 /install/ 을 한 번 열면 마무리), 설치 가이드 `docs/install-guide.html` → `docs/설치가이드.pdf`
 
+## 4차로 한 것 (교적 관리 연동)
+- 같은 DB에 교적 관리(ch-manage)의 연결 표(`cm_links`)가 있으면, 연결된 학생·교사의 인적사항(학생: 이름·성별·생년월일·연락처·주소·세례 / 교사: 이름·생년월일·연락처)은 서버가 수정을 무시하고 화면에서 잠근 뒤 "교적에서 수정" 안내(`server/api/lib/cmlink.php`, `StudentForm`·`TeacherForm`의 `cmLinked`)
+- 학생·교사를 지우면 연결도 지움. 교적 쪽 프로그램이 없거나 연결 표 구조가 다르면 아무 동작도 하지 않음(교적의 접두어가 `cm_` 가 아니면 `data/config.php` 에 `cm_prefix` 를 적는다)
+- 연결·동기화·출석 읽기는 모두 교적 쪽에서 한다 (ch-manage `docs/ARCHITECTURE.md` 8장)
+
 ## 다음에 할 일
 1. 추가 항목을 엑셀 양식·가져오기·내려받기에 넣기, 명단 표에 '명단에 표시' 항목 열 보이기
 2. 복원 기능(백업 zip 올려서 되돌리기), 음력 생일(youth67에 있던 기능)

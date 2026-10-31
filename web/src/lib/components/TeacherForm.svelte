@@ -9,6 +9,7 @@
 		classes,
 		fields = [],
 		initial,
+		cmLinked = false,
 		submitLabel = '저장',
 		onsubmit,
 		oncancel
@@ -16,6 +17,8 @@
 		classes: Array<{ id: number; name: string }>;
 		fields?: CustomField[];
 		initial?: Partial<TeacherInput>;
+		/** 교적 관리와 연결된 교사면 교적이 주인인 칸(이름·생년월일·연락처)을 잠근다 */
+		cmLinked?: boolean;
 		submitLabel?: string;
 		onsubmit: (v: TeacherInput) => Promise<void>;
 		oncancel: () => void;
@@ -54,12 +57,13 @@
 </script>
 
 <form class="card form" onsubmit={submit} novalidate>
+	{#if cmLinked}<p class="cm-note" role="note">교적 관리(ch-manage)와 연결된 {terms.teacher}이에요. <b>이름·생년월일·연락처</b>는 교적에서 수정해 주세요. 그러면 여기에도 자동으로 맞춰져요.</p>{/if}
 	<div class="grid">
-		<label class="field"><span>이름 *</span><input class="input" bind:value={name} autocomplete="off" /></label>
+		<label class="field"><span>이름 *</span><input class="input" bind:value={name} autocomplete="off" disabled={cmLinked} /></label>
 		<label class="field"><span>직분</span><input class="input" bind:value={position} placeholder="집사, 권사, 청년…" /></label>
 		<label class="field"><span>임원</span><input class="input" bind:value={officerRole} placeholder="{terms.head}, 총무, 서기…" /></label>
-		<label class="field"><span>생년월일</span><input class="input" type="date" bind:value={birthDate} />{#if lunarOfBirth}<small class="hint">{lunarText(lunarOfBirth)}</small>{/if}</label>
-		<label class="field"><span>연락처</span><input class="input" type="tel" bind:value={phone} placeholder="010-0000-0000" /></label>
+		<label class="field"><span>생년월일</span><input class="input" type="date" bind:value={birthDate} disabled={cmLinked} />{#if lunarOfBirth}<small class="hint">{lunarText(lunarOfBirth)}</small>{/if}</label>
+		<label class="field"><span>연락처</span><input class="input" type="tel" bind:value={phone} placeholder="010-0000-0000" disabled={cmLinked} /></label>
 		<label class="field"><span>상태</span>
 			<select class="input" bind:value={status}><option value="active">활동</option><option value="inactive">쉬는 중</option></select>
 		</label>
@@ -103,4 +107,5 @@
 	@media (max-width: 720px) { .form { padding: 18px 16px; } .grid { grid-template-columns: 1fr 1fr; } }
 	@media (max-width: 480px) { .grid { grid-template-columns: 1fr; } }
 	.hint { display: block; font-size: 12.5px; color: var(--muted); font-weight: 400; }
+	.cm-note { margin: 0 0 14px; padding: 10px 14px; border-radius: 12px; background: #eef1ff; color: #2b3e95; font-size: 13.5px; line-height: 1.5; }
 </style>

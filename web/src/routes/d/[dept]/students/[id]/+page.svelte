@@ -43,6 +43,7 @@ import { terms } from '$lib/terms.svelte';
 				<div><dt>연락처</dt><dd><PhoneLink phone={s.phone} name={s.name} /></dd></div>
 				<div><dt>학교</dt><dd>{s.school}</dd></div>
 				<div><dt>세례</dt><dd>{s.baptism}</dd></div>
+				{#if s.cmLinked}<div><dt>교적 연결</dt><dd>연결됨 · 인적사항은 교적에서 수정</dd></div>{/if}
 				{#if s.mentor}<div><dt>인도자</dt><dd>{s.mentor}</dd></div>{/if}
 				{#each data.fields.filter((f) => f.entity === 'student') as f (f.id)}
 					{@const v = showCustom(f, s.custom)}

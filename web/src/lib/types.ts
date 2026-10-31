@@ -61,6 +61,8 @@ export interface Student {
 	custom?: CustomValues;
 	/** 사진 토큰(없으면 null). 주소를 만들 때 쓴다. */
 	photo?: string | null;
+	/** 교적 관리(ch-manage)와 연결된 학생: 인적사항은 교적에서 수정한다 */
+	cmLinked?: boolean;
 }
 
 export interface Teacher {
@@ -76,6 +78,8 @@ export interface Teacher {
 	photo?: string | null;
 	notes?: string;
 	custom?: CustomValues;
+	/** 교적 관리(ch-manage)와 연결된 교사: 이름·생년월일·연락처는 교적에서 수정한다 */
+	cmLinked?: boolean;
 }
 
 export interface ClassRoom {

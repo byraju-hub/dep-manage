@@ -16,6 +16,7 @@ require __DIR__ . '/http.php';
 require __DIR__ . '/db.php';
 require __DIR__ . '/auth.php';
 require __DIR__ . '/util.php';
+require __DIR__ . '/cmlink.php';
 
 /** 설치 때 만들어지는 설정(DB 접속 정보 등). 설치 전이면 null. */
 function dm_config(): ?array

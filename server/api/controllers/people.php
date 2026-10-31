@@ -57,9 +57,11 @@ function map_students(array $students, array $grades, int $rank, bool $withRecen
     }
 
     $full = $rank >= 2;
-    return array_map(function ($s) use ($grades, $guardians, $recent, $full) {
+    $cmLinked = cm_linked_set('student', $ids); // 교적(ch-manage)과 연결된 학생: 인적사항은 교적이 주인이라 화면에서 잠근다
+    return array_map(function ($s) use ($grades, $guardians, $recent, $full, $cmLinked) {
         $id = (int)$s['id'];
         return [
+            'cmLinked' => isset($cmLinked[$id]),
             'id' => $id,
             'deptId' => (int)$s['department_id'],
             'name' => $s['name'],
@@ -238,6 +240,11 @@ route('PUT', '/students/{id}', function (array $p) {
     if (rank($ctx['role']) < 3 && ($in['classId'] !== (int)$s['class_id'] && $in['classId'] !== null)) {
         json_fail('forbidden', '반을 옮기는 것은 부서 관리자만 할 수 있습니다.', 403);
     }
+    if (cm_is_linked('student', (int)$s['id'])) {
+        // 교적과 연결된 학생: 인적사항은 교적에서 수정한다 (여기서 보낸 값은 무시)
+        $in['name'] = $s['name']; $in['gender'] = $s['gender']; $in['birth'] = $s['birth_date'];
+        $in['phone'] = $s['phone']; $in['address'] = $s['address']; $in['baptism'] = $s['baptism'];
+    }
     q(
         'UPDATE ' . t('students') . ' SET name=?, gender=?, birth_date=?, phone=?, school=?, grade_level_id=?, class_id=?, status=?, baptism=?, mentor=?, address=?, notes=?, custom=? WHERE id=?',
         [$in['name'], $in['gender'], $in['birth'], $in['phone'], $in['school'], $in['gradeId'], $in['classId'], $in['status'], $in['baptism'], $in['mentor'], $in['address'], $in['notes'], custom_encode($in['custom']), $s['id']]
@@ -251,6 +258,7 @@ route('DELETE', '/students/{id}', function (array $p) {
     $s = load_student((int)$p['id']);
     require_dept((int)$s['department_id'], 'admin');
     q('DELETE FROM ' . t('students') . ' WHERE id = ?', [$s['id']]);
+    cm_unlink('student', (int)$s['id']);
     delete_photo($s['photo_path'] ?? null);
     audit('student.delete', 'student', (int)$s['id']);
     return null;
@@ -319,10 +327,11 @@ route('DELETE', '/classes/{id}', function (array $p) {
 
 // ===== 교사 =====
 
-function teacher_json(array $t, int $rank, array $classNames): array
+function teacher_json(array $t, int $rank, array $classNames, bool $cmLinked = false): array
 {
     $full = $rank >= 2;
     return [
+        'cmLinked' => $cmLinked, // 교적(ch-manage)과 연결된 교사: 이름·생년월일·연락처는 교적이 주인
         'id' => (int)$t['id'], 'deptId' => (int)$t['department_id'], 'name' => $t['name'], 'position' => $t['position'],
         'officerRole' => $t['officer_role'], 'birthDate' => $full ? ($t['birth_date'] ?? '') : '', 'phone' => $full ? $t['phone'] : '',
         'status' => $t['status'], 'notes' => $full ? (string)$t['notes'] : '', 'photo' => $full ? $t['photo_path'] : null,
@@ -337,8 +346,9 @@ route('GET', '/d/{dept}/teachers', function (array $p) {
     foreach (rows('SELECT ct.teacher_id, c.id, c.name FROM ' . t('class_teachers') . ' ct JOIN ' . t('classes') . ' c ON c.id = ct.class_id JOIN ' . t('teachers') . ' t ON t.id = ct.teacher_id WHERE t.department_id = ? ORDER BY c.sort', [$ctx['deptId']]) as $r) {
         $byTeacher[(int)$r['teacher_id']][(int)$r['id']] = $r['name'];
     }
-    return array_map(fn($t) => teacher_json($t, rank($ctx['role']), $byTeacher[(int)$t['id']] ?? []),
-        rows('SELECT * FROM ' . t('teachers') . ' WHERE department_id = ? ORDER BY status, id', [$ctx['deptId']]));
+    $list = rows('SELECT * FROM ' . t('teachers') . ' WHERE department_id = ? ORDER BY status, id', [$ctx['deptId']]);
+    $cmLinked = cm_linked_set('teacher', array_column($list, 'id'));
+    return array_map(fn($t) => teacher_json($t, rank($ctx['role']), $byTeacher[(int)$t['id']] ?? [], isset($cmLinked[(int)$t['id']])), $list);
 });
 
 function teacher_input(array $b, int $deptId): array
@@ -375,7 +385,12 @@ route('PUT', '/teachers/{id}', function (array $p) {
     if (!$t) json_fail('not_found', '교사를 찾을 수 없습니다.', 404);
     $ctx = require_dept((int)$t['department_id'], 'admin');
     $b = body();
-    q('UPDATE ' . t('teachers') . ' SET name=?, position=?, officer_role=?, birth_date=?, phone=?, status=?, notes=?, custom=? WHERE id=?', [...teacher_input($b, $ctx['deptId']), $t['id']]);
+    $in = teacher_input($b, $ctx['deptId']);
+    if (cm_is_linked('teacher', (int)$t['id'])) {
+        // 교적과 연결된 교사: 이름·생년월일·연락처는 교적에서 수정한다 (여기서 보낸 값은 무시)
+        $in[0] = $t['name']; $in[3] = $t['birth_date']; $in[4] = $t['phone'];
+    }
+    q('UPDATE ' . t('teachers') . ' SET name=?, position=?, officer_role=?, birth_date=?, phone=?, status=?, notes=?, custom=? WHERE id=?', [...$in, $t['id']]);
     if (isset($b['classIds']) && is_array($b['classIds'])) save_teacher_classes((int)$t['id'], $ctx['deptId'], $b['classIds']);
     audit('teacher.update', 'teacher', (int)$t['id']);
     return null;
@@ -386,6 +401,7 @@ route('DELETE', '/teachers/{id}', function (array $p) {
     if (!$t) json_fail('not_found', '교사를 찾을 수 없습니다.', 404);
     require_dept((int)$t['department_id'], 'admin');
     q('DELETE FROM ' . t('teachers') . ' WHERE id = ?', [$t['id']]);
+    cm_unlink('teacher', (int)$t['id']);
     delete_photo($t['photo_path'] ?? null);
     audit('teacher.delete', 'teacher', (int)$t['id']);
     return null;
