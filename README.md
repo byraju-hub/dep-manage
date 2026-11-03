@@ -3,6 +3,9 @@
 
 영 · 유아부, 유치부, 유초등부, 중고등부, 청년부 등 교회 부서를 운영하는 교역자(목사, 전도사)와 교사를 위한 웹 프로그램입니다. cafe24와 같은 PHP + MariaDB 웹호스팅에 설치해서 사용하고, 무료로 배포합니다.
 
+교인 명단(교적)을 관리하는 [ch-manage](https://github.com/byraju-hub/ch-manage)와 짝을 이루는 프로그램입니다. 같은 데이터베이스에 둘 다 설치하면 부서 학생·교사를 교인과 연결해서, 인적사항은 교적에서 한 번만 고치고 부서 출석은 교적 화면에서 볼 수 있습니다. 따로 써도 됩니다.
+
+- 소개 페이지: https://dep-manage.pages.dev
 - 구조 설계: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 - 디자인 기준(색·원칙): [docs/DESIGN.md](docs/DESIGN.md)
 - 진행 계획: [PLAN.md](PLAN.md)
