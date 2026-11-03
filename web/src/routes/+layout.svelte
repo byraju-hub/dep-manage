@@ -1,7 +1,7 @@
 <script lang="ts">
 	import '../app.css';
 	import favicon from '#lib/assets/favicon.svg';
-	import { logoUrl } from '$lib/api';
+	import { faviconUrl, logoUrl } from '$lib/api';
 import { applyFonts } from '$lib/fonts';
 	import type { LayoutProps } from './$types';
 
@@ -14,7 +14,10 @@ import { applyFonts } from '$lib/fonts';
 </script>
 
 <svelte:head>
-	{#if data.church.logo}
+	{#if data.church.favicon}
+		<link rel="icon" type="image/png" href={faviconUrl(data.church.favicon)} />
+		<link rel="apple-touch-icon" href={faviconUrl(data.church.favicon)} />
+	{:else if data.church.logo}
 		<!-- 올린 로고를 탭 아이콘으로. 로고를 바꾸면 주소(v=)가 바뀌어 브라우저가 새로 받는다. -->
 		<link rel="icon" type="image/png" href={logoUrl(data.church.logo, true)} />
 		<link rel="apple-touch-icon" href={logoUrl(data.church.logo)} />

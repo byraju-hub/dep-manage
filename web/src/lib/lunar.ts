@@ -79,3 +79,34 @@ export function parseLunarCell(s: string): string | null {
 	if (mo < 1 || mo > 12 || d < 1 || d > 30) return null;
 	return formatLunarValue({ y, m: mo, d, leap: !!m[4] });
 }
+
+export interface LunarMD {
+	m: number;
+	d: number;
+	leap: boolean;
+}
+
+/** 음력 생일이 양력 year 년 month 월(1~12)의 며칠인지. 그 달에 없으면 null. (음력 12월은 양력 다음 해 1월에 걸치므로 앞뒤 해를 함께 본다.) */
+export function lunarBirthdayInSolarMonth(b: LunarMD, year: number, month: number): string | null {
+	const prefix = `${year}-${pad(month)}-`;
+	for (const ly of [year, year - 1]) {
+		const iso = lunarBirthdayIn(ly, b.m, b.d, b.leap);
+		if (iso && iso.startsWith(prefix)) return iso;
+	}
+	return null;
+}
+
+/** 오늘(양력 'YYYY-MM-DD')부터 다음 음력 생일까지 남은 날 수. 오늘이면 0. 찾지 못하면 null. */
+export function daysUntilLunarBirthday(b: LunarMD, todayIso: string): number | null {
+	const t = Date.parse(todayIso + 'T00:00:00Z');
+	if (Number.isNaN(t)) return null;
+	const y = Number(todayIso.slice(0, 4));
+	let best: number | null = null;
+	for (const ly of [y - 1, y, y + 1]) {
+		const iso = lunarBirthdayIn(ly, b.m, b.d, b.leap);
+		if (!iso) continue;
+		const diff = Math.round((Date.parse(iso + 'T00:00:00Z') - t) / DAY);
+		if (diff >= 0 && (best === null || diff < best)) best = diff;
+	}
+	return best;
+}

@@ -1,6 +1,7 @@
 import { getChurch, getStatus } from '$lib/api';
 import { defaultFonts } from '$lib/fonts';
 import { url } from '$lib/url';
+import type { Church } from '$lib/types';
 
 // 정적 SPA: 서버 렌더링 없이 브라우저에서만 그린다.
 export const ssr = false;
@@ -14,6 +15,6 @@ export const load = async () => {
 		location.replace(url('/install/'));
 		await new Promise(() => {});
 	}
-	const church = await getChurch().catch(() => ({ name: 'dep-manage', fonts: { ...defaultFonts } }));
+	const church = await getChurch().catch((): Church => ({ name: 'dep-manage', fonts: { ...defaultFonts } }));
 	return { church, needsUpdate: !!status?.needsUpdate };
 };

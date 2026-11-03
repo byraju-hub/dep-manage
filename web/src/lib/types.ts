@@ -156,6 +156,8 @@ export interface Church {
 	fonts: FontSettings;
 	/** 로고 토큰(없으면 null). 주소를 만들 때 쓴다. */
 	logo?: string | null;
+	/** 탭 아이콘 토큰(없으면 null). 없으면 로고를 쓴다. */
+	favicon?: string | null;
 	/** 초대 코드 없이도 가입 신청을 받는지 */
 	openSignup?: boolean;
 	/** 체험 계정이 만들어져 있는지 */

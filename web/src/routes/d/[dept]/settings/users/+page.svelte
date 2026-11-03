@@ -70,6 +70,9 @@
 	const canInviteAdmin = $derived(!!session.user?.isOwner);
 </script>
 
+{#if data.blocked}
+<div class="card blocked" role="status">{data.blocked} 사용자 승인·역할·초대 코드는 실제 관리자 계정에서 다룹니다.</div>
+{:else}
 <div class="stack">
 	{#if error}<p class="err" role="alert">{error}</p>{/if}
 
@@ -183,9 +186,11 @@
 		{/if}
 	</section>
 </div>
+{/if}
 
 <style>
 	.stack { display: flex; flex-direction: column; gap: 16px; }
+	.blocked { padding: 18px 20px; color: var(--ink2); }
 	.box { padding: 20px 24px; display: flex; flex-direction: column; gap: 12px; }
 	h2 { font-size: 18px; font-weight: 700; }
 	.sub { font-size: 13.5px; color: var(--muted); }

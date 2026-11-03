@@ -2,6 +2,7 @@
 	import { invalidateAll } from '$app/navigation';
 	import { ApiError, updateChurchName, updateDepartmentInfo } from '$lib/api';
 import ChurchLogo from '$lib/components/ChurchLogo.svelte';
+import FaviconField from '$lib/components/FaviconField.svelte';
 import LogoField from '$lib/components/LogoField.svelte';
 import { session } from '$lib/session.svelte';
 
@@ -47,6 +48,14 @@ let error = $state('');
 				<LogoField name={data.church.name} logo={data.church.logo} />
 			{:else}
 				<div class="ro"><ChurchLogo name={data.church.name} logo={data.church.logo} size={56} /><small class="muted">교회 관리자만 바꿀 수 있어요</small></div>
+			{/if}
+		</div>
+		<div class="logorow">
+			<span class="field-label">탭 아이콘</span>
+			{#if session.user?.isOwner}
+				<FaviconField favicon={data.church.favicon} />
+			{:else}
+				<small class="muted">교회 관리자만 바꿀 수 있어요</small>
 			{/if}
 		</div>
 	</section>

@@ -3,6 +3,7 @@
 	import { ApiError, deleteStudent, photoUrl } from '$lib/api';
 	import { confirmDeletePerson } from '$lib/confirm';
 import { age, dotted } from '$lib/dates';
+	import { showCustom } from '$lib/custom';
 	import Avatar from '$lib/components/Avatar.svelte';
 	import ExcelMenu from '$lib/components/ExcelMenu.svelte';
 import Icon from '$lib/components/Icon.svelte';
@@ -15,6 +16,8 @@ import Icon from '$lib/components/Icon.svelte';
 
 	let { data } = $props();
 	const dept = $derived(data.dept);
+	// '명단 표에도 보이기'로 정한 추가 항목은 표에 열로 더한다.
+	const listFields = $derived(data.fields.filter((f) => f.entity === 'student' && f.showInList));
 
 	async function removeStudent(id: number, name: string) {
 		if (!confirmDeletePerson(name, terms.student)) return;
@@ -44,7 +47,7 @@ import Icon from '$lib/components/Icon.svelte';
 	function onSearch(e: Event) {
 		const value = (e.target as HTMLInputElement).value;
 		clearTimeout(timer);
-		timer = setTimeout(() => goto(query({ q: value }), { replaceState: true, keepFocus: true, noScroll: true }), 250);
+		timer = setTimeout(() => goto(query({ q: value }), { replace: true, reset: false }), 250);
 	}
 
 	const statusLabel: Record<StudentStatus, string> = { active: '재적', new: terms.newMember, inactive: '비활동' };
@@ -107,14 +110,14 @@ import Icon from '$lib/components/Icon.svelte';
 			</label>
 			<label>
 				<span class="sr-only">{terms.grade} 선택</span>
-				<select class="input sel" value={data.grade ?? ''} onchange={(e) => goto(query({ grade: e.currentTarget.value }), { noScroll: true })}>
+				<select class="input sel" value={data.grade ?? ''} onchange={(e) => goto(query({ grade: e.currentTarget.value }), { reset: false })}>
 					<option value="">{terms.grade}: 전체</option>
 					{#each dept.gradeLevels.filter((g) => !g.isGraduate) as g (g.id)}<option value={g.id}>{g.label}</option>{/each}
 				</select>
 			</label>
 			<label>
 				<span class="sr-only">상태 선택</span>
-				<select class="input sel" value={data.status} onchange={(e) => goto(query({ status: e.currentTarget.value }), { noScroll: true })}>
+				<select class="input sel" value={data.status} onchange={(e) => goto(query({ status: e.currentTarget.value }), { reset: false })}>
 					<option value="enrolled">상태: 재적·{terms.newMember}</option>
 					<option value="inactive">상태: 비활동</option>
 					<option value="all">상태: 전체</option>
@@ -174,6 +177,7 @@ import Icon from '$lib/components/Icon.svelte';
 								<th scope="col">인도자</th>
 								<th scope="col">보호자</th>
 							{/if}
+							{#each listFields as f (f.id)}<th scope="col">{f.label}</th>{/each}
 							<th scope="col">최근 4주 출석</th>
 							<th scope="col" class="end"><span class="sr-only">상세</span></th>
 						</tr>
@@ -200,6 +204,7 @@ import Icon from '$lib/components/Icon.svelte';
 									<td class="c2">{s.mentor || '-'}</td>
 									<td class="c2 nowrap">{guardian(s.guardians)}</td>
 								{/if}
+								{#each listFields as f (f.id)}<td class="c2 nowrap">{showCustom(f, s.custom) ?? '-'}</td>{/each}
 								<td>{@render dots(s.recent)}</td>
 								<td class="end">
 										<span class="acts">
@@ -210,7 +215,7 @@ import Icon from '$lib/components/Icon.svelte';
 									</td>
 							</tr>
 						{:else}
-							<tr><td colspan="12" class="none">조건에 맞는 {terms.student}이(가) 없습니다.</td></tr>
+							<tr><td colspan={12 + listFields.length} class="none">조건에 맞는 {terms.student}이(가) 없습니다.</td></tr>
 						{/each}
 					</tbody>
 				</table>

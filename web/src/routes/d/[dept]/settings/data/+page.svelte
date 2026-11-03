@@ -73,7 +73,11 @@ import { session } from '$lib/session.svelte';
 		<h2>백업</h2>
 		<p class="sub">데이터베이스 전체와 학생·교사 사진을 zip 파일 하나로 내려받아요. 새 버전으로 올리기 전이나 정기적으로 받아 두세요. 파일 안의 <b>backup.sql</b>은 phpMyAdmin의 가져오기로 복원할 수 있어요.</p>
 		<p class="warnbox">이 파일에는 개인정보와 비밀번호 해시가 들어 있어요. 안전한 곳에만 보관하세요.</p>
-		<div><a class="btn btn-primary" href={backupUrl()} download>백업 파일 내려받기</a></div>
+		{#if session.user?.isDemo}
+			<p class="none">체험 계정에서는 백업 파일을 내려받을 수 없어요.</p>
+		{:else}
+			<div><a class="btn btn-primary" href={backupUrl()} download>백업 파일 내려받기</a></div>
+		{/if}
 	</section>
 
 	<section class="card box">
@@ -118,7 +122,9 @@ import { session } from '$lib/session.svelte';
 				{/each}
 			</ul>
 
-			{#if !confirming}
+			{#if session.user?.isDemo}
+				<p class="none">체험 계정에서는 샘플 데이터를 지우거나 다시 넣을 수 없어요.</p>
+			{:else if !confirming}
 				<div><button class="btn danger" onclick={() => (confirming = true)}>샘플 데이터 삭제</button></div>
 			{:else}
 				<div class="confirm" role="alertdialog" aria-label="샘플 데이터 삭제 확인">
@@ -131,7 +137,7 @@ import { session } from '$lib/session.svelte';
 			{/if}
 		{:else}
 			<p class="none">지금은 샘플 데이터가 없어요.</p>
-			<div><button class="btn" onclick={() => run(addSampleData, '샘플 데이터를 넣었어요.')} disabled={busy}>{busy ? '넣는 중…' : '샘플 데이터 다시 넣기'}</button></div>
+			{#if !session.user?.isDemo}<div><button class="btn" onclick={() => run(addSampleData, '샘플 데이터를 넣었어요.')} disabled={busy}>{busy ? '넣는 중…' : '샘플 데이터 다시 넣기'}</button></div>{/if}
 		{/if}
 
 		{#if message}<p class="okmsg" role="status">{message}</p>{/if}

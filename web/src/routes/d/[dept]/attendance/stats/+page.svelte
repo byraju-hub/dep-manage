@@ -23,7 +23,7 @@
 		const w = patch.who ?? data.who;
 		if (w === 'teachers') p.set('who', 'teachers');
 		p.set('weeks', String(patch.weeks ?? data.weeks));
-		void goto(`${url(`/d/${data.dept.id}/attendance/stats`)}?${p}`, { noScroll: true });
+		void goto(`${url(`/d/${data.dept.id}/attendance/stats`)}?${p}`, { reset: false });
 	}
 
 	/** 출석률에 따라 막대 색을 정한다. 숫자는 항상 같이 보여서 색만으로 구분하지 않는다. */

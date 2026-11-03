@@ -154,3 +154,29 @@ function store_logo(array $file): string
     }
     return $token;
 }
+
+// ===== 브라우저 탭 아이콘 (로고와 따로 올린다. 정사각형 PNG 128px) =====
+
+function favicon_path_for(string $token): string
+{
+    return logo_dir() . '/' . preg_replace('/[^a-f0-9]/', '', $token) . '_f.png';
+}
+
+function delete_favicon(?string $token): void
+{
+    if (!$token) return;
+    @unlink(favicon_path_for($token));
+}
+
+/** @param array $file $_FILES['favicon'] @return string 새 탭 아이콘의 토큰 */
+function store_favicon(array $file): string
+{
+    $img = load_uploaded_image($file);
+    if (min(imagesx($img), imagesy($img)) < 32) json_fail('too_small', '이미지가 너무 작아요. 가로·세로 32픽셀 이상(권장 128픽셀 이상)으로 올려 주세요.', 422);
+    $token = bin2hex(random_bytes(12));
+    if (!imagepng(logo_square($img, 128), favicon_path_for($token), 6)) {
+        delete_favicon($token);
+        json_fail('save_failed', '탭 아이콘을 저장하지 못했어요. 서버의 data 폴더 권한을 확인해 주세요.', 500);
+    }
+    return $token;
+}

@@ -62,7 +62,7 @@
 		if (who === 'teachers') p.set('who', 'teachers');
 		const cls = patch.cls === undefined ? data.cls : patch.cls;
 		if (cls && who === 'students') p.set('class', String(cls));
-		void goto(`${url(`/d/${dept.id}/attendance`)}?${p}`, { noScroll: true });
+		void goto(`${url(`/d/${dept.id}/attendance`)}?${p}`, { reset: false });
 	}
 
 	function set(id: number, st: AttendanceStatus) {

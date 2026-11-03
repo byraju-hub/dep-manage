@@ -25,7 +25,7 @@ function church_json(): array
         if (is_array($fonts) && isset($fonts[$role]) && in_array($fonts[$role], FONT_IDS, true)) $out[$role] = $fonts[$role];
     }
     $logo = setting('logo', null);
-    return ['name' => (string)setting('church_name', '교회'), 'fonts' => $out, 'logo' => is_string($logo) ? $logo : null, 'openSignup' => (bool)setting('open_signup', false), 'demoAccount' => demo_account_exists()];
+    return ['name' => (string)setting('church_name', '교회'), 'fonts' => $out, 'logo' => is_string($logo) ? $logo : null, 'favicon' => is_string($fav = setting('favicon', null)) ? $fav : null, 'openSignup' => (bool)setting('open_signup', false), 'demoAccount' => demo_account_exists()];
 }
 
 // 데이터베이스 구조가 코드보다 낡았으면 needsUpdate. (설정 → 데이터에서 교회 관리자가 업데이트를 적용한다.)
@@ -93,6 +93,39 @@ route('DELETE', '/church/logo', function () {
     set_setting('logo', null);
     if (is_string($old)) delete_logo($old);
     audit('church.logo.delete');
+    return null;
+});
+
+// ===== 브라우저 탭 아이콘 (로고와 따로) =====
+
+route('GET', '/church/favicon', function () {
+    $token = setting('favicon', null);
+    $file = is_string($token) ? favicon_path_for($token) : null;
+    if (!$file || !is_file($file)) json_fail('not_found', '탭 아이콘이 없습니다.', 404);
+    header('Content-Type: image/png');
+    header('Content-Length: ' . filesize($file));
+    header('Cache-Control: public, max-age=86400'); // 바꾸면 주소(v=)가 바뀌므로 오래 캐시해도 된다
+    header('X-Content-Type-Options: nosniff');
+    readfile($file);
+    exit;
+});
+
+route('POST', '/church/favicon', function () {
+    require_owner();
+    $old = setting('favicon', null);
+    $token = store_favicon($_FILES['favicon'] ?? []);
+    set_setting('favicon', $token);
+    if (is_string($old)) delete_favicon($old);
+    audit('church.favicon');
+    return ['favicon' => $token];
+});
+
+route('DELETE', '/church/favicon', function () {
+    require_owner();
+    $old = setting('favicon', null);
+    set_setting('favicon', null);
+    if (is_string($old)) delete_favicon($old);
+    audit('church.favicon.delete');
     return null;
 });
 

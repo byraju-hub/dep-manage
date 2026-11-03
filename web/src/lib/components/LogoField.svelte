@@ -60,7 +60,7 @@
 			{#if logo}<button type="button" class="btn" onclick={remove} disabled={busy}>지우기</button>{/if}
 		</div>
 		<p class="muted">정사각형 이미지(PNG 권장, 256×256 이상)를 올려 주세요. 정사각형이 아니면 가운데를 기준으로 잘라 맞춰요. JPG, PNG, WEBP · 5MB 이하.</p>
-		<p class="muted">올린 로고는 왼쪽 위 교회 이름 옆, 로그인 화면, 브라우저 탭의 아이콘에 나와요. 탭 아이콘은 브라우저가 기억하고 있어서 바뀌는 데 시간이 걸릴 수 있어요.</p>
+		<p class="muted">올린 로고는 왼쪽 위 교회 이름 옆과 로그인 화면에 나와요. 따로 탭 아이콘을 올리지 않으면 브라우저 탭에도 이 로고를 써요.</p>
 		{#if ok}<p class="okmsg" role="status">{ok}</p>{/if}
 		{#if error}<p class="err" role="alert">{error}</p>{/if}
 	</div>

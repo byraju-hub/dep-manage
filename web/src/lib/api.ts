@@ -1,5 +1,6 @@
 // 서버(PHP) API 와 이야기하는 곳. 화면은 이 파일의 함수만 부른다.
 // 주소는 /api/v1/... 이고, 로그인은 세션 쿠키, 변경 요청에는 X-CSRF-Token 을 붙인다.
+import { daysUntilLunarBirthday, lunarBirthdayInSolarMonth, type LunarMD } from './lunar';
 import { url } from './url';
 import type {
 	AttendanceStats,
@@ -221,10 +222,25 @@ export const getMinistryPlan = (deptId: number, year: number) => get<MinistryPla
 export const saveMinistryPlan = (deptId: number, plan: MinistryPlan) => put(`/d/${deptId}/ministry-plans/${plan.year}`, plan);
 
 // ===== 캘린더 · 대시보드 =====
-export const getCalendar = (deptId: number, month: string) => get<CalendarItem[]>(`/d/${deptId}/calendar`, { month });
+type RawCalendarItem = CalendarItem & { lunar?: LunarMD };
+// 음력 생일은 서버가 월·일만 주므로, 브라우저가 이 달의 양력 날짜로 바꿔서 끼워 넣는다.
+export async function getCalendar(deptId: number, month: string): Promise<CalendarItem[]> {
+	const raw = await get<RawCalendarItem[]>(`/d/${deptId}/calendar`, { month });
+	const [y, m] = month.split('-').map(Number);
+	const out: CalendarItem[] = [];
+	for (const it of raw) {
+		if (!it.lunar) {
+			out.push(it);
+			continue;
+		}
+		const date = lunarBirthdayInSolarMonth(it.lunar, y, m);
+		if (date) out.push({ date, kind: it.kind, label: it.label });
+	}
+	return out;
+}
 
-export const getDashboard = (deptId: number) =>
-	get<{
+export async function getDashboard(deptId: number) {
+	const d = await get<{
 		lastSunday: string;
 		studentCount: number;
 		studentDiff: number;
@@ -235,11 +251,18 @@ export const getDashboard = (deptId: number) =>
 		newCount: number;
 		birthdayCount: number;
 		birthdayRange: string;
+		lunarBirthdays: LunarMD[];
 		trend: Array<{ date: string; count: number }>;
 		absentees: Array<{ id: number; name: string; tone: Tone; weeks: number; gradeLabel: string; className: string }>;
 		followUps: VisitRow[];
 		notices: Array<{ id: number; deptId: number | null; title: string; body: string; date: string; pinned: boolean }>;
 	}>(`/d/${deptId}/dashboard`);
+	// 이번 주(오늘부터 7일) 음력 생일을 더한다.
+	const today = new Date();
+	const iso = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+	const lunarThisWeek = (d.lunarBirthdays ?? []).filter((b) => (daysUntilLunarBirthday(b, iso) ?? 99) <= 6).length;
+	return { ...d, birthdayCount: d.birthdayCount + lunarThisWeek };
+}
 
 // ===== 사용자 · 초대 (설정) =====
 export const listUsers = () => get<UserRow[]>('/users');
@@ -293,6 +316,10 @@ export function logoUrl(token: string, icon = false): string {
 }
 export const uploadLogo = (file: File) => sendFile<{ logo: string }>('/church/logo', file, 'logo');
 export const deleteLogo = () => del('/church/logo');
+// ===== 브라우저 탭 아이콘 =====
+export const faviconUrl = (token: string): string => url('/api/v1/church/favicon') + `?v=${token}`;
+export const uploadFavicon = (file: File) => sendFile<{ favicon: string }>('/church/favicon', file, 'favicon');
+export const deleteFavicon = () => del('/church/favicon');
 
 export const deletePhoto = (type: 'student' | 'teacher', id: number) => del(`/photos/${type}/${id}`);
 

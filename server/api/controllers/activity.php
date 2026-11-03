@@ -386,13 +386,15 @@ route('GET', '/d/{dept}/calendar', function (array $p) {
         $items[] = ['date' => $e['event_date'], 'kind' => $e['kind'], 'label' => $e['title']];
     }
     if (rank($ctx['role']) >= 2) {
-        $people = [
-            ...rows('SELECT name, birth_date FROM ' . t('students') . " WHERE department_id = ? AND status <> 'inactive' AND birth_date IS NOT NULL AND MONTH(birth_date) = ?", [$ctx['deptId'], $m]),
-            ...rows('SELECT name, birth_date FROM ' . t('teachers') . " WHERE department_id = ? AND status = 'active' AND birth_date IS NOT NULL AND MONTH(birth_date) = ?", [$ctx['deptId'], $m]),
-        ];
-        foreach ($people as $pe) {
+        $bp = birthday_people($ctx['deptId']);
+        foreach ($bp['solar'] as $pe) {
+            if ((int)substr($pe['birth_date'], 5, 2) !== $m) continue;
             $day = (int)substr($pe['birth_date'], 8, 2);
             if (checkdate($m, $day, $y)) $items[] = ['date' => sprintf('%04d-%02d-%02d', $y, $m, $day), 'kind' => 'birthday', 'label' => $short($pe['name']) . ' 생일'];
+        }
+        // 음력 생일은 양력 날짜를 화면이 계산한다. (date 가 비어 있고 lunar 가 있으면 화면이 채운다)
+        foreach ($bp['lunar'] as $pe) {
+            $items[] = ['date' => '', 'kind' => 'birthday', 'label' => $short($pe['name']) . ' 생일(음력)', 'lunar' => ['m' => $pe['m'], 'd' => $pe['d'], 'leap' => $pe['leap']]];
         }
         foreach (visits_for($ctx) as $v) {
             $first = $short($v['targetNames'][0] ?? '');
@@ -450,13 +452,13 @@ route('GET', '/d/{dept}/dashboard', function (array $p) {
     }
 
     $birthdays = 0;
+    $lunarBirthdays = [];
     if ($staff) {
         $today = today_str();
-        $people = [
-            ...rows('SELECT birth_date FROM ' . t('students') . " WHERE department_id = ? AND status <> 'inactive' AND birth_date IS NOT NULL", [$deptId]),
-            ...rows('SELECT birth_date FROM ' . t('teachers') . " WHERE department_id = ? AND status = 'active' AND birth_date IS NOT NULL", [$deptId]),
-        ];
-        foreach ($people as $pe) if (days_until_birthday($pe['birth_date'], $today) <= 6) $birthdays++;
+        $bp = birthday_people($deptId);
+        foreach ($bp['solar'] as $pe) if (days_until_birthday($pe['birth_date'], $today) <= 6) $birthdays++;
+        // 음력 생일은 이번 주인지를 화면이 계산해서 더한다.
+        foreach ($bp['lunar'] as $pe) $lunarBirthdays[] = ['m' => $pe['m'], 'd' => $pe['d'], 'leap' => $pe['leap']];
     }
 
     $follow = $staff ? visits_for($ctx, true) : [];
@@ -474,6 +476,7 @@ route('GET', '/d/{dept}/dashboard', function (array $p) {
         'teacherTotal' => $teachers,
         'newCount' => (int)val('SELECT COUNT(*) FROM ' . t('students') . " WHERE department_id = ? AND status = 'new'", [$deptId]),
         'birthdayCount' => $birthdays,
+        'lunarBirthdays' => $lunarBirthdays,
         'birthdayRange' => date('n/j') . ' ~ ' . date('n/j', strtotime('+6 days')),
         'trend' => array_map(fn($d) => ['date' => $d, 'count' => $attByDate[$d] ?? 0], array_reverse($sundays)),
         'absentees' => $absentees,

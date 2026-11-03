@@ -103,3 +103,34 @@ function custom_decode(?string $raw): object
     $d = $raw ? json_decode($raw, true) : null;
     return (object)(is_array($d) ? $d : []);
 }
+
+/**
+ * 생일을 센다. 음력(추가 항목의 '음력 날짜' 종류)을 입력한 사람은 양력 생년월일 대신 음력으로 생일을 쇤다고 보고,
+ * 음력 날짜는 양력으로 바꾸는 표가 서버에 없으므로 화면(브라우저)이 바꾸도록 월·일·윤달만 내려준다.
+ * @return array{solar: list<array{name:string, birth_date:string}>, lunar: list<array{name:string, m:int, d:int, leap:bool}>}
+ */
+function birthday_people(int $deptId): array
+{
+    $solar = [];
+    $lunar = [];
+    $sets = [
+        ['student', 'students', "status <> 'inactive'"],
+        ['teacher', 'teachers', "status = 'active'"],
+    ];
+    foreach ($sets as [$entity, $table, $where]) {
+        $lunarId = null;
+        foreach (custom_defs($deptId, $entity) as $id => $d) {
+            if ($d['field_type'] === 'lunar') { $lunarId = (string)$id; break; }
+        }
+        foreach (rows("SELECT name, birth_date, custom FROM " . t($table) . " WHERE department_id = ? AND $where", [$deptId]) as $r) {
+            $c = $r['custom'] ? json_decode((string)$r['custom'], true) : null;
+            $v = ($lunarId !== null && is_array($c) && isset($c[$lunarId])) ? (string)$c[$lunarId] : '';
+            if (preg_match('/^[0-9]{4}-([0-9]{2})-([0-9]{2})(L?)$/', $v, $mm)) {
+                $lunar[] = ['name' => $r['name'], 'm' => (int)$mm[1], 'd' => (int)$mm[2], 'leap' => $mm[3] === 'L'];
+            } elseif ($r['birth_date'] !== null) {
+                $solar[] = ['name' => $r['name'], 'birth_date' => $r['birth_date']];
+            }
+        }
+    }
+    return ['solar' => $solar, 'lunar' => $lunar];
+}

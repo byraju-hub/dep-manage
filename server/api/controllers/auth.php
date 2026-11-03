@@ -33,7 +33,11 @@ function me_payload(array $u): array
 /** 15분 안에 실패가 많으면 잠시 막는다. 아이디 기준 5번, 접속 주소 기준 20번. */
 function login_throttled(string $loginId): bool
 {
-    $byId = (int)val('SELECT COUNT(*) FROM ' . t('login_attempts') . ' WHERE login_id = ? AND attempted_at > (NOW() - INTERVAL 15 MINUTE)', [$loginId]);
+    // 체험 계정은 비밀번호가 공개돼 있어 아이디 기준으로 막으면 남이 일부러 틀려서 모두를 잠글 수 있다. 그 사람(접속 주소)만 막는다.
+    $isDemoId = defined('DEMO_LOGIN') && $loginId === DEMO_LOGIN;
+    $byId = $isDemoId
+        ? (int)val('SELECT COUNT(*) FROM ' . t('login_attempts') . ' WHERE login_id = ? AND ip = ? AND attempted_at > (NOW() - INTERVAL 15 MINUTE)', [$loginId, client_ip()])
+        : (int)val('SELECT COUNT(*) FROM ' . t('login_attempts') . ' WHERE login_id = ? AND attempted_at > (NOW() - INTERVAL 15 MINUTE)', [$loginId]);
     $byIp = (int)val('SELECT COUNT(*) FROM ' . t('login_attempts') . ' WHERE ip = ? AND attempted_at > (NOW() - INTERVAL 15 MINUTE)', [client_ip()]);
     return $byId >= 5 || $byIp >= 20;
 }

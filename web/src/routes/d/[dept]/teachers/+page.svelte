@@ -3,6 +3,7 @@
 	import { ApiError, deleteTeacher, photoUrl } from '$lib/api';
 	import { confirmDeletePerson } from '$lib/confirm';
 import { dotted } from '$lib/dates';
+	import { showCustom } from '$lib/custom';
 	import Avatar from '$lib/components/Avatar.svelte';
 	import ExcelMenu from '$lib/components/ExcelMenu.svelte';
 import Icon from '$lib/components/Icon.svelte';
@@ -12,6 +13,8 @@ import { terms } from '$lib/terms.svelte';
 import { url } from '$lib/url';
 
 	let { data } = $props();
+	// '명단 표에도 보이기'로 정한 추가 항목은 표에 열로 더한다.
+	const listFields = $derived(data.fields.filter((f) => f.entity === 'teacher' && f.showInList));
 
 	async function removeTeacher(id: number, name: string) {
 		if (!confirmDeletePerson(name, terms.teacher)) return;
@@ -50,6 +53,7 @@ import { url } from '$lib/url';
 						<th scope="col">담당 {terms.class}</th>
 						<th scope="col">생년월일</th>
 						<th scope="col">연락처</th>
+						{#each listFields as f (f.id)}<th scope="col">{f.label}</th>{/each}
 						<th scope="col" class="end"><span class="sr-only">수정·삭제</span></th>
 					</tr>
 				</thead>
@@ -62,6 +66,7 @@ import { url } from '$lib/url';
 							<td>{#if t.classNames.length}{#each t.classNames as c (c)}<span class="badge badge-sq tone-blue cls">{c}</span>{/each}{:else}<span class="muted">-</span>{/if}</td>
 							<td class="c2">{dotted(t.birthDate)}</td>
 							<td class="c2 nowrap"><PhoneLink phone={t.phone} name={t.name} /></td>
+							{#each listFields as f (f.id)}<td class="c2 nowrap">{showCustom(f, t.custom) ?? '-'}</td>{/each}
 							<td class="end">
 								{#if can(data.dept.id, 'admin')}
 									<span class="acts">
