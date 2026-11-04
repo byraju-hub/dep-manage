@@ -35,8 +35,8 @@ docs/     설계·디자인 문서
 
 ## 설치해서 쓰기 (배포 zip)
 
-[Releases](https://github.com/byraju-hub/dep-manage/releases)에서 `dep-manage-vX.Y.Z.zip` 을 받아 압축을 풀고, 안의 내용을 호스팅 사이트 폴더에 올린 뒤 `/install/` 을 열면 됩니다. 자세한 순서는 zip 안의 `설치가이드.pdf` (소스: `docs/install-guide.html`) 를 보세요.
-zip 은 `v0.2.0` 같은 태그를 올리면 GitHub Actions 가 만들고, 내 컴퓨터에서는 `./scripts/build-release.sh` 로 만들 수 있습니다.
+[Releases](https://github.com/byraju-hub/dep-manage/releases)에서 (첫 공개 버전은 `v0.1.0`입니다) `dep-manage-vX.Y.Z.zip` 을 받아 압축을 풀고, 안의 내용을 호스팅 사이트 폴더에 올린 뒤 `/install/` 을 열면 됩니다. 자세한 순서는 zip 안의 `설치가이드.pdf` (소스: `docs/install-guide.html`) 를 보세요.
+zip 은 `v0.1.1` 같은 태그를 올리면 GitHub Actions 가 만들고, 내 컴퓨터에서는 `./scripts/build-release.sh` 로 만들 수 있습니다.
 
 ## 개발과 배포
 
