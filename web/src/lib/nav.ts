@@ -8,6 +8,8 @@ export interface NavItem {
 	tone: Tone;
 	href: string; // /d/:dept 뒤에 붙는 경로
 	badge?: number;
+	/** 교사 이상에게만 보이는 메뉴(개인 정보가 들어 있어서) */
+	staff?: boolean;
 	/** 모바일 하단 탭에 바로 보이는 항목 */
 	tab?: boolean;
 }
@@ -25,6 +27,9 @@ export function buildNav(terms: Terms, pendingVisits: number): { main: NavItem[]
 		plan: [
 			{ key: 'calendar', label: '연간 계획', icon: 'calendar', tone: 'orange', href: '/plans/calendar' },
 			{ key: 'ministry', label: '사역 계획', icon: 'flag', tone: 'teal', href: '/plans/ministry' },
+			{ key: 'newcomers', label: '새가족 정착', icon: 'userPlus', tone: 'green', href: '/newcomers', staff: true },
+			{ key: 'prayers', label: '기도 제목', icon: 'star', tone: 'violet', href: '/prayers', staff: true },
+			{ key: 'participants', label: '행사 참가', icon: 'compass', tone: 'sky', href: '/events', staff: true },
 			{ key: 'notices', label: '공지사항', icon: 'megaphone', tone: 'amber', href: '/notices' },
 			{ key: 'meetings', label: '회의록', icon: 'file', tone: 'slate', href: '/meetings' }
 		],

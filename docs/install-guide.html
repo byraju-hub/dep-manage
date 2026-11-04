@@ -24,6 +24,9 @@
 	th, td { border: 1px solid var(--line); padding: 5px 9px; text-align: left; vertical-align: top; font-size: 10.5pt; }
 	th { background: var(--soft); }
 	.step { display: inline-block; width: 22px; height: 22px; line-height: 22px; text-align: center; border-radius: 50%; background: var(--accent); color: #fff; font-weight: 700; font-size: 10pt; margin-right: 6px; }
+	figure { margin: 10px 0; break-inside: avoid; }
+	figure img { display: block; width: 100%; border: 1px solid var(--line); border-radius: 8px; }
+	figcaption { font-size: 9.5pt; color: var(--muted); margin-top: 3px; }
 	.foot { margin-top: 26px; color: var(--muted); font-size: 9.5pt; border-top: 1px solid var(--line); padding-top: 8px; }
 	.credit { margin-top: 18px; text-align: center; border: 2px solid #2f5fe3; border-radius: 10px; padding: 10px 14px; font-size: 14pt; font-weight: 700; }
 	.credit a { color: #2f5fe3; text-decoration: none; }
@@ -90,18 +93,26 @@
 
 <h2>5. 처음 설정하기 (로그인 후)</h2>
 <ol>
-	<li><b>설정 → 부서 정보</b>에서 교회 이름과 로고(정사각형 이미지)를 넣어요. 로고는 왼쪽 위와 브라우저 탭 아이콘에 쓰여요.</li>
+	<li><b>설정 → 부서 정보</b>에서 교회 이름과 로고(정사각형 이미지)를 넣어요. 로고는 왼쪽 위와 로그인 화면에, <b>탭 아이콘</b>은 브라우저 탭과 휴대폰 홈 화면에 쓰여요(탭 아이콘을 따로 올리지 않으면 로고를 써요).</li>
 	<li><b>설정 → 용어</b>에서 '학생·교사·반·심방' 같은 말을 우리 교회에서 쓰는 말로 바꿔요.</li>
 	<li><b>설정 → 학년·반 구조</b>에서 학년 단계와 반을 확인하고 만들어요.</li>
 	<li>교사들을 초대해요: <b>설정 → 사용자 → 초대 코드</b>에서 부서와 역할을 정해 코드를 만들고, 가입 주소(<code>…/join</code>)와 함께 알려 주세요. 가입 신청이 오면 <b>승인</b>을 눌러요.</li>
 	<li>학생 명단은 <b>학생 명단 → 엑셀 → 양식 내려받기</b>로 양식을 받아 채워서 올리면 한꺼번에 등록돼요.</li>
 	<li>부서가 더 있다면 <b>설정 → 부서 관리</b>에서 추가해요(교회 관리자만). 사람마다 <b>부서별로</b> 역할을 정할 수 있어요.</li>
 </ol>
+<figure><img src="img/settings.jpg" alt="설정 화면" /><figcaption>설정 → 부서 정보: 교회 이름, 로고, 탭 아이콘, 부서 정보를 정해요.</figcaption></figure>
+
+<h3>이런 화면을 보게 돼요</h3>
+<p>부서가 여러 개면 로그인 직후 <b>교회 홈</b>이 열려요(교회 공지와 부서별 요약). 부서가 하나면 바로 그 부서의 대시보드가 열려요. 왼쪽 아래 이름을 누르면 <b>내 정보</b>(비밀번호 변경, 소속 부서와 역할)가 열려요.</p>
+<figure><img src="img/church-home.jpg" alt="교회 홈" /><figcaption>교회 홈: 모든 부서의 요약을 한눈에</figcaption></figure>
+<figure><img src="img/dashboard.jpg" alt="대시보드" /><figcaption>대시보드: 출석, 새가족, 이번 주 생일, 사역 캘린더, 장기 결석, 후속 심방</figcaption></figure>
+<figure><img src="img/students.jpg" alt="학생 명단" /><figcaption>학생 명단: 학년·반, 학교, 상태, 최근 4주 출석</figcaption></figure>
+<p>그 밖에 <b>새가족 정착</b>(첫 방문 → 2주 출석 → 심방 → 정식 등록 단계 확인), <b>기도 제목</b>(응답받은 것 표시), <b>행사 참가</b>(수련회 신청·회비 납부) 메뉴가 있어요. 이 세 메뉴는 부서 교사 이상에게만 보여요. (화면의 이름·학교는 모두 만들어 낸 가상 자료예요.)</p>
 
 <h2>6. 역할 한눈에 보기</h2>
 <table>
 	<tr><th>역할</th><th>할 수 있는 일</th></tr>
-	<tr><td>교회 관리자</td><td>모든 부서 + 부서 추가, 교회 이름·로고, 백업, 업데이트</td></tr>
+	<tr><td>교회 관리자</td><td>모든 부서 + 부서 추가·보관·삭제, 교회 이름·로고·탭 아이콘, 백업·복원, 업데이트</td></tr>
 	<tr><td>부서 관리자</td><td>자기 부서의 명단·설정·승급·사용자 승인</td></tr>
 	<tr><td>부서 교사</td><td>자기 부서의 출석 체크, 학생 정보 보기·고치기, 심방 기록</td></tr>
 	<tr><td>열람</td><td>자기 부서의 명단·출석·일정 보기만 (심방 기록은 못 봐요)</td></tr>
@@ -111,6 +122,8 @@
 <h2>7. 백업과 업데이트</h2>
 <h3>백업 (꼭 정기적으로)</h3>
 <p>교회 관리자로 로그인 → <b>설정 → 데이터 → 백업 내려받기</b>. 전체 자료가 zip 한 개로 내려와요. 새해 승급 전, 업데이트 전에는 꼭 받아 두세요. 호스팅의 DB 백업 기능도 함께 쓰면 더 안전해요.</p>
+<h3>백업에서 복원</h3>
+<p>문제가 생겼을 때는 <b>설정 → 데이터 → 백업에서 복원</b>에서 받아 둔 zip 파일을 올려 되돌릴 수 있어요. 지금 있는 모든 데이터가 백업 시점의 내용으로 바뀌고, 확인 칸에 '복원'이라고 입력해야 진행돼요. 복원 직전 상태는 서버의 <code>data</code> 폴더에 자동으로 저장되고, 복원이 중간에 실패하면 자동으로 되돌려요. 복원이 끝나면 로그아웃되니 백업 시점의 아이디·비밀번호로 다시 로그인하세요. (호스팅의 업로드 크기 제한보다 큰 백업은 올라가지 않아요. 그때는 phpMyAdmin의 가져오기로 <code>backup.sql</code>을 복원하세요.)</p>
 <h3>새 버전으로 업데이트</h3>
 <ol>
 	<li>먼저 위의 방법으로 <b>백업</b>을 받아요.</li>

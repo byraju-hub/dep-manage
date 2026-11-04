@@ -52,6 +52,7 @@ function dm_finalize_web(): int
             . "RewriteCond %{REQUEST_FILENAME} !-d\n"
             . "RewriteRule ^ index.html [L]\n\n"
             . "<IfModule mod_headers.c>\n"
+            . "  Header always set X-Frame-Options \"SAMEORIGIN\"\n  Header always set X-Content-Type-Options \"nosniff\"\n  Header always set Referrer-Policy \"same-origin\"\n"
             . "  <FilesMatch \"\.html$\">\n    Header set Cache-Control \"no-cache\"\n  </FilesMatch>\n"
             . "</IfModule>\n";
         @file_put_contents($ht, $rules, LOCK_EX);

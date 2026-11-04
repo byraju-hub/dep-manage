@@ -13,7 +13,7 @@ import Icon from './Icon.svelte';
 	let { dept, depts, pending, churchName, churchLogo = null }: { dept: Department; depts: Department[]; pending: number; churchName: string; churchLogo?: string | null } = $props();
 
 	const nav = $derived(buildNav(terms, pending));
-	const all = $derived([...nav.main, ...nav.plan, nav.manual, ...(can(dept.id, 'admin') ? [nav.settings] : [])]);
+	const all = $derived([...nav.main, ...nav.plan.filter((i) => !i.staff || can(dept.id, 'teacher')), nav.manual, ...(can(dept.id, 'admin') ? [nav.settings] : [])]);
 	const tabs = $derived(nav.main.filter((n) => n.tab));
 	let sheet = $state(false);
 

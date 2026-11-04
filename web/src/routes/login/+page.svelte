@@ -41,7 +41,8 @@ import ChurchLogo from '$lib/components/ChurchLogo.svelte';
 			password = '';
 			if (session.user?.mustChangePassword) return void (await goto(url('/password')));
 			const depts = await listDepartments();
-			await goto(depts.length ? url(`/d/${depts[0].id}`) : url('/login?nodept=1'));
+			// 부서가 하나면 그 부서로, 여러 개면 교회 홈으로 (첫 화면 '/' 이 정한다)
+			await goto(depts.length ? url('/') : url('/login?nodept=1'));
 		} catch (err) {
 			error = err instanceof ApiError ? err.message : '로그인하지 못했어요. 잠시 뒤 다시 시도해 주세요.';
 		} finally {

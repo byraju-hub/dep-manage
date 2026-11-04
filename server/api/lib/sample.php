@@ -176,6 +176,7 @@ function sample_seed_department(PDO $pdo, string $p, int $deptId, bool $withChur
         $insE->execute([$deptId, add_days($today, 6), 'meeting', '교사회의', '']);
         $insE->execute([$deptId, add_days($today, 6), 'due', '수련회 신청', '']);
         $insE->execute([$deptId, add_days($next, 21), 'ministry', '겨울 수련회 준비', '']);
+        $retreatId = (int)$pdo->lastInsertId();
 
         // ===== 공지 · 회의록 =====
         $insN = $pdo->prepare('INSERT INTO ' . sp($p, 'notices') . ' (department_id, title, body, pinned, publish_date, is_sample) VALUES (?,?,?,?,?,1)');
@@ -184,6 +185,38 @@ function sample_seed_department(PDO $pdo, string $p, int $deptId, bool $withChur
         $insN->execute([$deptId, '찬양팀 연습 시간 변경', '연습은 예배 30분 전에 시작합니다.', 0, add_days($today, -14)]);
         $insM = $pdo->prepare('INSERT INTO ' . sp($p, 'meetings') . ' (department_id, meeting_date, title, content, attendees, is_sample) VALUES (?,?,?,?,?,1)');
         $insM->execute([$deptId, add_days($today, -9), '10월 교사회의', "1. 수련회 장소 후보 세 곳 논의\n2. 장기 결석 학생 심방 담당 정하기\n3. 11월 추수감사 예배 순서 확인", '이상현, 박은지, 한소영, 김민석']);
+
+        // ===== 새가족 정착 · 기도 제목 · 행사 참가 (업데이트 006 을 적용한 서버에서만) =====
+        if ($pdo->query('SHOW TABLES LIKE ' . $pdo->quote($p . 'prayer_requests'))->fetchColumn()) {
+            $newIds = array_map('intval', $pdo->query('SELECT id FROM ' . sp($p, 'students') . ' WHERE department_id = ' . (int)$deptId . " AND status = 'new' AND is_sample = 1 ORDER BY id")->fetchAll(PDO::FETCH_COLUMN));
+            $insS = $pdo->prepare('INSERT INTO ' . sp($p, 'newcomer_steps') . ' (student_id, step, done_date, done_by) VALUES (?,?,?,?)');
+            foreach ($newIds as $i => $sid) {
+                $insS->execute([$sid, 'welcome', add_days($today, -14 + $i), '김선생']);
+                if ($i % 2 === 0) $insS->execute([$sid, 'attend', add_days($today, -3), '김선생']);
+                if ($i % 3 === 0) $insS->execute([$sid, 'visit', add_days($today, -2), '김선생']);
+            }
+
+            $insP = $pdo->prepare('INSERT INTO ' . sp($p, 'prayer_requests') . ' (department_id, target_type, target_id, content, status, request_date, answered_date, author_name) VALUES (?,?,?,?,?,?,?,?)');
+            $prayers = [
+                ['student', $enrolled[1] ?? null, '시험 기간에 건강과 평안을 지켜 주세요.', 'praying', -5, null],
+                ['student', $enrolled[2] ?? null, '진로를 놓고 고민하고 있어요. 길을 열어 주세요.', 'praying', -12, null],
+                ['student', $enrolled[3] ?? null, '교회에 다시 나올 수 있도록 마음을 열어 주세요.', 'praying', -20, null],
+                ['student', $enrolled[4] ?? null, '이사한 곳에서 잘 적응하게 해 주세요.', 'answered', -40, -10],
+                ['teacher', $teacherIds[0] ?? null, '교사회의가 하나 되어 은혜롭게 진행되도록.', 'praying', -8, null],
+            ];
+            foreach ($prayers as [$type, $tid, $text, $status, $off, $ans]) {
+                if ($tid) $insP->execute([$deptId, $type, $tid, $text, $status, add_days($today, $off), $ans === null ? null : add_days($today, $ans), '김선생']);
+            }
+
+            if (!empty($retreatId)) {
+                $insEP = $pdo->prepare('INSERT INTO ' . sp($p, 'event_participants') . ' (event_id, person_type, person_id, paid, amount, note) VALUES (?,?,?,?,?,?)');
+                foreach (array_slice($enrolled, 0, 18) as $i => $sid) {
+                    $paid = $i % 5 !== 4;
+                    $insEP->execute([$retreatId, 'student', $sid, $paid ? 1 : 0, $paid ? 80000 : null, $i === 3 ? '형제 할인 예정' : '']);
+                }
+                foreach (array_slice($teacherIds, 0, 3) as $tid) $insEP->execute([$retreatId, 'teacher', $tid, 1, 0, '교사 지원']);
+            }
+        }
 
         $pdo->commit();
     } catch (Throwable $e) {
@@ -227,6 +260,11 @@ function sample_delete(PDO $pdo, string $p): array
     $before = sample_counts($pdo, $p);
     $pdo->beginTransaction();
     try {
+        // 샘플 사람의 기도 제목을 먼저 지운다. (행사 참가·새가족 단계는 일정·학생이 지워질 때 함께 지워진다. 업데이트 006 전에는 표가 없어서 넘어간다.)
+        try {
+            $pdo->exec('DELETE FROM ' . sp($p, 'prayer_requests') . " WHERE (target_type = 'student' AND target_id IN (SELECT id FROM " . sp($p, 'students') . " WHERE is_sample = 1)) OR (target_type = 'teacher' AND target_id IN (SELECT id FROM " . sp($p, 'teachers') . ' WHERE is_sample = 1))');
+        } catch (Throwable) {
+        }
         foreach (['notices', 'meetings', 'events', 'visits', 'ministry_plans', 'students', 'teachers', 'classes'] as $t) {
             $pdo->exec('DELETE FROM ' . sp($p, $t) . ' WHERE is_sample = 1');
         }

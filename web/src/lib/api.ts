@@ -10,6 +10,10 @@ import type {
 	StudentImportRow,
 	TeacherImportRow,
 	CalendarItem,
+	EventParticipants,
+	NewcomerRow,
+	NewcomerStep,
+	PrayerRow,
 	Church,
 	CustomField,
 	CustomType,
@@ -138,6 +142,11 @@ export async function getDepartment(id: number): Promise<Department> {
 	if (!d) throw new ApiError('not_found', '부서를 찾을 수 없습니다.', 404);
 	return d;
 }
+export type DepartmentAdmin = Department & { archived: boolean; students: number; teachers: number };
+export const listAllDepartments = () => get<DepartmentAdmin[]>('/departments/all');
+export const archiveDepartment = (id: number, archived: boolean) => post(`/departments/${id}/archive`, { archived });
+export const orderDepartments = (ids: number[]) => put('/departments/order', { ids });
+export const deleteDepartment = (id: number, confirmName: string) => call('DELETE', `/departments/${id}`, { confirmName });
 export const createDepartment = (v: { name: string; pastorName: string; headName: string; terms: Terms; grades: string[] }) => post<Department>('/departments', v);
 export const updateDepartmentInfo = (deptId: number, info: { name: string; pastorName: string; headName: string }) => put(`/d/${deptId}`, info);
 export const updateTerms = (deptId: number, terms: Terms) => put(`/d/${deptId}/terms`, { terms });
@@ -174,6 +183,7 @@ export const updateClass = (id: number, v: { name: string; tone: Tone; teacherId
 export const deleteClass = (id: number) => del(`/classes/${id}`);
 
 export type TeacherRow = Teacher & { classNames: string[] };
+export const teacherElsewhere = (id: number) => get<Array<{ teacherId: number; deptId: number; deptName: string; position: string }>>(`/teachers/${id}/elsewhere`);
 export const listTeachers = (deptId: number) => get<TeacherRow[]>(`/d/${deptId}/teachers`);
 export const createTeacher = (deptId: number, v: TeacherInput) => post<{ id: number }>(`/d/${deptId}/teachers`, v);
 export const updateTeacher = (id: number, v: TeacherInput) => put(`/teachers/${id}`, v);
@@ -282,6 +292,36 @@ export const createGradeLevel = (deptId: number, v: { label: string; tone: Tone 
 export const updateGradeLevel = (id: number, v: { label: string; tone: Tone }) => put(`/grade-levels/${id}`, v);
 export const deleteGradeLevel = (id: number) => del(`/grade-levels/${id}`);
 
+
+// ===== 새가족 정착 · 기도 제목 · 행사 참가 =====
+export const listNewcomers = (deptId: number) => get<NewcomerRow[]>(`/d/${deptId}/newcomers`);
+export const setNewcomerStep = (studentId: number, step: NewcomerStep, done: boolean) => put(`/newcomers/${studentId}/steps/${step}`, { done });
+
+export const listPrayers = (deptId: number, status: 'praying' | 'answered' | 'all') => get<PrayerRow[]>(`/d/${deptId}/prayers`, { status });
+export const createPrayer = (deptId: number, v: { targetType: 'student' | 'teacher'; targetId: number; content: string; date?: string }) => post<{ id: number }>(`/d/${deptId}/prayers`, v);
+export const updatePrayer = (id: number, content: string) => put(`/prayers/${id}`, { content });
+export const answerPrayer = (id: number, answered: boolean) => post(`/prayers/${id}/answer`, { answered });
+export const deletePrayer = (id: number) => del(`/prayers/${id}`);
+
+export const getParticipants = (eventId: number) => get<EventParticipants>(`/events/${eventId}/participants`);
+export const setParticipant = (eventId: number, type: 'student' | 'teacher', personId: number, v: { applied: boolean; paid: boolean; amount: number | null; note: string }) =>
+	put(`/events/${eventId}/participants/${type}/${personId}`, v);
+
+// ===== 백업 복원 (설정 → 데이터) =====
+export async function restoreBackup(file: File, confirmWord: string): Promise<{ tables: number; photos: number; safetyFile: string }> {
+	const fd = new FormData();
+	fd.append('backup', file);
+	fd.append('confirm', confirmWord);
+	let res: Response;
+	try {
+		res = await fetch(url('/api/v1/system/restore'), { method: 'POST', body: fd, credentials: 'same-origin', headers: csrf ? { 'X-CSRF-Token': csrf } : {} });
+	} catch {
+		throw new ApiError('network', '서버에 연결하지 못했어요.', 0);
+	}
+	const json = await res.json().catch(() => null);
+	if (!res.ok || !json?.ok) throw new ApiError(json?.error?.code ?? 'error', json?.error?.message ?? '복원하지 못했어요. 파일이 서버의 업로드 제한보다 클 수 있어요.', res.status);
+	return json.data;
+}
 
 // ===== 사진 =====
 export function photoUrl(type: 'student' | 'teacher', id: number, token: string | null | undefined, thumb = false): string | null {

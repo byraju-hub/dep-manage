@@ -58,6 +58,7 @@ import Icon from './Icon.svelte';
 						<button class="menu-item" class:cur={d.id === dept.id} onclick={() => switchTo(d.id)}>{d.name}</button>
 					</li>
 				{/each}
+				<li><a class="menu-item home" href={url('/?home=1')} onclick={() => (open = false)}>교회 홈 (모든 부서)</a></li>
 			</ul>
 		{/if}
 	</div>
@@ -65,7 +66,7 @@ import Icon from './Icon.svelte';
 	<nav aria-label="주 메뉴">
 		{#each nav.main as item (item.key)}{@render link(item)}{/each}
 		<div class="group">계획 · 소통</div>
-		{#each nav.plan as item (item.key)}{@render link(item)}{/each}
+		{#each nav.plan.filter((i) => !i.staff || can(dept.id, 'teacher')) as item (item.key)}{@render link(item)}{/each}
 	</nav>
 
 	<div class="bottom">
@@ -73,10 +74,10 @@ import Icon from './Icon.svelte';
 		{#if can(dept.id, 'admin')}{@render link(nav.settings)}{/if}
 		<div class="user">
 			<span class="me" aria-hidden="true">{session.user?.name.slice(0, 1) ?? '?'}</span>
-			<div class="who">
+			<a class="who" href={url('/me')} title="내 정보">
 				<div class="name">{session.user?.name}</div>
 				<div class="role">{session.user?.roleLabel}</div>
-			</div>
+			</a>
 			<a class="out" href={url('/password')} aria-label="비밀번호 변경" title="비밀번호 변경"><Icon name="lock" size={18} /></a>
 			<button class="out" aria-label="로그아웃" title="로그아웃" onclick={signOut}><Icon name="logout" size={18} /></button>
 		</div>
@@ -125,6 +126,7 @@ import Icon from './Icon.svelte';
 	.menu-item {
 		width: 100%; text-align: left; padding: 9px 10px; border: 0; border-radius: 8px; background: transparent; font-weight: 500;
 	}
+	a.menu-item { display: block; color: var(--accent); font-weight: 700; border-top: 1px solid var(--line-soft); border-radius: 0 0 8px 8px; }
 	.menu-item:hover { background: var(--field-bg); }
 	.menu-item.cur { background: var(--accent-soft); font-weight: 700; }
 
@@ -148,7 +150,7 @@ import Icon from './Icon.svelte';
 		width: 34px; height: 34px; border-radius: 50%; background: #ffebd0; color: #a04a07;
 		display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0;
 	}
-	.who { line-height: 1.3; flex-grow: 1; min-width: 0; }
+	.who { line-height: 1.3; flex-grow: 1; min-width: 0; color: inherit; text-decoration: none; }
 	.name { font-size: 13.5px; font-weight: 600; }
 	.role { font-size: 12px; color: var(--muted); }
 	.out { border: 0; background: transparent; color: var(--muted); padding: 8px; border-radius: 8px; display: flex; }

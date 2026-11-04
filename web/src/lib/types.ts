@@ -345,3 +345,47 @@ export interface CustomField {
 	options: string[];
 	showInList: boolean;
 }
+
+// ===== 새가족 정착 · 기도 제목 · 행사 참가 =====
+export type NewcomerStep = 'welcome' | 'attend' | 'visit' | 'register';
+
+export interface NewcomerRow {
+	id: number;
+	name: string;
+	school: string;
+	gradeLabel: string;
+	className: string;
+	since: string;
+	/** 마친 단계 → 마친 날 */
+	steps: Partial<Record<NewcomerStep, string>>;
+	autoAttend: boolean;
+	autoVisit: boolean;
+}
+
+export interface PrayerRow {
+	id: number;
+	targetType: 'student' | 'teacher';
+	targetId: number;
+	targetName: string;
+	content: string;
+	status: 'praying' | 'answered';
+	date: string;
+	answeredDate: string | null;
+	author: string;
+}
+
+export interface ParticipantRow {
+	type: 'student' | 'teacher';
+	id: number;
+	name: string;
+	detail: string;
+	applied: boolean;
+	paid: boolean;
+	amount: number | null;
+	note: string;
+}
+
+export interface EventParticipants {
+	event: { id: number; title: string; date: string; endDate: string | null };
+	people: ParticipantRow[];
+}

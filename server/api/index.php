@@ -25,7 +25,7 @@ require __DIR__ . '/lib/migrate.php';
 require __DIR__ . '/lib/sample.php';
 require __DIR__ . '/lib/photos.php';
 require __DIR__ . '/lib/custom.php';
-foreach (['system', 'auth', 'orgs', 'people', 'activity', 'files', 'extra', 'custom'] as $c) {
+foreach (['system', 'auth', 'orgs', 'people', 'activity', 'files', 'extra', 'custom', 'modules'] as $c) {
     require __DIR__ . '/controllers/' . $c . '.php';
 }
 

@@ -258,6 +258,7 @@ route('DELETE', '/students/{id}', function (array $p) {
     $s = load_student((int)$p['id']);
     require_dept((int)$s['department_id'], 'admin');
     q('DELETE FROM ' . t('students') . ' WHERE id = ?', [$s['id']]);
+    purge_person_links('student', (int)$s['id']);
     cm_unlink('student', (int)$s['id']);
     delete_photo($s['photo_path'] ?? null);
     audit('student.delete', 'student', (int)$s['id']);
@@ -401,8 +402,27 @@ route('DELETE', '/teachers/{id}', function (array $p) {
     if (!$t) json_fail('not_found', '교사를 찾을 수 없습니다.', 404);
     require_dept((int)$t['department_id'], 'admin');
     q('DELETE FROM ' . t('teachers') . ' WHERE id = ?', [$t['id']]);
+    purge_person_links('teacher', (int)$t['id']);
     cm_unlink('teacher', (int)$t['id']);
     delete_photo($t['photo_path'] ?? null);
     audit('teacher.delete', 'teacher', (int)$t['id']);
     return null;
+});
+
+// 같은 사람이 다른 부서에서도 교사로 섬기는지. 이름이 같고 생년월일이나 전화번호까지 같은 교사를 보여준다.
+// (부서마다 교사 기록을 따로 두는 구조라서, 연결해 두지는 않고 알려주기만 한다. 내가 볼 수 있는 부서만 나온다.)
+route('GET', '/teachers/{id}/elsewhere', function (array $p) {
+    $t = row('SELECT * FROM ' . t('teachers') . ' WHERE id = ?', [(int)$p['id']]);
+    if (!$t) json_fail('not_found', '교사를 찾을 수 없습니다.', 404);
+    $ctx = require_dept((int)$t['department_id'], 'teacher');
+    $out = [];
+    $sql = 'SELECT t.id, t.department_id, t.position, t.birth_date, t.phone, d.name AS dept FROM ' . t('teachers') . ' t JOIN ' . t('departments') . ' d ON d.id = t.department_id WHERE t.name = ? AND t.id <> ? AND d.is_active = 1';
+    foreach (rows($sql, [$t['name'], $t['id']]) as $o) {
+        if (dept_role($ctx['user'], (int)$o['department_id']) === null) continue;
+        $sameBirth = $t['birth_date'] !== null && $o['birth_date'] !== null && $t['birth_date'] === $o['birth_date'];
+        $samePhone = (string)$t['phone'] !== '' && (string)$t['phone'] === (string)$o['phone'];
+        if (!$sameBirth && !$samePhone) continue;
+        $out[] = ['teacherId' => (int)$o['id'], 'deptId' => (int)$o['department_id'], 'deptName' => $o['dept'], 'position' => (string)$o['position']];
+    }
+    return $out;
 });

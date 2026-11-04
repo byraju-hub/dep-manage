@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { goto, invalidateAll } from '$app/navigation';
-	import { ApiError, addSampleData, backupUrl, createDemoAccount, deleteDemoAccount, deleteSampleData, getChurch, runMigrations } from '$lib/api';
+	import { ApiError, addSampleData, backupUrl, createDemoAccount, deleteDemoAccount, deleteSampleData, getChurch, restoreBackup, runMigrations } from '$lib/api';
 	import { onMount } from 'svelte';
 import { session } from '$lib/session.svelte';
 	import { url } from '$lib/url';
@@ -42,6 +42,29 @@ import { session } from '$lib/session.svelte';
 		}
 	}
 
+	// 백업 복원
+	let restoreFile = $state<File | null>(null);
+	let restoreWord = $state('');
+	let restoring = $state(false);
+	async function restore() {
+		if (!restoreFile) return void (error = '복원할 백업 zip 파일을 골라 주세요.');
+		if (restoreWord !== '복원') return void (error = "확인을 위해 '복원'이라고 입력해 주세요.");
+		if (!confirm('지금 데이터가 모두 백업 파일의 내용으로 바뀝니다. 계속할까요?')) return;
+		restoring = true;
+		error = message = '';
+		try {
+			const r = await restoreBackup(restoreFile, restoreWord);
+			alert(`복원했어요. (표 ${r.tables}개, 사진 ${r.photos}장)
+복원 직전 상태는 서버의 data 폴더에 ${r.safetyFile} 로 남겨 두었어요.
+다시 로그인해 주세요.`);
+			location.href = url('/login');
+		} catch (e) {
+			error = e instanceof ApiError ? e.message : '복원하지 못했어요.';
+		} finally {
+			restoring = false;
+		}
+	}
+
 	let confirming = $state(false);
 	let busy = $state(false);
 	let message = $state('');
@@ -79,6 +102,18 @@ import { session } from '$lib/session.svelte';
 			<div><a class="btn btn-primary" href={backupUrl()} download>백업 파일 내려받기</a></div>
 		{/if}
 	</section>
+
+	{#if !session.user?.isDemo}
+		<section class="card box">
+			<h2>백업에서 복원</h2>
+			<p class="sub">위에서 내려받은 백업 zip 파일로 데이터를 되돌려요. <b>지금 있는 모든 데이터(학생·교사·출석·심방·사용자·설정)가 백업 시점의 내용으로 바뀌어요.</b></p>
+			<p class="warnbox">복원 직전 상태는 서버의 data 폴더에 SQL 파일로 자동 저장되고, 복원이 중간에 실패하면 자동으로 되돌려요. 복원이 끝나면 로그아웃되니 백업 시점의 아이디·비밀번호로 다시 로그인하세요.</p>
+			<label class="field"><span>백업 zip 파일</span><input class="input" type="file" accept=".zip,application/zip" onchange={(e) => (restoreFile = e.currentTarget.files?.[0] ?? null)} disabled={restoring} /></label>
+			<label class="field"><span>확인을 위해 '복원'이라고 입력해 주세요</span><input class="input" bind:value={restoreWord} autocomplete="off" disabled={restoring} /></label>
+			<div><button class="btn danger" onclick={restore} disabled={restoring || !restoreFile}>{restoring ? '복원 중… (창을 닫지 마세요)' : '복원하기'}</button></div>
+			{#if error}<p class="err" role="alert">{error}</p>{/if}
+		</section>
+	{/if}
 
 	<section class="card box">
 		<h2>업데이트</h2>

@@ -34,6 +34,9 @@ import TeacherForm from '$lib/components/TeacherForm.svelte';
 
 <div class="page">
 	<header class="page-head"><h1>{t.name}</h1></header>
+	{#if data.elsewhere.length}
+		<p class="card also">이 {terms.teacher}은 다른 부서에서도 섬기고 있어요: {#each data.elsewhere as o, i (o.teacherId)}{i ? ', ' : ''}<a href={url(`/d/${o.deptId}/teachers/${o.teacherId}`)}>{o.deptName}{o.position ? ` (${o.position})` : ''}</a>{/each}</p>
+	{/if}
 	{#if editable}
 		<section class="card photo"><h2>사진</h2><PhotoField type="teacher" id={t.id} name={t.name} token={t.photo} tone="violet" /></section>
 		<TeacherForm
@@ -73,6 +76,8 @@ import TeacherForm from '$lib/components/TeacherForm.svelte';
 	.photo { padding: 18px 22px; max-width: 860px; display: flex; flex-direction: column; gap: 10px; }
 	.danger { padding: 18px 22px; max-width: 860px; display: flex; flex-direction: column; gap: 8px; border-color: #f5b8c7; background: #fffafb; }
 	.info { padding: 18px 22px; max-width: 860px; }
+	.also { padding: 12px 18px; max-width: 860px; background: var(--accent-soft); border-color: transparent; font-weight: 600; }
+	.also a { color: var(--accent); font-weight: 700; }
 	h2 { font-size: 16px; font-weight: 700; }
 	.row { display: flex; gap: 10px; }
 	.del { background: var(--danger); color: #fff; border-color: transparent; }

@@ -3,8 +3,17 @@ declare(strict_types=1);
 
 // 요청과 응답 도우미, 아주 작은 라우터.
 
+/** 모든 응답에 붙이는 보안 머리글. 다른 사이트의 틀(iframe)에 끼워 넣는 것과 파일 종류 추측을 막는다. */
+function security_headers(): void
+{
+    header('X-Content-Type-Options: nosniff');
+    header('X-Frame-Options: DENY');
+    header('Referrer-Policy: same-origin');
+}
+
 function json_out(mixed $data = null, int $status = 200): never
 {
+    security_headers();
     http_response_code($status);
     header('Content-Type: application/json; charset=utf-8');
     header('Cache-Control: no-store');
@@ -25,6 +34,7 @@ class ApiFail extends Exception
 function json_fail(string $code, string $message, int $status = 400): never
 {
     if (!empty($GLOBALS['dm_throw'])) throw new ApiFail($code, $message, $status);
+    security_headers();
     http_response_code($status);
     header('Content-Type: application/json; charset=utf-8');
     header('Cache-Control: no-store');

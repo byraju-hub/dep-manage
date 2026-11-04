@@ -116,8 +116,18 @@ route('POST', '/auth/password', function () {
     return null;
 });
 
-// 가입 화면에서 초대 코드가 맞는지 먼저 확인한다 (로그인 없이).
+/** 같은 접속 주소가 $marker 일을 $max 번 넘게 했으면 true. 아니면 한 번 센다. (로그인 시도 기록 표를 같이 쓴다.) */
+function rate_limited(string $marker, int $max, int $minutes): bool
+{
+    $n = (int)val('SELECT COUNT(*) FROM ' . t('login_attempts') . ' WHERE ip = ? AND login_id = ? AND attempted_at > (NOW() - INTERVAL ' . (int)$minutes . ' MINUTE)', [client_ip(), $marker]);
+    if ($n >= $max) return true;
+    q('INSERT INTO ' . t('login_attempts') . ' (ip, login_id) VALUES (?, ?)', [client_ip(), $marker]);
+    return false;
+}
+
+// 가입 화면에서 초대 코드가 맞는지 먼저 확인한다 (로그인 없이). 코드를 하나씩 대입해 보는 것을 막으려고 횟수를 제한한다.
 route('GET', '/invites/{code}/check', function (array $p) {
+    if (rate_limited('#chk', 30, 60)) json_fail('throttled', '확인을 너무 많이 했어요. 잠시 뒤에 다시 시도해 주세요.', 429);
     $inv = row('SELECT i.role, i.expires_at, i.max_uses, i.used_count, d.name AS dept FROM ' . t('invites') . ' i LEFT JOIN ' . t('departments') . ' d ON d.id = i.department_id WHERE i.code = ?', [strtoupper($p['code'])]);
     $valid = $inv && ($inv['expires_at'] === null || strtotime($inv['expires_at']) > time()) && (int)$inv['used_count'] < (int)$inv['max_uses'];
     if (!$valid) json_fail('invalid_code', '초대 코드가 올바르지 않거나 기간이 지났습니다.', 404);
@@ -137,6 +147,7 @@ route('POST', '/auth/join', function () {
         }
         q('INSERT INTO ' . t('login_attempts') . " (ip, login_id) VALUES (?, '#join')", [$ip]);
     }
+    if ($code !== '' && rate_limited('#chk', 30, 60)) json_fail('throttled', '시도를 너무 많이 했어요. 잠시 뒤에 다시 시도해 주세요.', 429);
     $loginId = in_str($b, 'loginId', 50, true, '아이디');
     $name = in_str($b, 'name', 50, true, '이름');
     $pw = (string)($b['password'] ?? '');

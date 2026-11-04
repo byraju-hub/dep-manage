@@ -283,3 +283,63 @@ route('DELETE', '/invites/{id}', function (array $p) {
     audit('invite.delete', 'invite', (int)$inv['id']);
     return null;
 });
+
+// ===== 부서 보관 · 순서 · 삭제 (교회 관리자) =====
+
+/** 보관한 부서까지 모두 (설정 → 부서 관리 화면용) */
+route('GET', '/departments/all', function () {
+    require_owner();
+    $out = [];
+    foreach (rows('SELECT * FROM ' . t('departments') . ' ORDER BY is_active DESC, sort, id') as $d) {
+        $j = dept_row_to_json($d, grade_levels_of((int)$d['id']));
+        $j['archived'] = (int)$d['is_active'] !== 1;
+        $j['students'] = (int)val('SELECT COUNT(*) FROM ' . t('students') . ' WHERE department_id = ?', [$d['id']]);
+        $j['teachers'] = (int)val('SELECT COUNT(*) FROM ' . t('teachers') . ' WHERE department_id = ?', [$d['id']]);
+        $out[] = $j;
+    }
+    return $out;
+});
+
+// 보관하면 목록과 전환 메뉴에서 사라지고(자료는 그대로), 다시 꺼낼 수 있다. 마지막 남은 부서는 보관할 수 없다.
+route('POST', '/departments/{id}/archive', function (array $p) {
+    require_owner();
+    $d = row('SELECT id, is_active FROM ' . t('departments') . ' WHERE id = ?', [(int)$p['id']]);
+    if (!$d) json_fail('not_found', '부서를 찾을 수 없습니다.', 404);
+    $archive = !empty(body()['archived']);
+    if ($archive && (int)val('SELECT COUNT(*) FROM ' . t('departments') . ' WHERE is_active = 1 AND id <> ?', [$d['id']]) === 0) {
+        json_fail('last_dept', '마지막 남은 부서는 보관할 수 없어요.', 422);
+    }
+    q('UPDATE ' . t('departments') . ' SET is_active = ? WHERE id = ?', [$archive ? 0 : 1, $d['id']]);
+    audit($archive ? 'department.archive' : 'department.restore', 'department', (int)$d['id']);
+    return null;
+});
+
+// 부서 순서. 받은 id 순서대로 번호를 다시 매긴다.
+route('PUT', '/departments/order', function () {
+    require_owner();
+    $ids = array_values(array_filter(array_map('intval', is_array(body()['ids'] ?? null) ? body()['ids'] : []), fn($i) => $i > 0));
+    foreach ($ids as $i => $id) q('UPDATE ' . t('departments') . ' SET sort = ? WHERE id = ?', [$i + 1, $id]);
+    audit('department.order');
+    return null;
+});
+
+// 부서와 그 부서의 모든 자료를 지운다. 보관한 부서만, 이름을 똑같이 입력해야 지워진다.
+route('DELETE', '/departments/{id}', function (array $p) {
+    require_owner();
+    $d = row('SELECT * FROM ' . t('departments') . ' WHERE id = ?', [(int)$p['id']]);
+    if (!$d) json_fail('not_found', '부서를 찾을 수 없습니다.', 404);
+    if ((int)$d['is_active'] === 1) json_fail('not_archived', '먼저 부서를 보관한 뒤에 지울 수 있어요.', 422);
+    if (in_str(body(), 'confirmName', 50) !== $d['name']) json_fail('confirm', '확인을 위해 부서 이름을 똑같이 입력해 주세요.', 422);
+    // 사진 파일은 DB 가 지워지면 찾을 수 없으니 먼저 지운다.
+    foreach (['students', 'teachers'] as $tbl) {
+        foreach (rows('SELECT photo_path FROM ' . t($tbl) . ' WHERE department_id = ? AND photo_path IS NOT NULL', [$d['id']]) as $r) delete_photo($r['photo_path']);
+    }
+    foreach (['students' => 'student', 'teachers' => 'teacher'] as $tbl => $type) {
+        foreach (rows('SELECT id FROM ' . t($tbl) . ' WHERE department_id = ?', [$d['id']]) as $r) cm_unlink($type, (int)$r['id']);
+    }
+    q('DELETE FROM ' . t('memberships') . ' WHERE department_id = ?', [$d['id']]);
+    q('DELETE FROM ' . t('invites') . ' WHERE department_id = ?', [$d['id']]);
+    q('DELETE FROM ' . t('departments') . ' WHERE id = ?', [$d['id']]);
+    audit('department.delete', 'department', (int)$d['id'], $d['name']);
+    return null;
+});
