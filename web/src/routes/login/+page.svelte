@@ -93,6 +93,7 @@ import ChurchLogo from '$lib/components/ChurchLogo.svelte';
 				<a href={url('/join')} class="link">{data.church.openSignup ? '가입 신청하기' : '초대 코드로 가입하기'}</a>
 				{#if data.church.demoAccount}<p class="demo">체험해 보기 · 아이디 <b>demo</b> / 비밀번호 <b>1234</b> (보기만 할 수 있어요)</p>{/if}
 				<p class="muted small">가입 후 관리자가 승인하면 사용할 수 있어요.<br />비밀번호를 5번 틀리면 15분 동안 잠겨요.</p>
+				<a class="pv" href={url('/privacy')}>개인정보 처리방침</a>
 			</div>
 		{/if}
 	</div>
@@ -109,6 +110,7 @@ import ChurchLogo from '$lib/components/ChurchLogo.svelte';
 	.err { color: var(--danger-ink); font-size: 13px; font-weight: 600; }
 	.foot { display: flex; flex-direction: column; align-items: center; gap: 10px; padding-top: 6px; border-top: 1px solid var(--line-soft); text-align: center; }
 	.link { color: var(--accent); font-weight: 700; padding: 6px 8px; }
+	.pv { font-size: 12px; color: var(--muted); }
 	.small { font-size: 12.5px; line-height: 1.6; }
 	.notice { background: #fff8ec; border: 1px solid #ffd9a8; border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
 	button:disabled { opacity: 0.6; cursor: default; }

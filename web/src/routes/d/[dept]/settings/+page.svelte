@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { invalidateAll } from '$app/navigation';
-	import { ApiError, updateChurchName, updateDepartmentInfo } from '$lib/api';
+	import { ApiError, updateChurchName, updateDepartmentInfo, updatePrivacyContact } from '$lib/api';
 import ChurchLogo from '$lib/components/ChurchLogo.svelte';
 import FaviconField from '$lib/components/FaviconField.svelte';
 import LogoField from '$lib/components/LogoField.svelte';
@@ -11,6 +11,8 @@ import { session } from '$lib/session.svelte';
 	let name = $state('');
 	let pastorName = $state('');
 	let headName = $state('');
+	let privacyOfficer = $state('');
+	let privacyContact = $state('');
 	let saved = $state(false);
 let error = $state('');
 
@@ -19,13 +21,18 @@ let error = $state('');
 		name = data.dept.name;
 		pastorName = data.dept.pastorName;
 		headName = data.dept.headName;
+		privacyOfficer = data.church.privacyOfficer ?? '';
+		privacyContact = data.church.privacyContact ?? '';
 	});
 
 	async function save(e: SubmitEvent) {
 		e.preventDefault();
 		error = '';
 		try {
-			if (session.user?.isOwner) await updateChurchName(churchName);
+			if (session.user?.isOwner) {
+				await updateChurchName(churchName);
+				await updatePrivacyContact(privacyOfficer, privacyContact);
+			}
 			await updateDepartmentInfo(data.dept.id, { name: name.trim() || data.dept.name, pastorName, headName });
 			await invalidateAll();
 			saved = true;
@@ -58,6 +65,16 @@ let error = $state('');
 				<small class="muted">교회 관리자만 바꿀 수 있어요</small>
 			{/if}
 		</div>
+	</section>
+
+	<section>
+		<h2>개인정보 관리책임자</h2>
+		<p class="sub">‘개인정보 처리방침’ 화면에 표시돼요. 교인이 개인정보 문의를 할 때 연락할 사람을 적어 주세요.</p>
+		<div class="grid">
+			<label class="field"><span>관리책임자 이름</span><input class="input" bind:value={privacyOfficer} oninput={() => (saved = false)} disabled={!session.user?.isOwner} maxlength="50" /></label>
+			<label class="field"><span>연락처 (전화·이메일)</span><input class="input" bind:value={privacyContact} oninput={() => (saved = false)} disabled={!session.user?.isOwner} maxlength="100" /></label>
+		</div>
+		{#if !session.user?.isOwner}<small class="muted">교회 관리자만 바꿀 수 있어요</small>{/if}
 	</section>
 
 	<section>

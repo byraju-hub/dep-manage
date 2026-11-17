@@ -60,6 +60,7 @@
 			</a>
 		{/each}
 	</div>
+	<p class="pv"><a href={url('/privacy')}>개인정보 처리방침</a></p>
 </main>
 
 <style>
@@ -81,5 +82,7 @@
 	dl div { display: flex; flex-direction: column; }
 	dt { font-size: 12.5px; color: var(--muted); }
 	dd { margin: 0; font-size: 18px; font-weight: 700; }
+	.pv { margin: 8px 0 0; font-size: 12px; }
+	.pv a { color: var(--muted); }
 	.warn { font-size: 13px; font-weight: 700; color: var(--danger-ink); }
 </style>

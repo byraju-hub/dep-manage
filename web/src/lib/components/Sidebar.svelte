@@ -72,6 +72,7 @@ import Icon from './Icon.svelte';
 	<div class="bottom">
 		{@render link(nav.manual)}
 		{#if can(dept.id, 'admin')}{@render link(nav.settings)}{/if}
+		<a class="privacy" href={url('/privacy')}>개인정보 처리방침</a>
 		<div class="user">
 			<span class="me" aria-hidden="true">{session.user?.name.slice(0, 1) ?? '?'}</span>
 			<a class="who" href={url('/me')} title="내 정보">
@@ -108,6 +109,8 @@ import Icon from './Icon.svelte';
 	}
 	.church { font-family: var(--font-title); font-size: 21px; font-weight: 700; line-height: 1.2; overflow-wrap: anywhere; }
 	.sub { font-size: 12px; color: var(--muted); }
+	.privacy { align-self: flex-start; margin: 0 10px; padding: 4px 0; font-size: 11.5px; color: var(--muted); text-decoration: none; }
+	.privacy:hover { color: var(--ink); text-decoration: underline; }
 	.copy { margin: 4px 6px 0; font-size: 11px; line-height: 1.4; color: var(--muted); overflow-wrap: anywhere; }
 
 	.switcher { position: relative; }

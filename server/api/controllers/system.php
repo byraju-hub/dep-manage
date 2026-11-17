@@ -25,7 +25,7 @@ function church_json(): array
         if (is_array($fonts) && isset($fonts[$role]) && in_array($fonts[$role], FONT_IDS, true)) $out[$role] = $fonts[$role];
     }
     $logo = setting('logo', null);
-    return ['name' => (string)setting('church_name', '교회'), 'fonts' => $out, 'logo' => is_string($logo) ? $logo : null, 'favicon' => is_string($fav = setting('favicon', null)) ? $fav : null, 'openSignup' => (bool)setting('open_signup', false), 'demoAccount' => demo_account_exists()];
+    return ['name' => (string)setting('church_name', '교회'), 'fonts' => $out, 'logo' => is_string($logo) ? $logo : null, 'favicon' => is_string($fav = setting('favicon', null)) ? $fav : null, 'openSignup' => (bool)setting('open_signup', false), 'privacyOfficer' => (string)setting('privacy_officer', ''), 'privacyContact' => (string)setting('privacy_contact', ''), 'demoAccount' => demo_account_exists()];
 }
 
 // 데이터베이스 구조가 코드보다 낡았으면 needsUpdate. (설정 → 데이터에서 교회 관리자가 업데이트를 적용한다.)
@@ -44,6 +44,9 @@ route('PUT', '/church', function () {
     if (array_key_exists('name', $b)) {
         set_setting('church_name', in_str($b, 'name', 50, true, '교회 이름'));
     }
+    // 개인정보 처리방침에 보여 줄 관리책임자와 연락처
+    if (array_key_exists('privacyOfficer', $b)) set_setting('privacy_officer', in_str($b, 'privacyOfficer', 50, false, '관리책임자'));
+    if (array_key_exists('privacyContact', $b)) set_setting('privacy_contact', in_str($b, 'privacyContact', 100, false, '연락처'));
     if (array_key_exists('openSignup', $b)) {
         set_setting('open_signup', (bool)$b['openSignup']);
     }
