@@ -84,7 +84,7 @@ import ChurchLogo from '$lib/components/ChurchLogo.svelte';
 				{#if error}<p class="err" role="alert">{error}</p>{/if}
 				<button class="btn btn-primary btn-lg btn-block" type="submit" disabled={busy}>{busy ? '처리 중…' : '가입 신청'}</button>
 			</form>
-			<div class="foot"><a href={url('/login')} class="link">이미 계정이 있어요</a> · <a href={url('/privacy')} class="link pv">개인정보 처리방침</a></div>
+			<div class="foot"><a href={url('/login')} class="link">이미 계정이 있어요</a> · <a href={url('/privacy')} class="link pv">개인정보 처리 방침</a></div>
 		{/if}
 	</div>
 </main>

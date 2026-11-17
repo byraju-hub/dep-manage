@@ -15,12 +15,12 @@
 	const backHref = $derived(session.user ? url('/') : url('/login'));
 </script>
 
-<svelte:head><title>개인정보 처리방침 · {church}</title></svelte:head>
+<svelte:head><title>개인정보 처리 방침 · {church}</title></svelte:head>
 
 <main class="wrap">
 	<article class="card doc">
 		<a class="back" href={backHref}>← 돌아가기</a>
-		<h1>{church} 개인정보 처리방침</h1>
+		<h1>{church} 개인정보 처리 방침</h1>
 		<p class="meta">시행일자 {EFFECTIVE}</p>
 
 		<p>

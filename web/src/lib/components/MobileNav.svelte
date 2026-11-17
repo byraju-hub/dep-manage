@@ -73,8 +73,8 @@ import Icon from './Icon.svelte';
 				</a>
 			{/each}
 			<a href={url('/privacy')} class="cell" onclick={() => (sheet = false)}>
-				<Tile icon="lock" tone="slate" size={40} iconSize={22} />
-				<span>개인정보 처리방침</span>
+				<Tile icon="shield" tone="slate" size={40} iconSize={22} />
+				<span>개인정보 처리 방침</span>
 			</a>
 			<button class="cell" onclick={signOut}>
 				<Tile icon="logout" tone="slate" size={40} iconSize={22} />

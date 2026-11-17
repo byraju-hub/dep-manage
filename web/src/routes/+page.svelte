@@ -60,7 +60,7 @@
 			</a>
 		{/each}
 	</div>
-	<p class="pv"><a href={url('/privacy')}>개인정보 처리방침</a></p>
+	<p class="pv"><a href={url('/privacy')}>개인정보 처리 방침</a></p>
 </main>
 
 <style>

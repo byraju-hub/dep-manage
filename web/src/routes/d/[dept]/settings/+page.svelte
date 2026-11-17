@@ -69,7 +69,7 @@ let error = $state('');
 
 	<section>
 		<h2>개인정보 관리책임자</h2>
-		<p class="sub">‘개인정보 처리방침’ 화면에 표시돼요. 교인이 개인정보 문의를 할 때 연락할 사람을 적어 주세요.</p>
+		<p class="sub">‘개인정보 처리 방침’ 화면에 표시돼요. 교인이 개인정보 문의를 할 때 연락할 사람을 적어 주세요.</p>
 		<div class="grid">
 			<label class="field"><span>관리책임자 이름</span><input class="input" bind:value={privacyOfficer} oninput={() => (saved = false)} disabled={!session.user?.isOwner} maxlength="50" /></label>
 			<label class="field"><span>연락처 (전화·이메일)</span><input class="input" bind:value={privacyContact} oninput={() => (saved = false)} disabled={!session.user?.isOwner} maxlength="100" /></label>

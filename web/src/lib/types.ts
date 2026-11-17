@@ -160,7 +160,7 @@ export interface Church {
 	favicon?: string | null;
 	/** 초대 코드 없이도 가입 신청을 받는지 */
 	openSignup?: boolean;
-	/** 개인정보 관리책임자 이름과 연락처(개인정보 처리방침에 표시) */
+	/** 개인정보 관리책임자 이름과 연락처(개인정보 처리 방침에 표시) */
 	privacyOfficer?: string;
 	privacyContact?: string;
 	/** 체험 계정이 만들어져 있는지 */
