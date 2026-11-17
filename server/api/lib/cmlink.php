@@ -77,3 +77,45 @@ function cm_privacy_contact(): ?array
         return null;
     }
 }
+
+/**
+ * 교적(ch-manage)의 최고관리자 계정. 아이디가 같고 '사용' 상태인 최고관리자일 때만 돌려준다. (읽기만 한다.)
+ * 이 계정은 부서 관리에서도 교회 관리자로 로그인할 수 있고, 비밀번호는 교적 것을 쓴다.
+ * @return array{name:string,hash:string}|null
+ */
+function cm_super_user(string $loginId): ?array
+{
+    if (cm_links_table() === null) return null;
+    try {
+        $prefix = (dm_config() ?? [])['cm_prefix'] ?? 'cm_';
+        $u = row('SELECT * FROM `' . $prefix . 'users` WHERE login_id = ?', [$loginId]);
+        if (!$u || (int)$u['is_super'] !== 1 || $u['status'] !== '사용') return null;
+        if ((int)($u['is_demo'] ?? 0) === 1) return null; // 교적의 체험 계정은 연결하지 않는다
+        // 부서 쪽의 체험 계정(보기 전용)도 연결 대상이 아니다
+        if ((int)val('SELECT COUNT(*) FROM ' . t('users') . ' WHERE login_id = ? AND is_demo = 1', [$loginId]) > 0) return null;
+        return ['name' => (string)$u['name'], 'hash' => (string)$u['password_hash']];
+    } catch (Throwable) {
+        return null;
+    }
+}
+
+/**
+ * 교적 최고관리자가 부서 관리에 로그인했을 때 부서 쪽 계정을 맞춘다.
+ * 같은 아이디의 계정이 있으면 같은 사람으로 보고 연결하고, 없으면 새로 만든다. 둘 다 교회 관리자로 둔다.
+ * 부서 쪽 비밀번호는 쓸 수 없는 값으로 바꿔 둔다. (비밀번호는 항상 교적 것으로 확인하므로 한 곳에서만 관리된다.)
+ */
+function cm_sync_dm_user(string $loginId, string $name): array
+{
+    $u = row('SELECT * FROM ' . t('users') . ' WHERE login_id = ?', [$loginId]);
+    $unusable = password_hash(bin2hex(random_bytes(24)), PASSWORD_DEFAULT);
+    if ($u) {
+        q('UPDATE ' . t('users') . " SET is_owner = 1, status = 'active', must_change_password = 0, password_hash = ? WHERE id = ?", [$unusable, $u['id']]);
+        $linked = 'cm.link';
+    } else {
+        q('INSERT INTO ' . t('users') . " (login_id, password_hash, name, is_owner, status) VALUES (?, ?, ?, 1, 'active')", [$loginId, $unusable, $name]);
+        $linked = 'cm.create';
+    }
+    $u = row('SELECT * FROM ' . t('users') . ' WHERE login_id = ?', [$loginId]);
+    $_SESSION['cm_audit'] = $linked;
+    return $u;
+}

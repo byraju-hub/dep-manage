@@ -165,6 +165,8 @@ export interface Church {
 	privacyContact?: string;
 	/** 책임자·문의처를 교적(ch-manage)에서 가져오는 중이면 true (여기서는 고치지 않는다) */
 	privacyFromCm?: boolean;
+	/** 교적이 함께 설치돼 있어 교적 최고관리자 계정으로도 로그인할 수 있는지 */
+	cmLogin?: boolean;
 	/** 체험 계정이 만들어져 있는지 */
 	demoAccount?: boolean;
 }
@@ -178,6 +180,8 @@ export interface SessionUser {
 	isOwner: boolean;
 	/** 체험 계정: 모든 화면을 볼 수 있지만 보기만 가능 */
 	isDemo?: boolean;
+	/** 교적(ch-manage) 최고관리자와 연결된 계정: 비밀번호는 교적에서 바꾼다 */
+	cmLinked?: boolean;
 	mustChangePassword: boolean;
 	roleLabel: string;
 }

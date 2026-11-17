@@ -38,6 +38,10 @@
 <main class="wrap">
 	<div class="card box">
 		<h1>비밀번호를 바꿔요</h1>
+		{#if session.user?.cmLinked}
+			<p class="muted">이 계정은 교적 관리(ch-manage)의 최고관리자 계정과 연결돼 있어요. 비밀번호는 교적 관리에서 바꿔 주세요. 바꾸면 여기서도 바로 새 비밀번호로 로그인해요.</p>
+			<div class="row"><a class="btn btn-primary" href={url('/')}>돌아가기</a><button class="btn" type="button" onclick={doLogout}>로그아웃</button></div>
+		{:else}
 		{#if forced}<p class="muted">관리자가 임시 비밀번호를 정해 주었어요. 나만 아는 비밀번호로 바꿔야 계속 쓸 수 있어요.</p>{/if}
 		<form onsubmit={submit} novalidate>
 			<label class="field"><span>지금 비밀번호</span><input class="input" type="password" bind:value={current} autocomplete="current-password" /></label>
@@ -49,6 +53,7 @@
 				<button class="btn" type="button" onclick={doLogout}>로그아웃</button>
 			</div>
 		</form>
+		{/if}
 	</div>
 </main>
 

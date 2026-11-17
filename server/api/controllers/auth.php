@@ -23,6 +23,7 @@ function me_payload(array $u): array
             'isOwner' => (int)$u['is_owner'] === 1,
             'isDemo' => (int)($u['is_demo'] ?? 0) === 1,
             'mustChangePassword' => (int)$u['must_change_password'] === 1,
+            'cmLinked' => cm_super_user((string)$u['login_id']) !== null,
             'roleLabel' => ROLE_LABELS[$best ?? 'viewer'],
         ],
         'memberships' => $list,
@@ -59,8 +60,24 @@ route('POST', '/auth/login', function () {
     if (login_throttled($loginId)) {
         json_fail('throttled', '로그인에 여러 번 실패했습니다. 15분 뒤에 다시 시도해 주세요.', 429);
     }
-    $u = row('SELECT * FROM ' . t('users') . ' WHERE login_id = ?', [$loginId]);
-    $ok = $u && password_verify($pw, $u['password_hash']);
+    // 교적(ch-manage)의 최고관리자라면 교적 비밀번호로 로그인한다. 부서 쪽 계정은 만들거나 연결해 둔다.
+    $cm = cm_super_user($loginId);
+    if ($cm !== null) {
+        if (!password_verify($pw, $cm['hash'])) {
+            q('INSERT INTO ' . t('login_attempts') . ' (ip, login_id) VALUES (?, ?)', [client_ip(), $loginId]);
+            json_fail('bad_credentials', '아이디 또는 비밀번호가 맞지 않습니다.', 401);
+        }
+        $u = cm_sync_dm_user($loginId, $cm['name']);
+        $ok = true;
+    } else {
+        $u = row('SELECT * FROM ' . t('users') . ' WHERE login_id = ?', [$loginId]);
+        $ok = $u && password_verify($pw, $u['password_hash']);
+        // 체험 계정 비밀번호는 공개돼 있다. 예전에 잘못 바뀐 값이 있으면 되돌린다.
+        if (!$ok && $u && (int)($u['is_demo'] ?? 0) === 1 && defined('DEMO_PASSWORD') && $pw === DEMO_PASSWORD) {
+            q('UPDATE ' . t('users') . ' SET password_hash = ? WHERE id = ?', [password_hash(DEMO_PASSWORD, PASSWORD_DEFAULT), $u['id']]);
+            $ok = true;
+        }
+    }
     if (!$u) {
         // 없는 아이디도 같은 시간이 걸리게 해서, 응답 시간으로 계정 유무가 드러나지 않게 한다.
         static $dummy = null;
@@ -81,6 +98,10 @@ route('POST', '/auth/login', function () {
     q('DELETE FROM ' . t('login_attempts') . ' WHERE login_id = ?', [$loginId]);
     // 오래된 시도 기록 정리 (가끔)
     if (random_int(1, 20) === 1) q('DELETE FROM ' . t('login_attempts') . ' WHERE attempted_at < (NOW() - INTERVAL 1 DAY)');
+    if (!empty($_SESSION['cm_audit'])) {
+        audit((string)$_SESSION['cm_audit'], 'user', (int)$u['id'], '교적 최고관리자');
+        unset($_SESSION['cm_audit']);
+    }
     audit('login');
     return me_payload($u);
 });
@@ -104,6 +125,7 @@ route('POST', '/auth/logout', function () {
 
 route('POST', '/auth/password', function () {
     $u = require_user(true);
+    if (cm_super_user((string)$u['login_id']) !== null) json_fail('cm_linked', '교적 관리(ch-manage)와 연결된 계정이에요. 비밀번호는 교적 관리에서 바꿔 주세요.', 403);
     $b = body();
     $cur = (string)($b['current'] ?? '');
     $new = (string)($b['newPassword'] ?? '');

@@ -27,7 +27,7 @@ function church_json(): array
     $logo = setting('logo', null);
     // 교적이 같은 DB 에 있으면 교적의 책임자·문의처를 쓰고, 없으면 여기서 정한 값을 쓴다.
     $cm = cm_privacy_contact();
-    return ['name' => (string)setting('church_name', '교회'), 'fonts' => $out, 'logo' => is_string($logo) ? $logo : null, 'favicon' => is_string($fav = setting('favicon', null)) ? $fav : null, 'openSignup' => (bool)setting('open_signup', false), 'privacyOfficer' => $cm ? $cm['officer'] : (string)setting('privacy_officer', ''), 'privacyContact' => $cm ? $cm['contact'] : (string)setting('privacy_contact', ''), 'privacyFromCm' => $cm !== null, 'demoAccount' => demo_account_exists()];
+    return ['name' => (string)setting('church_name', '교회'), 'fonts' => $out, 'logo' => is_string($logo) ? $logo : null, 'favicon' => is_string($fav = setting('favicon', null)) ? $fav : null, 'openSignup' => (bool)setting('open_signup', false), 'privacyOfficer' => $cm ? $cm['officer'] : (string)setting('privacy_officer', ''), 'privacyContact' => $cm ? $cm['contact'] : (string)setting('privacy_contact', ''), 'privacyFromCm' => $cm !== null, 'cmLogin' => cm_links_table() !== null, 'demoAccount' => demo_account_exists()];
 }
 
 // 데이터베이스 구조가 코드보다 낡았으면 needsUpdate. (설정 → 데이터에서 교회 관리자가 업데이트를 적용한다.)
