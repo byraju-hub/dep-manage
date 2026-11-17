@@ -31,7 +31,7 @@ let error = $state('');
 		try {
 			if (session.user?.isOwner) {
 				await updateChurchName(churchName);
-				await updatePrivacyContact(privacyOfficer, privacyContact);
+				if (!data.church.privacyFromCm) await updatePrivacyContact(privacyOfficer, privacyContact);
 			}
 			await updateDepartmentInfo(data.dept.id, { name: name.trim() || data.dept.name, pastorName, headName });
 			await invalidateAll();
@@ -69,10 +69,10 @@ let error = $state('');
 
 	<section>
 		<h2>개인정보 관리책임자</h2>
-		<p class="sub">‘개인정보 처리 방침’ 화면에 표시돼요. 교인이 개인정보 문의를 할 때 연락할 사람을 적어 주세요.</p>
+		<p class="sub">{data.church.privacyFromCm ? '교적 관리(ch-manage)의 교회 정보에 적힌 책임자와 연락처를 ‘개인정보 처리 방침’에 보여 줘요. 바꾸려면 교적 관리에서 고쳐 주세요.' : '‘개인정보 처리 방침’ 화면에 표시돼요. 교인이 개인정보 문의를 할 때 연락할 사람을 적어 주세요.'}</p>
 		<div class="grid">
-			<label class="field"><span>관리책임자 이름</span><input class="input" bind:value={privacyOfficer} oninput={() => (saved = false)} disabled={!session.user?.isOwner} maxlength="50" /></label>
-			<label class="field"><span>연락처 (전화·이메일)</span><input class="input" bind:value={privacyContact} oninput={() => (saved = false)} disabled={!session.user?.isOwner} maxlength="100" /></label>
+			<label class="field"><span>관리책임자 이름</span><input class="input" bind:value={privacyOfficer} oninput={() => (saved = false)} disabled={!session.user?.isOwner || data.church.privacyFromCm} maxlength="50" /></label>
+			<label class="field"><span>연락처 (전화·이메일)</span><input class="input" bind:value={privacyContact} oninput={() => (saved = false)} disabled={!session.user?.isOwner || data.church.privacyFromCm} maxlength="100" /></label>
 		</div>
 		{#if !session.user?.isOwner}<small class="muted">교회 관리자만 바꿀 수 있어요</small>{/if}
 	</section>

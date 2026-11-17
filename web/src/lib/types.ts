@@ -163,6 +163,8 @@ export interface Church {
 	/** 개인정보 관리책임자 이름과 연락처(개인정보 처리 방침에 표시) */
 	privacyOfficer?: string;
 	privacyContact?: string;
+	/** 책임자·문의처를 교적(ch-manage)에서 가져오는 중이면 true (여기서는 고치지 않는다) */
+	privacyFromCm?: boolean;
 	/** 체험 계정이 만들어져 있는지 */
 	demoAccount?: boolean;
 }

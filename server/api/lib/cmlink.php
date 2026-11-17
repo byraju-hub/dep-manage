@@ -52,3 +52,28 @@ function cm_unlink(string $kind, int $id): void
     } catch (Throwable) {
     }
 }
+
+/**
+ * 교적(ch-manage)이 같은 DB 에 있으면 교적의 개인정보 책임자·문의처를 읽어 온다. (읽기만 한다.)
+ * 책임자는 church_info.privacyOfficer, 전화·메일은 privacyPhone/privacyEmail, 비었으면 대표 전화·메일.
+ * @return array{officer:string,contact:string}|null 교적이 없거나 비어 있으면 null
+ */
+function cm_privacy_contact(): ?array
+{
+    if (cm_links_table() === null) return null;
+    try {
+        $prefix = (dm_config() ?? [])['cm_prefix'] ?? 'cm_';
+        $raw = val('SELECT church_info FROM `' . $prefix . 'site_settings` WHERE id = 1');
+        $ci = json_decode((string)$raw, true);
+        if (!is_array($ci)) return null;
+        $s = fn(string $k): string => is_string($ci[$k] ?? null) ? trim($ci[$k]) : '';
+        $officer = $s('privacyOfficer');
+        $phone = $s('privacyPhone') ?: $s('phone');
+        $email = $s('privacyEmail') ?: $s('email');
+        $contact = trim($phone . ($phone !== '' && $email !== '' ? ' · ' : '') . $email);
+        if ($officer === '' && $contact === '') return null;
+        return ['officer' => $officer, 'contact' => $contact];
+    } catch (Throwable) {
+        return null;
+    }
+}
