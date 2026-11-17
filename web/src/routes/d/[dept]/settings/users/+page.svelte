@@ -30,7 +30,10 @@
 	let newInvite = $state<{ code: string } | null>(null);
 
 	// 새 초대 코드 만들기
-	let invDept = $state(data.dept.id);
+	let invDept = $state(0);
+	$effect(() => {
+		invDept = data.dept.id;
+	});
 	let invRole = $state<Role>('teacher');
 	let invUses = $state(1);
 	let invDays = $state(7);

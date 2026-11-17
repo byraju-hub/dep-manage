@@ -138,11 +138,6 @@ export const updateFonts = (fonts: FontSettings) => put('/church', { fonts });
 // ===== 부서 =====
 export const listDepartments = () => get<Department[]>('/departments');
 
-export async function getDepartment(id: number): Promise<Department> {
-	const d = (await listDepartments()).find((x) => x.id === id);
-	if (!d) throw new ApiError('not_found', '부서를 찾을 수 없습니다.', 404);
-	return d;
-}
 export type DepartmentAdmin = Department & { archived: boolean; students: number; teachers: number };
 export const listAllDepartments = () => get<DepartmentAdmin[]>('/departments/all');
 export const archiveDepartment = (id: number, archived: boolean) => post(`/departments/${id}/archive`, { archived });

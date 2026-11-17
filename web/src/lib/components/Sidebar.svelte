@@ -102,10 +102,6 @@ import Icon from './Icon.svelte';
 		gap: 16px;
 	}
 	.brand { display: flex; align-items: center; gap: 10px; padding: 0 6px; color: inherit; text-decoration: none; }
-	.logo {
-		width: 38px; height: 38px; border-radius: 12px; background: var(--accent); color: #fff;
-		display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 17px;
-	}
 	.church { font-family: var(--font-title); font-size: 21px; font-weight: 700; line-height: 1.2; overflow-wrap: anywhere; }
 	.sub { font-size: 12px; color: var(--muted); }
 	.privacy { align-self: flex-start; display: inline-flex; align-items: center; gap: 5px; margin: 0 10px; padding: 4px 0; font-size: 11.5px; color: var(--muted); text-decoration: none; }

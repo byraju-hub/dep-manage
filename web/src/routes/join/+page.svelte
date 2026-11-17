@@ -93,7 +93,6 @@ import ChurchLogo from '$lib/components/ChurchLogo.svelte';
 	.wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
 	.box { width: 100%; max-width: 420px; padding: 28px 28px 22px; border-radius: 22px; box-shadow: 0 8px 24px rgba(37, 99, 235, 0.1); display: flex; flex-direction: column; gap: 18px; }
 	.brand { display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; }
-	.logo { width: 52px; height: 52px; border-radius: 15px; background: var(--accent); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 22px; }
 	h1 { font-size: 20px; font-weight: 700; line-height: 1.3; }
 	form { display: flex; flex-direction: column; gap: 12px; }
 	.big { height: 44px; font-size: 15px; }

@@ -18,7 +18,7 @@ export default defineConfig({
 			alias: { $lib: 'src/lib' },
 
 			// 서브폴더에 설치하는 경우 BASE_PATH=/church 처럼 지정하고 빌드한다.
-			paths: { base: process.env.BASE_PATH ?? '' }
+			paths: { base: (process.env.BASE_PATH ?? '') as '' | `/${string}` }
 		})
 	],
 	server: {

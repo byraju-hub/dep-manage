@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { goto, invalidateAll } from '$app/navigation';
-	import { ApiError, completeFollowUp, saveVisit, searchPeople } from '$lib/api';
+	import { ApiError, completeFollowUp, deleteVisit, saveVisit, searchPeople } from '$lib/api';
 	import { addDays, dotted, shortMD, today } from '$lib/dates';
 	import Icon from '$lib/components/Icon.svelte';
 	import { methodTone, visitMethods } from '$lib/palette';
-	import { session } from '$lib/session.svelte';
+	import { can, session } from '$lib/session.svelte';
 	import { terms } from '$lib/terms.svelte';
 	import { url } from '$lib/url';
 	import type { VisitMethod, VisitTarget, VisitVisibility } from '$lib/types';
@@ -63,6 +63,18 @@
 		await invalidateAll();
 	}
 
+	// 작성자나 부서 관리자만 지울 수 있다(서버도 같은 규칙으로 막는다).
+	const canDelete = (author: string) => can(dept.id, 'admin') || author === session.user?.name;
+	async function remove(id: number, label: string) {
+		if (!confirm(`'${label}' ${terms.visit} 기록을 삭제할까요? 되돌릴 수 없어요.`)) return;
+		try {
+			await deleteVisit(id);
+			await invalidateAll();
+		} catch (err) {
+			alert(err instanceof ApiError ? err.message : '삭제하지 못했어요.');
+		}
+	}
+
 	async function done(id: number) {
 		await completeFollowUp(id);
 		await invalidateAll();
@@ -100,6 +112,7 @@
 							<span class="badge badge-sq tone-{methodTone[v.method]}">{v.method}</span>
 							<span class="t">{v.title}</span>
 							{#if v.visibility !== 'staff'}<span class="lock" title="열람 범위가 제한된 기록"><Icon name="lock" size={14} /></span>{/if}
+							{#if canDelete(v.author)}<button class="del" aria-label="{v.title} 기록 삭제" title="삭제" onclick={() => remove(v.id, v.title || v.targetNames[0])}><Icon name="trash" size={14} /></button>{/if}
 						</div>
 						{#if v.followUp && !v.followUpDone}
 							<div class="fu">
@@ -192,6 +205,8 @@
 	.t { font-size: 13.5px; color: var(--ink-2); }
 	.lock { color: var(--muted); display: inline-flex; }
 	.fu { display: flex; align-items: center; gap: 8px; margin-top: 2px; flex-wrap: wrap; }
+	.del { margin-left: auto; border: 0; background: transparent; color: var(--muted); padding: 4px; border-radius: 6px; display: inline-flex; }
+	.del:hover { color: var(--danger-ink); background: var(--field-bg); }
 	.mini { height: 28px; padding: 0 10px; border-radius: 9px; border: 1px solid var(--line-strong); background: var(--surface); font-size: 12.5px; font-weight: 700; color: var(--ok-ink); }
 	.none { color: var(--muted); padding: 24px; text-align: center; }
 

@@ -11,7 +11,7 @@
 	{#if open}
 		<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
 		<div class="back" onclick={() => (open = false)}>
-			<div class="sheet" role="dialog" aria-label="연락하기" onclick={(e) => e.stopPropagation()}>
+			<div class="sheet" role="dialog" tabindex="-1" aria-label="연락하기" onclick={(e) => e.stopPropagation()}>
 				<p class="who">{name ? `${name} · ` : ''}{phone}</p>
 				<a class="act call" href="tel:{digits}" onclick={() => (open = false)}>전화 걸기</a>
 				<a class="act" href="sms:{digits}" onclick={() => (open = false)}>문자 보내기</a>

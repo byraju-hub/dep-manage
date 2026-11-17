@@ -27,10 +27,6 @@ export function sundayOf(iso: string): string {
 	return addDays(iso, -d.getDay());
 }
 
-export function weekday(iso: string): number {
-	return fromISO(iso).getDay();
-}
-
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
 export const weekdayLabels = WEEKDAYS;
 
@@ -60,15 +56,6 @@ export function dotted(iso: string): string {
 
 export function monthKey(iso: string): string {
 	return iso.slice(0, 7);
-}
-
-/** 생일이 기준일부터 며칠 뒤인지(올해 이미 지났으면 내년). 오늘이면 0. */
-export function daysUntilBirthday(birthISO: string, fromDate: string): number {
-	const base = fromISO(fromDate);
-	const b = fromISO(birthISO);
-	let next = new Date(base.getFullYear(), b.getMonth(), b.getDate());
-	if (next < base) next = new Date(base.getFullYear() + 1, b.getMonth(), b.getDate());
-	return Math.round((next.getTime() - base.getTime()) / 86400000);
 }
 
 export function age(birthISO: string, onDate: string = today()): number {
