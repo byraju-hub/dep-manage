@@ -1,8 +1,8 @@
 <script lang="ts">
 	import '../app.css';
-	import favicon from '#lib/assets/favicon.svg';
 	import { faviconUrl, logoUrl } from '$lib/api';
-import { applyFonts } from '$lib/fonts';
+	import { applyFonts } from '$lib/fonts';
+	import { url } from '$lib/url';
 	import type { LayoutProps } from './$types';
 
 	let { data, children }: LayoutProps = $props();
@@ -22,7 +22,8 @@ import { applyFonts } from '$lib/fonts';
 		<link rel="icon" type="image/png" href={logoUrl(data.church.logo, true)} />
 		<link rel="apple-touch-icon" href={logoUrl(data.church.logo)} />
 	{:else}
-		<link rel="icon" href={favicon} />
+		<link rel="icon" type="image/png" href={url('/favicon-32.png')} />
+		<link rel="apple-touch-icon" href={url('/apple-touch-icon.png')} />
 	{/if}
 	<title>{data.church.name} · dep-manage</title>
 </svelte:head>
